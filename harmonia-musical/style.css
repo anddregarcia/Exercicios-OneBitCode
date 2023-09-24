@@ -1,0 +1,90 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+  :root {
+    --bg-color: #f1f5f9;
+    --font-color: #212529;
+    --table-border-color: #212529;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--font-color);
+    font-family: "Ubuntu", sans-serif;
+}
+
+main {
+    display: block;
+    margin: 0rem 2.5rem;
+    max-width: 40rem;
+    padding: 0 1.5rem 5rem;
+    position: absolute;
+}
+
+header {
+    padding: 2rem 0;
+}
+
+#campos_harmonicos_maiores
+{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap:1rem;
+    margin: 2rem 0;
+}
+  
+table, th, tr {
+    border: 2px solid var(--table-border-color);
+    padding: 0rem 0rem 0rem 0rem;
+}
+
+table {
+    width: 100%;
+}
+
+th {
+    height: 2rem;
+}
+
+td {
+    border: 2px solid var(--table-border-color);
+    padding: 0rem 4rem 0rem 0rem;
+}
+
+table {
+    width: 100%;
+    aspect-ratio: 1/1;
+    object-fit: cover;
+
+    transition: scale 350ms ease, opacity 350ms linear;
+}
+
+.gallery:has(table:hover) table:not(:hover){
+    scale: .9;
+    opacity: .7;
+}
+
+
+@media screen and (max-width: 992px) {
+    #campos_harmonicos_maiores
+    {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+  }
+
+@media screen and (max-width: 692px) {
+    #campos_harmonicos_maiores
+    {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media screen and (max-width: 392px) {
+    #campos_harmonicos_maiores
+    {
+        grid-template-columns: 1fr;
+    }
+}

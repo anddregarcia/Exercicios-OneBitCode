@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escalação de time de Futebol</title>
+    
+    <script src="14 - escalacao.js" defer></script>
+</head>
+<body>
+    <h1>Escalação</h1>
+    <hr>
+    <h2>Escalar um jogador</h2>
+    <label for="position">Posição:</label>
+    <input type="text" name="position" id="position" required="true">
+    
+    <label for="name">Nome:</label>
+    <input type="text" name="name" id="name" required="true">
+    
+    <label for="number">Número:</label>
+    <input type="text" name="number" id="number" required="true">
+
+    <input type="button" value="Escalar Jogador" onclick="AddPlayer()">
+
+    <h2>Remover um jogador</h2>
+    <label for="number">Número:</label>
+    <input type="text" name="number" id="numberRemove" required="true">
+
+    <input type="button" value="Remover Jogador" onclick="RemovePlayer()">
+    <input type="button" value="Remover Todos" onclick="RemoveAllPlayers()">
+
+    <h2>Time</h2>
+    <ul id="teamList"></ul>
+
+    <script>Main()</script>
+</body>
+</html>
