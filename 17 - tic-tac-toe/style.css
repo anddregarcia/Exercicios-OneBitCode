@@ -93,7 +93,16 @@
 
   .match  {
     background-color: var(--match-color); 
+    animation: matchPositionsAnimation 1s infinite;
   }
+  
+	@keyframes matchPositionsAnimation {
+		0%		{ scale: 1; font-size: 6rem; }
+		25%		{ scale: 1.05; font-size: 5.7rem; }
+		50%		{ scale: 1.1; font-size: 5.5rem; }
+		75%		{ scale: 1.05; font-size: 5.7rem; }
+		100%	{ scale: 1; font-size: 6rem; }
+	}
 
   .position {
     padding: 0rem;

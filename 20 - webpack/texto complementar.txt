@@ -1,0 +1,150 @@
+1. Vamos começar inicializando o projeto:
+    
+    ```jsx
+    npm init -y
+    ```
+    
+2. Em seguida, podemos criar a pasta “src” e dentro dela a pasta “styles”. Na pasta “styles” podemos criar o arquivo “index.css”, que será o CSS utilizado na página HTML que criaremos mais a frente:
+    
+    ```css
+    /* src/styles/index.css */
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      background-color: #303a3d;
+      color: #fafafa;
+      display: grid;
+      font-family: sans-serif;
+      min-height: 100vh;
+      place-content: center;
+    }
+    
+    img {
+      display: block;
+      margin: 0 auto;
+    }
+    
+    h1, div {
+      text-align: center;
+      padding: .75rem 0;
+    }
+    
+    div + div {
+      padding: .5rem 0 0;
+    }
+    
+    pre {
+      background-color: #49575c;
+      border-radius: .25rem;
+      display: inline;
+      padding: .25rem .5rem;
+    }
+    ```
+    
+3. Dentro de “src” vamos criar o arquivo “index.js”, que servirá de ponto de entrada para o webpack. Nele incluiremos um código simples de teste e também o arquivo “index.css”:
+    
+    ```jsx
+    // src/index.js
+    
+    import './styles/index.css'
+    
+    const hello = () => console.log(`It works!`)
+    
+    hello()
+    ```
+    
+4. Agora podemos passar para a instalação dos pacotes necessários. Vamos instalar todos como dependências de desenvolvimento:
+    
+    ```jsx
+    npm i -D webpack webpack-cli @babel/core @babel/preset-env babel-loader style-loader css-loader
+    ```
+    
+5. Com tudo instalado, vamos primeiro configurar o Babel:
+    
+    ```jsx
+    // babel.config.js
+    
+    module.exports = {
+      presets: [
+        ['@babel/preset-env']
+      ]
+    }
+    ```
+    
+6. Agora é a vez de configurar o Webpack:
+    
+    ```jsx
+    // webpack.config.js
+    
+    module.exports = {
+      entry: {
+        index: './src/index.js'
+      },
+      mode: 'production',
+      module: {
+        rules: [{
+          test: /\.css$/,
+          use: ['style-loader', 'css-loader']
+        }, {
+          test: /.js$/,
+          use: ['babel-loader']
+        }]
+      },
+      output: {
+        filename: '[name].min.js'
+      }
+    }
+    ```
+    
+7. Com tudo pronto, vamos criar um script para executar o webpack:
+    
+    ```jsx
+    // package.json
+    
+    // ...
+    	"scripts": {
+        "build": "webpack"
+      },
+    // ...
+    ```
+    
+8. E então rodar o script:
+    
+    ```jsx
+    npm run build
+    ```
+    
+9. Com o bundle “index.min.js” criado, resta apenas criar a página “index.html” e incluir a saída do webpack nela:
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Webpack Project</title>
+</head>
+
+<body>
+  <img src="https://webpack.js.org/icon-square-small.85ba630cf0c5f29ae3e3.svg" alt="Webpack" height="128" width="128">
+  <h1>It works! 🤘</h1>
+  <div>You're ready to start working with Webpack and Babel.</div>
+  <div>Edit this page on
+    <pre>./dist/index.html</pre>.
+  </div>
+  <div>Edit styles on
+    <pre>./src/styles/index.css</pre>.
+  </div>
+  <div>Add javascript on
+    <pre>./src/index.js</pre>.
+  </div>
+  <script src="index.min.js"></script>
+</body>
+
+</html>
