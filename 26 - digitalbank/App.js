@@ -1,29 +1,56 @@
-const Account = require("./Account")
 const User = require("./User")
+const Loan = require("./Loan")
 
-module.export = class App{
+module.exports = class App{
     
-    static #dataBaseAccount = []
+    static #dataBase = []
     
-    constructor(){
-
+    static findUser(email){
+        return this.#dataBase.find((el) => el.email === email)
     }
 
-    static #findUser(email){
-        return this.#dataBaseAccount.find((el) => el.userOwner.email === email)
+    static getDataBase(){
+        return this.#dataBase
     }
 
-    static #createUser(fullname, email){
-        if (!this.#findUser(email)){
-            this.#createUser(fullname, email)
+    static createUser(fullname, email){
+        if (!this.findUser(email)){
+            this.#dataBase.push(new User(fullname, email))
         }else{
             console.log("email já está sendo utilizado por outro usuário.")
         }
     }
 
-    static createAccount(user){       
-        this.#dataBaseAccount.push(new Account(user))
+    static doDeposit(email, amount){
+        const user = this.findUser(email)
+        if (!this.findUser(email)){
+            console.log("Usuário não encontrado.")
+            return
+        }
+        user.account.doDeposit(amount)
     }
+
+    static doTransfer(emailFrom, emailTo, amount){
+        const userFrom = this.findUser(emailFrom)
+        const userTo = this.findUser(emailTo)
+        if (!userFrom || !userTo){
+            console.log("Usuário não encontrado.")
+            return
+        }
+        userFrom.account.doTransfer(userFrom, userTo, amount)
+    }
+
+    static doLoan(email, amount, installmentsQuantity){
+        const user = this.findUser(email)
+        if (!user){
+            console.log("Usuário não encontrado.")
+            return
+        }
+        user.account.doLoan(amount, installmentsQuantity)
+    }
+
+    static changeLoanFee(newFeePercentage) {
+        Loan.fee = newFeePercentage
+    }
+
 }
-
-

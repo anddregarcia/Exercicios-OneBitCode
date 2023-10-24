@@ -2,16 +2,16 @@ const Account = require("./Account")
 
 module.exports = class User{
 
-    #account
+    account
 
     constructor(fullName, email){
         this.fullName = fullName
         this.email = email
-        this.#account = new Account(this)
+        this.account = new Account(this)
     }
 
     get account(){
-        return this.#account
+        return this.account
     }
 
 }
