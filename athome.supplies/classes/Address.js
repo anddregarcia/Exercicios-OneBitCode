@@ -1,9 +1,9 @@
 module.exports = class Address {
-    constructor(street, number, neighborhood, city){
+    constructor(params){//(street, number, neighborhood, city){
         this.id = 0
-        this.street = street 
-        this.number = number
-        this.neighborhood = neighborhood
-        this.city = city
+        this.street = params.street 
+        this.number = params.number
+        this.neighborhood = params.neighborhood
+        this.city = params.city
     }
 }

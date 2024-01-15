@@ -1,6 +1,6 @@
 module.exports = class Country {
-    constructor(name){
+    constructor(params){//(name){
         this.id = 0
-        this.name = name
+        this.name = params.name
     }
 }

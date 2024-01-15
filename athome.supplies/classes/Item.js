@@ -1,7 +1,7 @@
 module.exports = class Item {
-    constructor(name, categoriesList){
+    constructor(params){//(name, categoriesList){
         this.id = 0
-        this.name = name
-        this.categoriesList = categoriesList
+        this.name = params.name
+        this.categoriesList = params.categoriesList
     }
 }

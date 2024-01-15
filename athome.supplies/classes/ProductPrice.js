@@ -1,10 +1,10 @@
 module.exports = class ProductPrice {
-    constructor(product, value, quantity, date, shop){
+    constructor(params){//(product, value, quantity, date, shop){
         this.id = 0
-        this.product = product
-        this.value = value
-        this.quantity = quantity
-        this.date = date
-        this.shop = shop
+        this.product = params.product
+        this.value = params.value
+        this.quantity = params.quantity
+        this.date = params.date
+        this.shop = params.shop
     }
 }

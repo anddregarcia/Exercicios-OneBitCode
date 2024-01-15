@@ -1,0 +1,1007 @@
+{
+  "Address": [
+    {
+      "id": 1,
+      "street": "",
+      "number": "",
+      "neighborhood": "Centro",
+      "city": {
+        "id": 1,
+        "name": "Piracicaba",
+        "state": {
+          "id": 1,
+          "name": "São Paulo",
+          "country": {
+            "id": 1,
+            "name": "Brasil"
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "street": "",
+      "number": "",
+      "neighborhood": "Vila Rezende",
+      "city": {
+        "id": 1,
+        "name": "Piracicaba",
+        "state": {
+          "id": 1,
+          "name": "São Paulo",
+          "country": {
+            "id": 1,
+            "name": "Brasil"
+          }
+        }
+      }
+    }
+  ],
+  "Category": [
+    {
+      "id": 1,
+      "name": "Comida",
+      "itemsList": [
+        {
+          "id": 0,
+          "name": "arroz",
+          "categoriesList": [
+            null,
+            {
+              "id": 0,
+              "name": "Almoço/Janta",
+              "itemsList": [
+                null,
+                {
+                  "id": 0,
+                  "name": "feijao",
+                  "categoriesList": [
+                    null,
+                    null
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        null
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Almoço/Janta",
+      "itemsList": [
+        {
+          "id": 0,
+          "name": "arroz",
+          "categoriesList": [
+            {
+              "id": 1,
+              "name": "Comida",
+              "itemsList": [
+                null,
+                {
+                  "id": 0,
+                  "name": "feijao",
+                  "categoriesList": [
+                    null,
+                    null
+                  ]
+                }
+              ]
+            },
+            null
+          ]
+        },
+        null
+      ]
+    }
+  ],
+  "City": [
+    {
+      "id": 1,
+      "name": "Piracicaba",
+      "state": {
+        "id": 1,
+        "name": "São Paulo",
+        "country": {
+          "id": 1,
+          "name": "Brasil"
+        }
+      }
+    }
+  ],
+  "Country": [
+    {
+      "id": 1,
+      "name": "Brasil"
+    }
+  ],
+  "Item": [
+    {
+      "id": 1,
+      "name": "arroz",
+      "categoriesList": [
+        {
+          "id": 1,
+          "name": "Comida",
+          "itemsList": [
+            null,
+            {
+              "id": 0,
+              "name": "feijao",
+              "categoriesList": [
+                null,
+                {
+                  "id": 2,
+                  "name": "Almoço/Janta",
+                  "itemsList": [
+                    null,
+                    null
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        null
+      ]
+    },
+    {
+      "id": 2,
+      "name": "feijao",
+      "categoriesList": [
+        {
+          "id": 1,
+          "name": "Comida",
+          "itemsList": [
+            {
+              "id": 1,
+              "name": "arroz",
+              "categoriesList": [
+                null,
+                {
+                  "id": 2,
+                  "name": "Almoço/Janta",
+                  "itemsList": [
+                    null,
+                    null
+                  ]
+                }
+              ]
+            },
+            null
+          ]
+        },
+        null
+      ]
+    },
+    {
+      "id": 3,
+      "name": "bolacha"
+    }
+  ],
+  "Market": [
+    {
+      "id": 1,
+      "name": "Assaí",
+      "address": {
+        "id": 1,
+        "street": "",
+        "number": "",
+        "neighborhood": "Centro",
+        "city": {
+          "id": 1,
+          "name": "Piracicaba",
+          "state": {
+            "id": 1,
+            "name": "São Paulo",
+            "country": {
+              "id": 1,
+              "name": "Brasil"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "name": "Pague Menos",
+      "address": {
+        "id": 2,
+        "street": "",
+        "number": "",
+        "neighborhood": "Vila Rezende",
+        "city": {
+          "id": 1,
+          "name": "Piracicaba",
+          "state": {
+            "id": 1,
+            "name": "São Paulo",
+            "country": {
+              "id": 1,
+              "name": "Brasil"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "Pantry": [
+    {
+      "id": 1,
+      "productPantryList": [
+        {
+          "id": 1,
+          "product": {
+            "id": 1,
+            "name": "arroz",
+            "categoriesList": [
+              {
+                "id": 1,
+                "name": "Comida",
+                "itemsList": [
+                  null,
+                  {
+                    "id": 2,
+                    "name": "feijao",
+                    "categoriesList": [
+                      null,
+                      {
+                        "id": 2,
+                        "name": "Almoço/Janta",
+                        "itemsList": [
+                          null,
+                          null
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              null
+            ]
+          },
+          "quantity": 1,
+          "musthave": true
+        },
+        {
+          "id": 2,
+          "quantity": 1,
+          "musthave": true
+        }
+      ]
+    }
+  ],
+  "Product": [
+    {
+      "id": 1,
+      "name": "arroz",
+      "brand": "broto legal",
+      "volume": 1,
+      "unitMeasurement": {
+        "id": 1,
+        "name": "Pacote Kg",
+        "abbreviation": "PctKg"
+      },
+      "item": {
+        "id": 1,
+        "name": "arroz",
+        "categoriesList": [
+          {
+            "id": 1,
+            "name": "Comida",
+            "itemsList": [
+              null,
+              {
+                "id": 2,
+                "name": "feijao",
+                "categoriesList": [
+                  null,
+                  {
+                    "id": 2,
+                    "name": "Almoço/Janta",
+                    "itemsList": [
+                      null,
+                      null
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          null
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "name": "feijao",
+      "brand": "broto legal",
+      "volume": 1,
+      "unitMeasurement": {
+        "id": 1,
+        "name": "Pacote Kg",
+        "abbreviation": "PctKg"
+      },
+      "item": {
+        "id": 2,
+        "name": "feijao",
+        "categoriesList": [
+          {
+            "id": 1,
+            "name": "Comida",
+            "itemsList": [
+              {
+                "id": 1,
+                "name": "arroz",
+                "categoriesList": [
+                  null,
+                  {
+                    "id": 2,
+                    "name": "Almoço/Janta",
+                    "itemsList": [
+                      null,
+                      null
+                    ]
+                  }
+                ]
+              },
+              null
+            ]
+          },
+          null
+        ]
+      }
+    }
+  ],
+  "ProductPantry": [
+    {
+      "id": 1,
+      "product": {
+        "id": 1,
+        "name": "arroz",
+        "categoriesList": [
+          {
+            "id": 1,
+            "name": "Comida",
+            "itemsList": [
+              null,
+              {
+                "id": 2,
+                "name": "feijao",
+                "categoriesList": [
+                  null,
+                  {
+                    "id": 2,
+                    "name": "Almoço/Janta",
+                    "itemsList": [
+                      null,
+                      null
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          null
+        ]
+      },
+      "quantity": 1,
+      "musthave": true,
+      "pantry": {
+        "id": 0,
+        "productPantryList": []
+      }
+    },
+    {
+      "id": 2,
+      "product": {
+        "id": 2,
+        "name": "feijao",
+        "categoriesList": [
+          {
+            "id": 1,
+            "name": "Comida",
+            "itemsList": [
+              {
+                "id": 1,
+                "name": "arroz",
+                "categoriesList": [
+                  null,
+                  {
+                    "id": 2,
+                    "name": "Almoço/Janta",
+                    "itemsList": [
+                      null,
+                      null
+                    ]
+                  }
+                ]
+              },
+              null
+            ]
+          },
+          null
+        ]
+      },
+      "quantity": 1,
+      "musthave": true,
+      "pantry": {
+        "id": 0,
+        "productPantryList": []
+      }
+    }
+  ],
+  "ProductPrice": [
+    {
+      "id": 1,
+      "product": {
+        "id": 1,
+        "name": "arroz",
+        "brand": "broto legal",
+        "volume": 1,
+        "unitMeasurement": {
+          "id": 1,
+          "name": "Pacote Kg",
+          "abbreviation": "PctKg"
+        },
+        "item": {
+          "id": 1,
+          "name": "arroz",
+          "categoriesList": [
+            {
+              "id": 1,
+              "name": "Comida",
+              "itemsList": [
+                null,
+                {
+                  "id": 2,
+                  "name": "feijao",
+                  "categoriesList": [
+                    null,
+                    {
+                      "id": 2,
+                      "name": "Almoço/Janta",
+                      "itemsList": [
+                        null,
+                        null
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            null
+          ]
+        }
+      },
+      "value": 5.8,
+      "quantity": 2,
+      "date": "2023-12-05T12:38:54.312Z",
+      "shop": {
+        "id": 0,
+        "productList": [
+          null,
+          {
+            "id": 0,
+            "product": {
+              "id": 2,
+              "name": "feijao",
+              "brand": "broto legal",
+              "volume": 1
+            },
+            "value": 8.8,
+            "quantity": 1,
+            "date": "2023-12-05T12:38:54.312Z"
+          }
+        ],
+        "market": {
+          "id": 1,
+          "name": "Assaí",
+          "address": {
+            "id": 1,
+            "street": "",
+            "number": "",
+            "neighborhood": "Centro",
+            "city": {
+              "id": 1,
+              "name": "Piracicaba",
+              "state": {
+                "id": 1,
+                "name": "São Paulo",
+                "country": {
+                  "id": 1,
+                  "name": "Brasil"
+                }
+              }
+            }
+          }
+        },
+        "date": "2023-12-05T12:38:54.312Z"
+      }
+    },
+    {
+      "id": 2,
+      "product": {
+        "id": 1,
+        "name": "arroz",
+        "brand": "broto legal",
+        "volume": 1,
+        "unitMeasurement": {
+          "id": 1,
+          "name": "Pacote Kg",
+          "abbreviation": "PctKg"
+        },
+        "item": {
+          "id": 1,
+          "name": "arroz",
+          "categoriesList": [
+            {
+              "id": 1,
+              "name": "Comida",
+              "itemsList": [
+                null,
+                {
+                  "id": 2,
+                  "name": "feijao",
+                  "categoriesList": [
+                    null,
+                    {
+                      "id": 2,
+                      "name": "Almoço/Janta",
+                      "itemsList": [
+                        null,
+                        null
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            null
+          ]
+        }
+      },
+      "value": 6.8,
+      "quantity": 1,
+      "date": "2023-12-05T12:38:54.312Z",
+      "shop": {
+        "id": 0,
+        "productList": [
+          null,
+          {
+            "id": 0,
+            "product": {
+              "id": 2,
+              "name": "feijao",
+              "brand": "broto legal",
+              "volume": 1
+            },
+            "value": 7.8,
+            "quantity": 2,
+            "date": "2023-12-05T12:38:54.312Z"
+          }
+        ],
+        "market": {
+          "id": 2,
+          "name": "Pague Menos",
+          "address": {
+            "id": 2,
+            "street": "",
+            "number": "",
+            "neighborhood": "Vila Rezende",
+            "city": {
+              "id": 1,
+              "name": "Piracicaba",
+              "state": {
+                "id": 1,
+                "name": "São Paulo",
+                "country": {
+                  "id": 1,
+                  "name": "Brasil"
+                }
+              }
+            }
+          }
+        },
+        "date": "2023-12-05T12:38:54.312Z"
+      }
+    },
+    {
+      "id": 3,
+      "product": {
+        "id": 2,
+        "name": "feijao",
+        "brand": "broto legal",
+        "volume": 1,
+        "unitMeasurement": {
+          "id": 1,
+          "name": "Pacote Kg",
+          "abbreviation": "PctKg"
+        },
+        "item": {
+          "id": 2,
+          "name": "feijao",
+          "categoriesList": [
+            {
+              "id": 1,
+              "name": "Comida",
+              "itemsList": [
+                {
+                  "id": 1,
+                  "name": "arroz",
+                  "categoriesList": [
+                    null,
+                    {
+                      "id": 2,
+                      "name": "Almoço/Janta",
+                      "itemsList": [
+                        null,
+                        null
+                      ]
+                    }
+                  ]
+                },
+                null
+              ]
+            },
+            null
+          ]
+        }
+      },
+      "value": 8.8,
+      "quantity": 1,
+      "date": "2023-12-05T12:38:54.312Z",
+      "shop": {
+        "id": 0,
+        "productList": [
+          {
+            "id": 1,
+            "product": {
+              "id": 1,
+              "name": "arroz",
+              "brand": "broto legal",
+              "volume": 1
+            },
+            "value": 5.8,
+            "quantity": 2,
+            "date": "2023-12-05T12:38:54.312Z"
+          },
+          null
+        ],
+        "market": {
+          "id": 1,
+          "name": "Assaí",
+          "address": {
+            "id": 1,
+            "street": "",
+            "number": "",
+            "neighborhood": "Centro",
+            "city": {
+              "id": 1,
+              "name": "Piracicaba",
+              "state": {
+                "id": 1,
+                "name": "São Paulo",
+                "country": {
+                  "id": 1,
+                  "name": "Brasil"
+                }
+              }
+            }
+          }
+        },
+        "date": "2023-12-05T12:38:54.312Z"
+      }
+    },
+    {
+      "id": 4,
+      "product": {
+        "id": 2,
+        "name": "feijao",
+        "brand": "broto legal",
+        "volume": 1,
+        "unitMeasurement": {
+          "id": 1,
+          "name": "Pacote Kg",
+          "abbreviation": "PctKg"
+        },
+        "item": {
+          "id": 2,
+          "name": "feijao",
+          "categoriesList": [
+            {
+              "id": 1,
+              "name": "Comida",
+              "itemsList": [
+                {
+                  "id": 1,
+                  "name": "arroz",
+                  "categoriesList": [
+                    null,
+                    {
+                      "id": 2,
+                      "name": "Almoço/Janta",
+                      "itemsList": [
+                        null,
+                        null
+                      ]
+                    }
+                  ]
+                },
+                null
+              ]
+            },
+            null
+          ]
+        }
+      },
+      "value": 7.8,
+      "quantity": 2,
+      "date": "2023-12-05T12:38:54.312Z",
+      "shop": {
+        "id": 0,
+        "productList": [
+          {
+            "id": 2,
+            "product": {
+              "id": 1,
+              "name": "arroz",
+              "brand": "broto legal",
+              "volume": 1
+            },
+            "value": 6.8,
+            "quantity": 1,
+            "date": "2023-12-05T12:38:54.312Z"
+          },
+          null
+        ],
+        "market": {
+          "id": 2,
+          "name": "Pague Menos",
+          "address": {
+            "id": 2,
+            "street": "",
+            "number": "",
+            "neighborhood": "Vila Rezende",
+            "city": {
+              "id": 1,
+              "name": "Piracicaba",
+              "state": {
+                "id": 1,
+                "name": "São Paulo",
+                "country": {
+                  "id": 1,
+                  "name": "Brasil"
+                }
+              }
+            }
+          }
+        },
+        "date": "2023-12-05T12:38:54.312Z"
+      }
+    }
+  ],
+  "Shop": [
+    {
+      "id": 1,
+      "productList": [
+        {
+          "id": 1,
+          "product": {
+            "id": 1,
+            "name": "arroz",
+            "brand": "broto legal",
+            "volume": 1,
+            "unitMeasurement": {
+              "id": 1,
+              "name": "Pacote Kg",
+              "abbreviation": "PctKg"
+            },
+            "item": {
+              "id": 1,
+              "name": "arroz",
+              "categoriesList": [
+                {
+                  "id": 1,
+                  "name": "Comida",
+                  "itemsList": [
+                    null,
+                    {
+                      "id": 2,
+                      "name": "feijao",
+                      "categoriesList": [
+                        null,
+                        {
+                          "id": 2,
+                          "name": "Almoço/Janta",
+                          "itemsList": [
+                            null,
+                            null
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                null
+              ]
+            }
+          },
+          "value": 5.8,
+          "quantity": 2,
+          "date": "2023-12-05T12:38:54.312Z"
+        },
+        {
+          "id": 3,
+          "product": {
+            "id": 2,
+            "name": "feijao",
+            "brand": "broto legal",
+            "volume": 1
+          },
+          "value": 8.8,
+          "quantity": 1,
+          "date": "2023-12-05T12:38:54.312Z"
+        }
+      ],
+      "market": {
+        "id": 1,
+        "name": "Assaí",
+        "address": {
+          "id": 1,
+          "street": "",
+          "number": "",
+          "neighborhood": "Centro",
+          "city": {
+            "id": 1,
+            "name": "Piracicaba",
+            "state": {
+              "id": 1,
+              "name": "São Paulo",
+              "country": {
+                "id": 1,
+                "name": "Brasil"
+              }
+            }
+          }
+        }
+      },
+      "date": "2023-12-05T12:38:54.312Z"
+    },
+    {
+      "id": 2,
+      "productList": [
+        {
+          "id": 2,
+          "product": {
+            "id": 1,
+            "name": "arroz",
+            "brand": "broto legal",
+            "volume": 1,
+            "unitMeasurement": {
+              "id": 1,
+              "name": "Pacote Kg",
+              "abbreviation": "PctKg"
+            },
+            "item": {
+              "id": 1,
+              "name": "arroz",
+              "categoriesList": [
+                {
+                  "id": 1,
+                  "name": "Comida",
+                  "itemsList": [
+                    null,
+                    {
+                      "id": 2,
+                      "name": "feijao",
+                      "categoriesList": [
+                        null,
+                        {
+                          "id": 2,
+                          "name": "Almoço/Janta",
+                          "itemsList": [
+                            null,
+                            null
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                null
+              ]
+            }
+          },
+          "value": 6.8,
+          "quantity": 1,
+          "date": "2023-12-05T12:38:54.312Z"
+        },
+        {
+          "id": 4,
+          "product": {
+            "id": 2,
+            "name": "feijao",
+            "brand": "broto legal",
+            "volume": 1
+          },
+          "value": 7.8,
+          "quantity": 2,
+          "date": "2023-12-05T12:38:54.312Z"
+        }
+      ],
+      "market": {
+        "id": 2,
+        "name": "Pague Menos",
+        "address": {
+          "id": 2,
+          "street": "",
+          "number": "",
+          "neighborhood": "Vila Rezende",
+          "city": {
+            "id": 1,
+            "name": "Piracicaba",
+            "state": {
+              "id": 1,
+              "name": "São Paulo",
+              "country": {
+                "id": 1,
+                "name": "Brasil"
+              }
+            }
+          }
+        }
+      },
+      "date": "2023-12-05T12:38:54.312Z"
+    }
+  ],
+  "State": [
+    {
+      "id": 1,
+      "name": "São Paulo",
+      "country": {
+        "id": 1,
+        "name": "Brasil"
+      }
+    }
+  ],
+  "UnitMeasurement": [
+    {
+      "id": 1,
+      "name": "Pacote Kg",
+      "abbreviation": "PctKg"
+    },
+    {
+      "id": 2,
+      "name": "Pacote Kg",
+      "abbreviation": "PctKg"
+    },
+    {
+      "id": 3,
+      "name": "Pacote Kg",
+      "abbreviation": "PctKg"
+    },
+    {
+      "id": 4,
+      "name": "Pacote Kg",
+      "abbreviation": "PctKg"
+    },
+    {
+      "id": 5,
+      "name": "Pacote Kg",
+      "abbreviation": "PctKg"
+    },
+    {
+      "id": 6,
+      "name": "Pacote Kg",
+      "abbreviation": "PctKg"
+    },
+    {
+      "id": 7,
+      "name": "Pacote Kg",
+      "abbreviation": "PctKg"
+    }
+  ]
+}

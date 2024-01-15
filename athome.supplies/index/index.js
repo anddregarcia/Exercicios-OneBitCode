@@ -13,6 +13,32 @@ const State = require("../classes/state")
 const UnitMeasurement = require("../classes/unitMeasurement")
 const Repository = require("../repository/repository")
 
+/*//não consegui fazer isso funcionar... as promises eram todas executadas no fim da execução, e os arrays não eram carregados
+async function LoadData(){
+    return await Repository.LoadArrayDataBase()
+}
+
+const p = LoadData()
+
+Promise.all([p])
+*/
+
+//
+
+/*console.log(Repository.GetTable(Address.name))
+console.log(Repository.GetTable(Category.name))
+console.log(Repository.GetTable(City.name))
+console.log(Repository.GetTable(Country.name))
+console.log(Repository.GetTable(Item.name))
+console.log(Repository.GetTable(Market.name))
+console.log(Repository.GetTable(Pantry.name))
+console.log(Repository.GetTable(Product.name))
+console.log(Repository.GetTable(ProductPantry.name))
+console.log(Repository.GetTable(ProductPrice.name))
+console.log(Repository.GetTable(Shop.name))
+console.log(Repository.GetTable(State.name))
+console.log(Repository.GetTable(UnitMeasurement.name))
+
 const brasil = new Country("Brasil")
 const saoPaulo = new State("São Paulo", brasil)
 const piracicaba = new City("Piracicaba", saoPaulo)
@@ -22,17 +48,19 @@ const vilaRezende = new Address("", "", "Vila Rezende", piracicaba)
 
 const assai = new Market("Assaí", centro)
 const pagueMenos = new Market("Pague Menos", vilaRezende)
-
-const pacoteKg = new UnitMeasurement("Pacote Kg", "PctKg")
-
+*/
+const pacoteKg = new UnitMeasurement({name: "Pacote Kg", abbreviation: "PctKg"})
+/*
 const comida = new Category("Comida")
 const almocoEjanta = new Category("Almoço/Janta")
 
+const brotoLegal = new Brand("broto legal", false)
+
 const arroz = new Item("arroz", [comida, almocoEjanta])
-const arrozBrotoLegal = new Product("arroz", "broto legal", 1, pacoteKg, arroz)
+const arrozBrotoLegal = new Product("arroz", brotoLegal, 1, pacoteKg, arroz, true)
 
 const feijao = new Item("feijao", [comida, almocoEjanta])
-const feijaoBrotoLegal = new Product("feijao", "broto legal", 1, pacoteKg, feijao)
+const feijaoBrotoLegal = new Product("feijao", brotoLegal, 1, pacoteKg, feijao, true)
 
 comida.itemsList.push(arroz)
 comida.itemsList.push(feijao)
@@ -60,8 +88,8 @@ Repository.Add(piracicaba)
 Repository.Add(centro)
 Repository.Add(vilaRezende)
 Repository.Add(assai)
-Repository.Add(pagueMenos)
-Repository.Add(pacoteKg)
+Repository.Add(pagueMenos)*/
+Repository.Add(pacoteKg)/*
 Repository.Add(comida)
 Repository.Add(almocoEjanta)
 Repository.Add(arroz)
@@ -102,9 +130,8 @@ Repository.Add(bolacha)
 bolacha.name = "Bolacha"
 Repository.Update(bolacha)
 Repository.Delete(bolacha)
-
-
-console.log(Repository.GetTable(Address.name))
+*/
+/*console.log(Repository.GetTable(Address.name))
 console.log(Repository.GetTable(Category.name))
 console.log(Repository.GetTable(City.name))
 console.log(Repository.GetTable(Country.name))
@@ -115,5 +142,7 @@ console.log(Repository.GetTable(Product.name))
 console.log(Repository.GetTable(ProductPantry.name))
 console.log(Repository.GetTable(ProductPrice.name))
 console.log(Repository.GetTable(Shop.name))
-console.log(Repository.GetTable(State.name))
+console.log(Repository.GetTable(State.name))*/
 console.log(Repository.GetTable(UnitMeasurement.name))
+
+console.log(Repository.ArrayDatabase)

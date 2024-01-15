@@ -1,6 +1,6 @@
 module.exports = class Pantry {
-    constructor(productList){
+    constructor(params){//(productList){
         this.id = 0
-        this.productPantryList = productList
+        this.productPantryList = params.productList
     }
 }

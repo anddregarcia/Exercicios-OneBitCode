@@ -1,7 +1,7 @@
 module.exports = class UnitMeasurement {
-    constructor(name, abbreviation){
-        this.id = 0
-        this.name = name
-        this.abbreviation = abbreviation
+    constructor(params){//name, abbreviation){
+        this.id = params.id ? params.id : 0
+        this.name = params.name
+        this.abbreviation = params.abbreviation
     }
 }

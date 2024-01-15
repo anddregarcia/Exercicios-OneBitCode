@@ -1,7 +1,7 @@
 module.exports = class City {
-    constructor(name, state){
+    constructor(params){//(name, state){
         this.id = 0
-        this.name = name
-        this.state = state
+        this.name = params.name
+        this.state = params.state
     }
 }

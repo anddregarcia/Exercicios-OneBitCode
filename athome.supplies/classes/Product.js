@@ -1,10 +1,11 @@
 module.exports = class Product {
-    constructor(name, brand, volume, unitMeasurement, item){
+    constructor(params){//(name, brand, volume, unitMeasurement, item){
         this.id = 0
-        this.name = name
-        this.brand = brand
-        this.volume = volume
-        this.unitMeasurement = unitMeasurement
-        this.item = item
+        this.name = params.name
+        this.brand = params.brand
+        this.volume = params.volume
+        this.unitMeasurement = params.unitMeasurement
+        this.item = params.item
+        this.isVegan = params.isVegan
     }
 }
