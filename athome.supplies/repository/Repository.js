@@ -1,4 +1,5 @@
 const Address       = require("../classes/Address")
+const Brand         = require("../classes/Brand")
 const Category      = require("../classes/Category")
 const City          = require("../classes/City")
 const Country       = require("../classes/Country")
@@ -55,6 +56,7 @@ module.exports = class Repository {
         {classInstace: Address         , class: Address.name         , table: this.#ADDRESS},
         {classInstace: Brand           , class: Brand.name           , table: this.#BRAND},
         {classInstace: Category        , class: Category.name        , table: this.#CATEGORY},
+        {classInstace: City            , class: City.name            , table: this.#CITY},
         {classInstace: Country         , class: Country.name         , table: this.#COUNTRY},
         {classInstace: Item            , class: Item.name            , table: this.#ITEM},
         {classInstace: Market          , class: Market.name          , table: this.#MARKET},
