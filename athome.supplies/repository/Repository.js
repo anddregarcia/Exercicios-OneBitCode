@@ -1,17 +1,17 @@
-const Address       = require("../classes/Address")
-const Brand         = require("../classes/Brand")
-const Category      = require("../classes/Category")
-const City          = require("../classes/City")
-const Country       = require("../classes/Country")
-const Item          = require("../classes/Item")
-const Market        = require("../classes/Market")
-const ProductPantry = require("../classes/ProductPantry")
-const Product       = require("../classes/product")
-const ProductPrice  = require("../classes/ProductPrice")
-const Shop          = require("../classes/Shop")
-const State         = require("../classes/State")
-const UnitMeasurement = require("../classes/UnitMeasurement")
-const Pantry = require("../classes/Pantry")
+const Address       = require("../src/model/AddressModel")
+const Brand         = require("../src/model/BrandModel")
+const Category      = require("../src/model/CategoryModel")
+const City          = require("../src/model/CityModel")
+const Country       = require("../src/model/CountryModel")
+const Item          = require("../src/model/ItemModel")
+const Market        = require("../src/model/MarketModel")
+const ProductPantry = require("../src/model/ProductPantryModel")
+const Product       = require("../src/model/ProductModel")
+const ProductPrice  = require("../src/model/ProductPriceModel")
+const Shop          = require("../src/model/ShopModel")
+const State         = require("../src/model/StateModel")
+const UnitMeasurement = require("../src/model/UnitMeasurementModel")
+const Pantry = require("../src/model/PantryModel")
 
 module.exports = class Repository {
 
@@ -71,6 +71,48 @@ module.exports = class Repository {
 
     static #databasetype = this.#jsonServerType
 
+    static Get(objectClassName, id){
+        if(this.#databasetype===this.#arrayType){
+            return this.#GetArray(objectClassName, id)
+        }
+        else if(this.#databasetype===this.#jsonServerType){
+            return this.#GetJsonServer(objectClassName, id)
+        }
+
+        return null
+    }
+    
+    static Add(object){
+        if(this.#databasetype===this.#arrayType){
+            this.#AddArray(object)
+        }
+        else if(this.#databasetype===this.#jsonServerType){
+            this.#AddJsonServer(object)
+        }
+
+        return object
+    }
+
+    static Update(object){
+        if(this.#databasetype===this.#arrayType){
+            this.#UpdateArray(object)
+        }
+        else if(this.#databasetype===this.#jsonServerType){
+            this.#UpdateJsonServer(object)
+        }
+
+        return object
+    }
+
+    static Delete(object){
+        if(this.#databasetype===this.#arrayType){
+            this.#DeleteArray(object)
+        }
+        else if(this.#databasetype===this.#jsonServerType){
+            this.#DeleteJsonServer(object)
+        }
+    }
+
     static async #GetJsonServer(objectClassName, id){
         
         const entityRef = this.#arrays.find((el) => el.class === objectClassName)
@@ -92,17 +134,6 @@ module.exports = class Repository {
         const reg = arr.find((el) => el.id === id)
 
         return reg
-    }
-
-    static Get(objectClassName, id){
-        if(this.#databasetype===this.#arrayType){
-            return this.#GetArray(objectClassName, id)
-        }
-        else if(this.#databasetype===this.#jsonServerType){
-            return this.#GetJsonServer(objectClassName, id)
-        }
-
-        return null
     }
 
     static async #AddJsonServer(object){
@@ -142,17 +173,6 @@ module.exports = class Repository {
 
         return object
     }
-    
-    static Add(object){
-        if(this.#databasetype===this.#arrayType){
-            this.#AddArray(object)
-        }
-        else if(this.#databasetype===this.#jsonServerType){
-            this.#AddJsonServer(object)
-        }
-
-        return object
-    }
 
     static async #UpdateJsonServer(object){
         let objClassName = object.constructor.name
@@ -179,17 +199,6 @@ module.exports = class Repository {
         return object
     }
 
-    static Update(object){
-        if(this.#databasetype===this.#arrayType){
-            this.#UpdateArray(object)
-        }
-        else if(this.#databasetype===this.#jsonServerType){
-            this.#UpdateJsonServer(object)
-        }
-
-        return object
-    }
-
     static async #DeleteJsonServer(object){
         let objClassName = object.constructor.name
         let url = this.#url + objClassName
@@ -209,15 +218,6 @@ module.exports = class Repository {
         const idx = arr.findIndex((el) => el.id === object.id)
 
         arr.splice(idx, 1)
-    }
-
-    static Delete(object){
-        if(this.#databasetype===this.#arrayType){
-            this.#DeleteArray(object)
-        }
-        else if(this.#databasetype===this.#jsonServerType){
-            this.#DeleteJsonServer(object)
-        }
     }
 
     static #getTable(objectClassName){

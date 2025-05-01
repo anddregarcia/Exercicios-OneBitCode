@@ -148,7 +148,7 @@ function montarEscalaMaior(index, grau, notaAnterior, tipo)
 //harmônico completo
 function carregarEscalaMaiorDasQuintas(escala)
 {    
-    let ch = escalaMaiorC //se não for passando um campo harmônico, a função assume o campo harmônico de Dó como inicial
+    let ch = escalaMaiorC //se não for passado um campo harmônico, a função assume o campo harmônico de Dó como inicial
     
     if (escala)
     {
