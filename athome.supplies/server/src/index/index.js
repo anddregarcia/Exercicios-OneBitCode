@@ -11,7 +11,7 @@ const ProductPrice = require("../classes/ProductPrice")
 const Shop = require("../classes/Shop")
 const State = require("../classes/State")
 const UnitMeasurement = require("../classes/UnitMeasurement")
-const Repository = require("../repository/Repository")
+const Repository = require("../../../repository/Repository")
 
 /*//não consegui fazer isso funcionar... as promises eram todas executadas no fim da execução, e os arrays não eram carregados
 async function LoadData(){

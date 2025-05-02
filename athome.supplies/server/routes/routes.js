@@ -1,3 +1,5 @@
+//Definição das rotas Express
+
 const express = require('express')
 
 const router = express.Router()
