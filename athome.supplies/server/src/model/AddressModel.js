@@ -1,4 +1,4 @@
-module.exports = class Address {
+class Address {
     constructor(params){//(street, number, neighborhood, city){
         this.id = 0
         this.street = params.street 
@@ -7,3 +7,5 @@ module.exports = class Address {
         this.city = params.city
     }
 }
+
+export default Address;
