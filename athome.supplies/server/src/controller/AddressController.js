@@ -9,3 +9,12 @@ export async function createAddress(req, res) {
     res.status(500).json({ error: 'Erro ao salvar endereço' });
   }
 }
+
+export const getAddress = async (req, res) => {
+  try {
+    const addresses = await Address.find();
+    res.json(addresses);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
