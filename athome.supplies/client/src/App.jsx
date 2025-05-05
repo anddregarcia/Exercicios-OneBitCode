@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import CityForm from './pages/CityForm';
+import StateForm from './pages/StateForm';
+import CountryForm from './pages/CountryForm';
 import AddressForm from './pages/AddressForm';
 import MarketForm from './pages/MarketForm';
 import reactLogo from './assets/react.svg';
@@ -12,6 +15,9 @@ function App() {
   return (
     <Router>
       <Routes>
+        <Route path="/City" element={<CityForm />} />
+        <Route path="/State" element={<StateForm />} />
+        <Route path="/Country" element={<CountryForm />} />
         <Route path="/Address" element={<AddressForm />} />
         <Route path="/Market" element={<MarketForm />} />
       </Routes>

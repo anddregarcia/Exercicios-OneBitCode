@@ -1,15 +1,21 @@
-import { useState } from 'react';
-import axios from 'axios';
+import { useState, useEffect } from 'react';
 
 export default function AddressForm() {
     const [form, setForm] = useState({
         street: '',
         number: '',
         neighborhood: '',
-        city: '',
-        state: '',
-        country: ''
+        city: ''
       });
+
+    const [cities, setCities] = useState([]);
+
+    useEffect(() => {
+      fetch('http://localhost:3001/api/city')
+        .then(res => res.json())
+        .then(data => setCities(data))
+        .catch(() => setCities([]));
+    }, []);
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -43,9 +49,16 @@ export default function AddressForm() {
             <input name="street" placeholder="Rua" onChange={handleChange} />
             <input name="number" placeholder="Número" onChange={handleChange} />
             <input name="neighborhood" placeholder="Bairro" onChange={handleChange} />
-            <input name="city" placeholder="Cidade" onChange={handleChange} />
-            <input name="state" placeholder="Estado" onChange={handleChange} />
-            <input name="country" placeholder="País" onChange={handleChange} />
+            
+            <select name="city" onChange={handleChange}>
+              <option value="">Selecione um cidade</option>
+              {cities.map(city => (
+                <option key={city._id} value={city._id}>
+                  {city.code} - {city.name}
+                </option>
+              ))}
+            </select>
+
             <button type="submit">Cadastrar</button>
           </form>
         </div>

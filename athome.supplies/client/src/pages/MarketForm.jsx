@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 
 export default function MarketForm() {
   const [form, setForm] = useState({
+    code: '',
     name: '',
     address: ''
   });
@@ -45,6 +46,7 @@ export default function MarketForm() {
       <h1>Cadastro de Mercado</h1>
       <form onSubmit={handleSubmit}>
         <input name="name" placeholder="Nome do mercado" onChange={handleChange} />
+        <input name="code" placeholder="Código" onChange={handleChange} />
 
         <select name="address" onChange={handleChange}>
           <option value="">Selecione um endereço</option>

@@ -2,8 +2,11 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 
+import cityRoutes from './src/routes/CityRoutes.js';
+import stateRoutes from './src/routes/StateRoutes.js';
+import countryRoutes from './src/routes/CountryRoutes.js';
 import addressRoutes from './src/routes/AddressRoutes.js';
-import marketRoutes from './src/routes/marketRoutes.js';
+import marketRoutes from './src/routes/MarketRoutes.js';
 
 const app = express();
 app.use(cors({
@@ -12,6 +15,9 @@ app.use(cors({
 
 app.use(express.json());
 
+app.use('/api/city', cityRoutes);
+app.use('/api/state', stateRoutes);
+app.use('/api/country', countryRoutes);
 app.use('/api/address', addressRoutes);
 app.use('/api/market', marketRoutes);
 
