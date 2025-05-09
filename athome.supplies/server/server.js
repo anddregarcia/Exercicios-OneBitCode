@@ -10,6 +10,7 @@ import marketRoutes from './src/routes/MarketRoutes.js';
 import brandRoutes from './src/routes/BrandRoutes.js';
 import unitMeasurementRoutes from './src/routes/UnitMeasurementRoutes.js';
 import categoryRoutes from './src/routes/CategoryRoutes.js';
+import itemRoutes from './src/routes/ItemRoutes.js';
 
 const app = express();
 app.use(cors({
@@ -26,6 +27,7 @@ app.use('/api/market', marketRoutes);
 app.use('/api/brand', brandRoutes);
 app.use('/api/unitMeasurement', unitMeasurementRoutes);
 app.use('/api/category', categoryRoutes);
+app.use('/api/item', itemRoutes);
 
 const PORT = process.env.PORT || 3001
 

@@ -8,6 +8,7 @@ import MarketForm from './pages/MarketForm';
 import BrandForm from './pages/BrandForm';
 import UnitMeasurementForm from './pages/UnitMeasurementForm';
 import CategoryForm from './pages/CategoryForm';
+import ItemForm from './pages/ItemForm';
 import reactLogo from './assets/react.svg';
 import viteLogo from '/vite.svg';
 import './App.css';
@@ -26,6 +27,7 @@ function App() {
         <Route path="/Brand" element={<BrandForm />} />
         <Route path="/UnitMeasurement" element={<UnitMeasurementForm />} />
         <Route path="/Category" element={<CategoryForm />} />
+        <Route path="/Item" element={<ItemForm />} />
       </Routes>
     </Router>
   );
