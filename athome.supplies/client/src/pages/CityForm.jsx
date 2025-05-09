@@ -21,25 +21,25 @@ export default function CityForm() {
     };
   
   const handleSubmit = async (e) => {
-      e.preventDefault();
-      try {
-        const res = await fetch(`http://localhost:3001/api/city`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form)
-        });
-    
-        const data = await res.json().catch(() => ({}));
-        
-        if (res.ok) {
-          alert('Cidade cadastrada com sucesso:\n' + JSON.stringify(data, null, 2));
-        } else {
-          alert('Erro ao cadastrar: ' + res.status);
-        }
-      } catch (err) {
-        alert('Erro de rede');
+    e.preventDefault();
+    try {
+      const res = await fetch(`http://localhost:3001/api/city`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      });
+  
+      const data = await res.json().catch(() => ({}));
+      
+      if (res.ok) {
+        alert('Cidade cadastrada com sucesso:\n' + JSON.stringify(data, null, 2));
+      } else {
+        alert('Erro ao cadastrar: ' + res.status);
       }
-    };
+    } catch (err) {
+      alert('Erro de rede');
+    }
+  };
   
   return (
       <div>

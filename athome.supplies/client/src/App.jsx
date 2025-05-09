@@ -5,6 +5,8 @@ import StateForm from './pages/StateForm';
 import CountryForm from './pages/CountryForm';
 import AddressForm from './pages/AddressForm';
 import MarketForm from './pages/MarketForm';
+import BrandForm from './pages/BrandForm';
+import UnitMeasurementForm from './pages/UnitMeasurementForm';
 import reactLogo from './assets/react.svg';
 import viteLogo from '/vite.svg';
 import './App.css';
@@ -20,6 +22,8 @@ function App() {
         <Route path="/Country" element={<CountryForm />} />
         <Route path="/Address" element={<AddressForm />} />
         <Route path="/Market" element={<MarketForm />} />
+        <Route path="/Brand" element={<BrandForm />} />
+        <Route path="/UnitMeasurement" element={<UnitMeasurementForm />} />
       </Routes>
     </Router>
   );
