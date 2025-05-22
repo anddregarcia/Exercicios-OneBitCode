@@ -12,6 +12,8 @@ import unitMeasurementRoutes from './src/routes/UnitMeasurementRoutes.js';
 import categoryRoutes from './src/routes/CategoryRoutes.js';
 import itemRoutes from './src/routes/ItemRoutes.js';
 import productRoutes from './src/routes/ProductRoutes.js';
+import shopRoutes from './src/routes/ShopRoutes.js';
+import productPriceRoutes from './src/routes/ProductPriceRoutes.js';
 
 const app = express();
 app.use(cors({
@@ -30,6 +32,8 @@ app.use('/api/unitMeasurement', unitMeasurementRoutes);
 app.use('/api/category', categoryRoutes);
 app.use('/api/item', itemRoutes);
 app.use('/api/product', productRoutes);
+app.use('/api/shop', shopRoutes);
+app.use('/api/productPrice', productPriceRoutes);
 
 const PORT = process.env.PORT || 3001
 
