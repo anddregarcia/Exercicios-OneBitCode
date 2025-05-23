@@ -14,6 +14,8 @@ import itemRoutes from './src/routes/ItemRoutes.js';
 import productRoutes from './src/routes/ProductRoutes.js';
 import shopRoutes from './src/routes/ShopRoutes.js';
 import productPriceRoutes from './src/routes/ProductPriceRoutes.js';
+import pantryRoutes from './src/routes/PantryRoutes.js';
+import pantryProductRoutes from './src/routes/PantryProductRoutes.js';
 
 const app = express();
 app.use(cors({
@@ -34,6 +36,9 @@ app.use('/api/item', itemRoutes);
 app.use('/api/product', productRoutes);
 app.use('/api/shop', shopRoutes);
 app.use('/api/productPrice', productPriceRoutes);
+app.use('/api/pantry', pantryRoutes);
+app.use('/api/pantryProduct', pantryProductRoutes);
+
 
 const PORT = process.env.PORT || 3001
 

@@ -36,8 +36,10 @@ export default function ProductForm() {
       .catch(() => setUnitMeasurement([]));
     }, []);
 
-  const handleChange = (e) => {
-      setForm({ ...form, [e.target.name]: e.target.value });
+    const handleChange = (e) => {
+      const { name, type, value, checked } = e.target;
+      setForm({ ...form, 
+        [name]: type === "checkbox" ? checked : value });
     };
   
   const handleSubmit = async (e) => {

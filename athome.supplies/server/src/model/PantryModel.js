@@ -3,6 +3,5 @@ module.exports = class Pantry {
         this.id = 0
         this.code = params.code
         this.description = params.description
-        this.productPantryList = params.productList
     }
 }
