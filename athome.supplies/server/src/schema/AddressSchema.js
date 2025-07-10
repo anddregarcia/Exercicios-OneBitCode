@@ -7,7 +7,7 @@ const AddressSchema = new mongoose.Schema({
     city: { 
             type: mongoose.Schema.Types.ObjectId, 
             ref: 'City',
-            required: true 
+            required: false 
           }
 });
 

@@ -6,7 +6,7 @@ const ProductSchema = new mongoose.Schema({
     brand: { 
       type: mongoose.Schema.Types.ObjectId, 
       ref: 'Brand',
-      required: true 
+      required: false 
     },
     volume: {type: Number, required: true},
     unitMeasurement: { 
@@ -17,7 +17,7 @@ const ProductSchema = new mongoose.Schema({
     item: { 
       type: mongoose.Schema.Types.ObjectId, 
       ref: 'Item',
-      required: true 
+      required: false 
     },
     isVegan: {type: Boolean, required: true}
 });

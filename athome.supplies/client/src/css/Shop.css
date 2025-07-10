@@ -1,0 +1,92 @@
+/* === Estrutura geral === */
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f5f5;
+  margin: 20px;
+}
+
+h1 {
+  color: #4b6400;
+}
+
+/* === Container === */
+.shop-container {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+/* === Barra de seleção de mercado === */
+.market-bar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.market-bar select {
+  padding: 10px;
+  border: 2px solid #6c7a00;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.market-bar button {
+  margin-left: 10px;
+  background: #6c7a00;
+  color: #fff;
+  border: none;
+  padding: 10px 14px;
+  font-size: 18px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.market-bar button:hover {
+  background: #4b6400;
+}
+
+/* === Tabela === */
+.shop-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.shop-table thead {
+  background: #8cae0b;
+  color: white;
+}
+
+.shop-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: bold;
+}
+
+.shop-table tbody tr:nth-child(even) {
+  background: #f0f4d7;
+}
+
+.shop-table td {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+/* === Select custom dentro da tabela === */
+.shop-table select {
+  padding: 6px;
+  font-size: 14px;
+}
+
+/* === Inputs numéricos === */
+.shop-table input[type="number"] {
+  width: 60px;
+  padding: 5px;
+  font-size: 14px;
+  border: 1px solid #999;
+  border-radius: 4px;
+}
+
+/* === Botões gerais === */
+button {
+  cursor: pointer;
+}

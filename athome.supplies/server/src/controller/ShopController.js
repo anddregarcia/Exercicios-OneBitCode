@@ -2,6 +2,7 @@ import Shop from '../schema/ShopSchema.js';
 
 export async function createShop(req, res) {
   try {
+    console.log(req.body);
     const shop = new Shop(req.body);
     await shop.save();
     return res.status(201).json(shop);
