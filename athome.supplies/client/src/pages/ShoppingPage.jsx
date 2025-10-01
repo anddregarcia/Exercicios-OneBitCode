@@ -1,7 +1,48 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from "react";
+import MarketModal from "../components/modals/MarketModal";
+
+export default function ShoppingPage() {
+  const [markets, setMarkets] = useState([]);
+  const [selectedMarket, setSelectedMarket] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    fetch("http://localhost:3001/api/market")
+      .then((res) => res.json())
+      .then(setMarkets);
+  }, []);
+
+  return (
+    <div>
+      <h1>Checklist de Compras</h1>
+
+      <select
+        value={selectedMarket}
+        onChange={(e) => setSelectedMarket(e.target.value)}
+      >
+        <option value="">Selecione um mercado</option>
+        {markets.map((m) => (
+          <option key={m._id} value={m._id}>
+            {m.name}
+          </option>
+        ))}
+      </select>
+
+      <button onClick={() => setIsModalOpen(true)}>+ Adicionar Mercado</button>
+
+      <MarketModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onMarketCreated={(newMarket) => setMarkets([...markets, newMarket])}
+      />
+    </div>
+  );
+}
+
+
+/*import { useState, useEffect, useRef } from 'react';
 import '../css/Shop.css';
 import MarketModal from '../components/modals/MarketModal.jsx';
-import MarketForm from '../components/forms/MarketForm.jsx';
 
 export default function ShoppingChecklist() 
 {
@@ -50,11 +91,6 @@ export default function ShoppingChecklist()
   {
     
   }, [selectedMarkets]);
-
-  const handleMarketChange = (market) => 
-  {
-    setSelectedMarkets(market);
-  };
 
   const handleChecklistChange = (index, field, value) => 
   {
@@ -201,4 +237,4 @@ export default function ShoppingChecklist()
       />
     </div>
   );
-}
+}*/

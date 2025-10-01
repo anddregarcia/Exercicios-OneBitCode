@@ -1,4 +1,4 @@
-export default function MarketForm({ form, setForm, onSubmit }) {
+export default function CountryForm({ form, setForm, onSubmit }) {
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -7,7 +7,7 @@ export default function MarketForm({ form, setForm, onSubmit }) {
     <form onSubmit={onSubmit} className="basic-form">
       <input
         name="name"
-        placeholder="Nome do mercado"
+        placeholder="Nome do país"
         value={form.name}
         onChange={handleChange}
       />

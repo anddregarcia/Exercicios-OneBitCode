@@ -1,17 +1,13 @@
 import { useState } from "react";
 import FormContainer from "../components/ui/FormContainer";
-import MarketForm from "../components/forms/MarketForm";
+import CityForm from "../components/forms/CityForm";
 
-export default function MarketPage() {
+export default function CityPage() {
   const [form, setForm] = useState({ name: "", code: "" });
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await fetch("http://localhost:3001/api/market", {
+    await fetch("http://localhost:3001/api/city", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
@@ -20,8 +16,8 @@ export default function MarketPage() {
   };
 
   return (
-    <FormContainer title="Cadastro de Mercado">
-      <MarketForm form={form} setForm={setForm} onSubmit={handleSubmit} />
+    <FormContainer title="Cadastro de Cidade">
+      <CityForm form={form} setForm={setForm} onSubmit={handleSubmit} />
     </FormContainer>
   );
 }

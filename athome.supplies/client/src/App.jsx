@@ -1,20 +1,20 @@
 import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import CityForm from './pages/CityForm';
-import StateForm from './pages/StateForm';
-import CountryForm from './pages/CountryForm';
-import AddressForm from './pages/AddressForm';
+import CityPage from './pages/CityPage';
+import StatePage from './pages/StatePage';
+import CountryPage from './pages/CountryPage';
+import AddressPage from './pages/AddressPage';
 import MarketPage from './pages/MarketPage';
-import BrandForm from './pages/BrandForm';
-import UnitMeasurementForm from './pages/UnitMeasurementForm';
-import CategoryForm from './pages/CategoryForm';
-import ItemForm from './pages/ItemForm';
-import ProductForm from './pages/ProductForm';
-import ShopForm from './pages/ShopForm';
+import BrandForm from './components/forms/BrandForm';
+import UnitMeasurementForm from './components/forms/UnitMeasurementForm';
+import CategoryForm from './components/forms/CategoryForm';
+import ItemForm from './components/forms/ItemForm';
+import ProductForm from './components/forms/ProductForm';
+import ShopForm from './components/forms/ShopForm';
 import ShoppingPage from './pages/ShoppingPage';
-import ProductPriceForm from './pages/ProductPriceForm';
-import PantryForm from './pages/PantryForm';
-import PantryProductForm from './pages/PantryProductForm';
+import ProductPriceForm from './components/forms/ProductPriceForm';
+import PantryForm from './components/forms/PantryForm';
+import PantryProductForm from './components/forms/PantryProductForm';
 import reactLogo from './assets/react.svg';
 import viteLogo from '/vite.svg';
 import './App.css';
@@ -25,10 +25,10 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/City" element={<CityForm />} />
-        <Route path="/State" element={<StateForm />} />
-        <Route path="/Country" element={<CountryForm />} />
-        <Route path="/Address" element={<AddressForm />} />
+        <Route path="/City" element={<CityPage />} />
+        <Route path="/State" element={<StatePage />} />
+        <Route path="/Country" element={<CountryPage />} />
+        <Route path="/Address" element={<AddressPage />} />
         <Route path="/Market" element={<MarketPage />} />
         <Route path="/Brand" element={<BrandForm />} />
         <Route path="/UnitMeasurement" element={<UnitMeasurementForm />} />
