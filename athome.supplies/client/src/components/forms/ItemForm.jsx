@@ -1,11 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from "react";
 
-export default function ItemForm() {
-  const [form, setForm] = useState({
-      code: '',
-      name: '',
-      category: ''
-    });
+export default function ItemForm({ form, setForm, onSubmit }) {
 
   const [categories, setCategories] = useState([]);
 
@@ -17,48 +12,37 @@ export default function ItemForm() {
   }, []);
 
   const handleChange = (e) => {
-      setForm({ ...form, [e.target.name]: e.target.value });
-    };
-  
-  const handleSubmit = async (e) => {
-      e.preventDefault();
-      try {
-        const res = await fetch(`http://localhost:3001/api/item`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form)
-        });
-    
-        const data = await res.json().catch(() => ({}));
-        
-        if (res.ok) {
-          alert('Item cadastrado com sucesso:\n' + JSON.stringify(data, null, 2));
-        } else {
-          alert('Erro ao cadastrar: ' + res.status);
-        }
-      } catch (err) {
-        alert('Erro de rede');
-      }
-    };
-  
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
   return (
-      <div>
-        <h1>Cadastro de Item</h1>
-        <form onSubmit={handleSubmit}>
-          <input name="code" placeholder="Código" onChange={handleChange} />
-          <input name="name" placeholder="Nome" onChange={handleChange} />
-
-          <select name="category" onChange={handleChange}>
-            <option value="">Selecione uma categoria</option>
-            {categories.map(category => (
-              <option key={category._id} value={category._id}>
-                {category.code} - {category.name}
-              </option>
-            ))}
-          </select>
-
-          <button type="submit">Cadastrar</button>
-        </form>
+    <form onSubmit={onSubmit} className="basic-form">
+      <input
+        name="name"
+        placeholder="Nome do Item"
+        value={form.name}
+        onChange={handleChange}
+      />
+      <input
+        name="code"
+        placeholder="Código"
+        value={form.code}
+        onChange={handleChange}
+      />
+      <select name="category" onChange={handleChange}>
+        <option value="">Selecione a Categoria</option>
+        {categories.map(category => (
+          <option key={category._id} value={category._id}>
+            {category.name}
+          </option>
+        ))}
+      </select>
+      <div className="actions">
+        <button type="submit" className="btn btn-primary">
+          Salvar
+        </button>
       </div>
-    );
+
+    </form>
+  );
 }

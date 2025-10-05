@@ -1,50 +1,33 @@
-import { useState } from 'react';
-
-export default function BrandForm() {
-  const [form, setForm] = useState({
-      code: '',
-      name: '',
-      isVegan: false
-    });
+export default function BrandForm({ form, setForm, onSubmit }) {
 
   const handleChange = (e) => {
-      setForm({ ...form, [e.target.name]: e.target.value });
-    };
-  
-  const handleSubmit = async (e) => {
-      e.preventDefault();
-      try {
-        const res = await fetch(`http://localhost:3001/api/brand`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form)
-        });
-    
-        const data = await res.json().catch(() => ({}));
-        
-        if (res.ok) {
-          alert('Marca cadastrada com sucesso:\n' + JSON.stringify(data, null, 2));
-        } else {
-          alert('Erro ao cadastrar: ' + res.status);
-        }
-      } catch (err) {
-        alert('Erro de rede');
-      }
-    };
-  
-  return (
-      <div>
-        <h1>Cadastro de Marca</h1>
-        <form onSubmit={handleSubmit}>
-          <input name="code" placeholder="Código" onChange={handleChange} />
-          <input name="name" placeholder="Nome" onChange={handleChange} />
-          <label>
-            <input name="isVegan" type="checkbox" placeholder="Marca Vegana" onChange={handleChange} />
-            Marca vegana
-          </label>
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
-          <button type="submit">Cadastrar</button>
-        </form>
+  return (
+    <form onSubmit={onSubmit} className="basic-form">
+      <input
+        name="name"
+        placeholder="Nome da Marca"
+        value={form.name}
+        onChange={handleChange}
+      />
+      <input
+        name="code"
+        placeholder="Código"
+        value={form.code}
+        onChange={handleChange}
+      />
+      <label>
+        <input name="isVegan" type="checkbox" placeholder="Marca Vegana" onChange={handleChange} />
+        Marca vegana
+      </label>
+      <div className="actions">
+        <button type="submit" className="btn btn-primary">
+          Salvar
+        </button>
       </div>
-    );
+
+    </form>
+  );
 }

@@ -5,16 +5,16 @@ import StatePage from './pages/StatePage';
 import CountryPage from './pages/CountryPage';
 import AddressPage from './pages/AddressPage';
 import MarketPage from './pages/MarketPage';
-import BrandForm from './components/forms/BrandForm';
-import UnitMeasurementForm from './components/forms/UnitMeasurementForm';
-import CategoryForm from './components/forms/CategoryForm';
-import ItemForm from './components/forms/ItemForm';
+import BrandPage from './pages/BrandPage';
+import UnitMeasurementPage from './pages/UnitMeasurementPage';
+import CategoryPage from './pages/CategoryPage';
+import ItemPage from './pages/ItemPage';
 import ProductPage from './pages/ProductPage';
 import ShopForm from './components/forms/ShopForm';
 import ShoppingPage from './pages/ShoppingPage';
 import ProductPriceForm from './components/forms/ProductPriceForm';
-import PantryForm from './components/forms/PantryForm';
-import PantryProductForm from './components/forms/PantryProductForm';
+import PantryPage from './pages/PantryPage';
+import PantryProductPage from './pages/PantryProductPage';
 import reactLogo from './assets/react.svg';
 import viteLogo from '/vite.svg';
 import './App.css';
@@ -30,16 +30,16 @@ function App() {
         <Route path="/Country" element={<CountryPage />} />
         <Route path="/Address" element={<AddressPage />} />
         <Route path="/Market" element={<MarketPage />} />
-        <Route path="/Brand" element={<BrandForm />} />
-        <Route path="/UnitMeasurement" element={<UnitMeasurementForm />} />
-        <Route path="/Category" element={<CategoryForm />} />
-        <Route path="/Item" element={<ItemForm />} />
+        <Route path="/Brand" element={<BrandPage />} />
+        <Route path="/UnitMeasurement" element={<UnitMeasurementPage />} />
+        <Route path="/Category" element={<CategoryPage />} />
+        <Route path="/Item" element={<ItemPage />} />
         <Route path="/Product" element={<ProductPage />} />
         <Route path="/Shop" element={<ShopForm />} />
         <Route path="/Shopping" element={<ShoppingPage />} />
         <Route path="/ProductPrice" element={<ProductPriceForm />} />
-        <Route path="/Pantry" element={<PantryForm />} />
-        <Route path="/PantryProduct" element={<PantryProductForm />} />
+        <Route path="/Pantry" element={<PantryPage />} />
+        <Route path="/PantryProduct" element={<PantryProductPage />} />
       </Routes>
     </Router>
   );
