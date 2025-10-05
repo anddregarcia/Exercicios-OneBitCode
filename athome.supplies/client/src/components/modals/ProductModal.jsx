@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import Modal from "../ui/Modal";
-import MarketForm from "../forms/MarketForm";
+import ProductForm from "../forms/ProductForm";
 import Button from "../ui/Button";
 
-export default function MarketModal({ isOpen, onClose, onMarketCreated }) {
+export default function ProductModal({ isOpen, onClose, onProductCreated }) {
   const [form, setForm] = useState({ name: "", code: "" });
 
   // ESC fecha o modal
@@ -24,7 +24,8 @@ export default function MarketModal({ isOpen, onClose, onMarketCreated }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const res = await fetch("http://localhost:3001/api/market", {
+	
+    const res = await fetch("http://localhost:3001/api/product", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
@@ -32,7 +33,7 @@ export default function MarketModal({ isOpen, onClose, onMarketCreated }) {
 
     if (res.ok) {
       const data = await res.json();
-      onMarketCreated(data);
+      onProductCreated(data);
       setForm({ name: "", code: "" });
       onClose();
     }
@@ -48,8 +49,8 @@ export default function MarketModal({ isOpen, onClose, onMarketCreated }) {
   return (
     <div className="modal-overlay" onClick={handleOverlayClick}>
       <div className="modal-content">
-        <Modal title="Cadastrar Novo Mercado" onClose={onClose}>
-          <MarketForm form={form} setForm={setForm} onSubmit={handleSubmit} showAddress={false} />
+        <Modal title="Cadastrar Novo Produto" onClose={onClose}>
+          <ProductForm form={form} setForm={setForm} onSubmit={handleSubmit} />
         </Modal>
       </div>
     </div>

@@ -1,0 +1,102 @@
+.market-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.market-bar label {
+  font-weight: 500;
+}
+
+.market-bar select {
+  flex: 1;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  margin-top: 1rem;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
+/* Estilo da tabela */
+.checklist {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  font-size: 14px;
+}
+
+.checklist thead {
+  background: #f5f5f5;
+}
+
+.checklist th,
+.checklist td {
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.checklist input[type="number"] {
+  width: 90px;
+  padding: 6px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.checklist input[type="checkbox"] {
+  transform: scale(1.2);
+}
+
+.checklist tbody tr:nth-child(even) {
+  background: #fafafa;
+}
+
+/* Responsividade (modo "cards" no mobile) */
+@media (max-width: 768px) {
+  .checklist,
+  .checklist thead,
+  .checklist tbody,
+  .checklist th,
+  .checklist td,
+  .checklist tr {
+    display: block;
+    width: 100%;
+  }
+
+  .checklist thead {
+    display: none;
+  }
+
+  .checklist tr {
+    margin-bottom: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    background: #fff;
+  }
+
+  .checklist td {
+    border: none;
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+  }
+
+  .checklist td::before {
+    content: attr(data-label);
+    font-weight: bold;
+    color: #333;
+  }
+}

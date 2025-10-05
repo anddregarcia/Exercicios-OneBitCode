@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const MarketSchema = new mongoose.Schema({
-  name: { type: String, required: true },
+  name: { type: String },
   code: { type: String, required: true },
   address: { 
     type: mongoose.Schema.Types.ObjectId, 

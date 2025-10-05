@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const ItemSchema = new mongoose.Schema({
-    code: {type: String, required: true},
+    code: {type: String},
     name: {type: String, required: true},
     category: { 
             type: mongoose.Schema.Types.ObjectId, 
