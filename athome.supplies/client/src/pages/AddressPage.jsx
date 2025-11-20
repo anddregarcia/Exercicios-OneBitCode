@@ -1,6 +1,6 @@
 import { useState } from "react";
-import FormContainer from "../components/ui/FormContainer";
-import AddressForm from "../components/forms/AddressForm";
+import FormContainer from "../components/ui/FormContainer.jsx";
+import AddressForm from "../components/forms/AddressForm.jsx";
 
 export default function AddressPage() {
   const [form, setForm] = useState({ street: "", number: "", neighborhood: "" });

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import FormContainer from "../components/ui/FormContainer";
-import BrandForm from "../components/forms/BrandForm";
+import FormContainer from "../components/ui/FormContainer.jsx";
+import BrandForm from "../components/forms/BrandForm.jsx";
 
 export default function BrandPage() {
   const [form, setForm] = useState({ code: "", name: "", isVegan: "" });

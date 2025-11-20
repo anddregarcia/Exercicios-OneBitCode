@@ -1,10 +1,10 @@
 // src/pages/ShoppingPage.jsx
 import { useEffect, useState } from "react";
-import FormContainer from "../components/ui/FormContainer";
-import ShoppingChecklist from "../components/shopping/ShoppingChecklist";
-import MarketModal from "../components/modals/MarketModal";
-import ProductModal from "../components/modals/ProductModal";
-import Button from "../components/ui/Button";
+import FormContainer from "../components/ui/FormContainer.jsx";
+import ShoppingChecklist from "../components/shopping/ShoppingCheckList.jsx";
+import MarketModal from "../components/modals/MarketModal.jsx";
+import ProductModal from "../components/modals/ProductModal.jsx";
+import Button from "../components/ui/Button.jsx";
 import "../styles/shoppingChecklist.css";
 
 export default function ShoppingPage() {
