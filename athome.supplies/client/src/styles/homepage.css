@@ -1,0 +1,30 @@
+.home-container {
+  text-align: center;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+  padding: 10px;
+}
+
+.menu-card {
+  display: block;
+  background: #f4f4f4;
+  border: 1px solid #ddd;
+  padding: 15px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: #333;
+  font-weight: bold;
+  transition: 0.2s;
+}
+
+.menu-card:hover {
+  background: #e3e3e3;
+  transform: scale(1.02);
+}

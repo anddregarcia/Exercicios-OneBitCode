@@ -20,7 +20,8 @@ import Menu from './components/ui/Menu.jsx';
 import reactLogo from './assets/react.svg';
 import viteLogo from '/vite.svg';
 import './App.css';
-
+import HomePage from "./pages/HomePage";
+import { Navigate } from "react-router-dom";
 //const PORT = process.env.PORT || 3001
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
     <Router>
       <Menu />
       <Routes>
+        <Route path="/" element={<HomePage />} />
         <Route path="/City" element={<CityPage />} />
         <Route path="/State" element={<StatePage />} />
         <Route path="/Country" element={<CountryPage />} />
@@ -43,6 +45,7 @@ function App() {
         <Route path="/ProductPrice" element={<ProductPricePage />} />
         <Route path="/Pantry" element={<PantryPage />} />
         <Route path="/PantryProduct" element={<PantryProductPage />} />
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>
   );
