@@ -46,7 +46,7 @@ export default function PantryProductForm({ form, setForm, onSubmit }) {
         ))}
       </select>
 
-      <input type="number" name="quantity" placeholder="Quantidade" step="0.01" onChange={handleChange} />
+      <input type="number" name="quantity" placeholder="Quantidade" step="1" onChange={handleChange} />
     
       <label>
         <input name="mustHave" type="checkbox" onChange={handleChange} />

@@ -12,14 +12,14 @@ const ProductSchema = new mongoose.Schema({
     unitMeasurement: { 
       type: mongoose.Schema.Types.ObjectId, 
       ref: 'UnitMeasurement',
-      required: true 
+      required: false
     },
     item: { 
       type: mongoose.Schema.Types.ObjectId, 
       ref: 'Item',
       required: false 
     },
-    isVegan: {type: Boolean, required: true}
+    isVegan: {type: Boolean, required: false}
 });
 
 export default mongoose.model('Product', ProductSchema, 'product');

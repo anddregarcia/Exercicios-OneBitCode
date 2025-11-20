@@ -1,7 +1,9 @@
 export default function BrandForm({ form, setForm, onSubmit }) {
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+      const { name, type, value, checked } = e.target;
+      setForm({ ...form, 
+        [name]: type === "checkbox" ? checked : value });
   };
 
   return (

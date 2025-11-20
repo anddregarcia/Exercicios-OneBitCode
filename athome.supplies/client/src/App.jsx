@@ -10,9 +10,9 @@ import UnitMeasurementPage from './pages/UnitMeasurementPage';
 import CategoryPage from './pages/CategoryPage';
 import ItemPage from './pages/ItemPage';
 import ProductPage from './pages/ProductPage';
-import ShopForm from './components/forms/ShopForm';
+import ShopPage from './pages/ShopPage';
 import ShoppingPage from './pages/ShoppingPage';
-import ProductPriceForm from './components/forms/ProductPriceForm';
+import ProductPricePage from './pages/ProductPricePage';
 import PantryPage from './pages/PantryPage';
 import PantryProductPage from './pages/PantryProductPage';
 import reactLogo from './assets/react.svg';
@@ -35,9 +35,9 @@ function App() {
         <Route path="/Category" element={<CategoryPage />} />
         <Route path="/Item" element={<ItemPage />} />
         <Route path="/Product" element={<ProductPage />} />
-        <Route path="/Shop" element={<ShopForm />} />
+        <Route path="/Shop" element={<ShopPage />} />
         <Route path="/Shopping" element={<ShoppingPage />} />
-        <Route path="/ProductPrice" element={<ProductPriceForm />} />
+        <Route path="/ProductPrice" element={<ProductPricePage />} />
         <Route path="/Pantry" element={<PantryPage />} />
         <Route path="/PantryProduct" element={<PantryProductPage />} />
       </Routes>

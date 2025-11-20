@@ -1,3 +1,70 @@
+import { useEffect, useState } from "react";
+
+export default function ProductPriceForm({ form, setForm, onSubmit }) {
+
+  const [shops, setShops] = useState([]);
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    fetch('http://localhost:3001/api/shop')
+      .then(res => res.json())
+      .then(data => setShops(data))
+      .catch(() => setShops([]));
+  }, []);
+
+  useEffect(() => {
+    fetch('http://localhost:3001/api/product')
+      .then(res => res.json())
+      .then(data => setProducts(data))
+      .catch(() => setProducts([]));
+  }, []);  
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  return (
+    <form onSubmit={onSubmit} className="basic-form">
+      <select name="shop" onChange={handleChange}>
+        <option value="">Selecione uma compra</option>
+        {shops.map(shop => (
+          <option key={shop._id} value={shop._id}>
+            {shop.market.name} - {shop.date.slice(0, 10).split('-').reverse().join('/')}
+          </option>
+        ))}
+      </select>
+      
+      <input
+        type="date"
+        name="date"
+        value={form.date}
+        onChange={handleChange}
+        required
+      />
+
+      <select name="product" onChange={handleChange}>
+        <option value="">Selecione um produto</option>
+        {products.map(product => (
+          <option key={product._id} value={product._id}>
+            {product.code} - {product.name}
+          </option>
+        ))}
+      </select>
+      
+      <input type="number" name="value" placeholder="Valor" step="0.01" onChange={handleChange} />
+
+      <input type="number" name="quantity" placeholder="Quantidade" step="0.01" onChange={handleChange} />
+
+      <div className="actions">
+        <button type="submit" className="btn btn-primary">
+          Salvar
+        </button>
+      </div>
+
+    </form>
+  );
+}
+/*
 import { useState, useEffect } from 'react';
 
 export default function ProductForm() {
@@ -10,7 +77,7 @@ export default function ProductForm() {
     });
 
   const [products, setProduct] = useState([]);
-  const [shops, setShop] = useState([]);
+  const [shops, setShop]ProductPriceseState([]);
 
   useEffect(() => {
     fetch('http://localhost:3001/api/product')
@@ -22,8 +89,8 @@ export default function ProductForm() {
   useEffect(() => {
       fetch('http://localhost:3001/api/shop')
       .then(res => res.json())
-      .then(data => setShop(data))
-      .catch(() => setShop([]));
+      .then(data => setSProductPricedata))
+      .catch(() => setShProductPrice]));
     }, []);
 
   const handleChange = (e) => {
@@ -32,11 +99,11 @@ export default function ProductForm() {
       const { name, value } = e.target;
 
       if (name === "shop") {
-        const selectedShop = shops.find(shop => shop._id === value);
+        const selectedShProductPrice shops.find(shop => shop._id === value);
         setForm(prevForm => ({
           ...prevForm,
           shop: value,
-          date: selectedShop ? selectedShop.date.slice(0, 10) : ''  // yyyy-mm-dd
+          date: selectedProductPrice ? selectedShop.date.slice(0, 10) : ''  // yyyy-mm-dd
         }));
       } else {
         setForm(prevForm => ({
@@ -108,3 +175,4 @@ export default function ProductForm() {
       </div>
     );
 }
+*/

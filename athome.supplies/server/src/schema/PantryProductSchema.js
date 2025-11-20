@@ -11,7 +11,7 @@ const PantryProductSchema = new mongoose.Schema({
       ref: 'Pantry',
       required: true 
     },
-    quantity: {type: Number, required: true},
+    quantity: {type: Number, required: false},
     mustHave: {type: Boolean}
 });
 
