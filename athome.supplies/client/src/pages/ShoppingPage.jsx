@@ -5,7 +5,7 @@ import ShoppingChecklist from "../components/shopping/ShoppingChecklist";
 import MarketModal from "../components/modals/MarketModal";
 import ProductModal from "../components/modals/ProductModal";
 import Button from "../components/ui/Button";
-import "../styles/ShoppingChecklist.css";
+import "../styles/shoppingChecklist.css";
 
 export default function ShoppingPage() {
   const [markets, setMarkets] = useState([]);
