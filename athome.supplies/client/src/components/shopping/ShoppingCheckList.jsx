@@ -1,6 +1,6 @@
 // src/components/shopping/ShoppingChecklist.jsx
 import React from "react";
-import "../../styles/shoppingChecklist.css";
+import "../../styles/shoppingCheckList.css";
 
 export default function ShoppingChecklist({ products, onUpdateProduct }) {
   return (
