@@ -15,6 +15,7 @@ import ShoppingPage from './pages/ShoppingPage';
 import ProductPricePage from './pages/ProductPricePage';
 import PantryPage from './pages/PantryPage';
 import PantryProductPage from './pages/PantryProductPage';
+import Menu from './components/ui/Menu.jsx';
 import reactLogo from './assets/react.svg';
 import viteLogo from '/vite.svg';
 import './App.css';
@@ -24,6 +25,7 @@ import './App.css';
 function App() {
   return (
     <Router>
+      <Menu />
       <Routes>
         <Route path="/City" element={<CityPage />} />
         <Route path="/State" element={<StatePage />} />
