@@ -1,33 +1,57 @@
 import { useEffect, useState } from "react";
 import { seedData, itemsAPI } from "../lib/api";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "./ui/button";
 
 export function DataInitializer({ children }: { children: React.ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     checkAndInitialize();
-  }, []);
+  }, [retryCount]);
 
   const checkAndInitialize = async () => {
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      // Check if data exists
-      const items = await itemsAPI.getAll();
+      console.log("[DataInitializer] Checking for existing data...");
       
-      if (items.length === 0) {
-        // No data, seed initial data
-        console.log("No data found, seeding initial data...");
-        await seedData();
-        toast.success("Dados iniciais carregados com sucesso!");
+      // Try to fetch items with a timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      try {
+        const items = await itemsAPI.getAll();
+        clearTimeout(timeoutId);
+        console.log("[DataInitializer] Found items:", items.length);
+        
+        if (items.length === 0) {
+          // No data, seed initial data
+          console.log("[DataInitializer] No data found, seeding initial data...");
+          await seedData();
+          console.log("[DataInitializer] Seeding complete!");
+          toast.success("Dados iniciais carregados com sucesso!");
+        }
+        
+        setIsInitialized(true);
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+        throw fetchError;
       }
+    } catch (error: any) {
+      console.error("[DataInitializer] Error initializing data:", error);
       
-      setIsInitialized(true);
-    } catch (error) {
-      console.error("Error initializing data:", error);
-      // Even if seeding fails, allow the app to continue
-      setIsInitialized(true);
+      // Check if it's a network error
+      if (error.message?.includes("Failed to fetch") || error.name === 'AbortError') {
+        setError("O servidor está iniciando. Aguarde alguns segundos e clique em 'Tentar Novamente'.");
+      } else {
+        setError(`Erro ao carregar dados: ${error.message}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -35,20 +59,27 @@ export function DataInitializer({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center space-y-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground">Carregando aplicação...</p>
+          <p className="text-muted-foreground">
+            {retryCount > 0 ? "Tentando reconectar..." : "Carregando aplicação..."}
+          </p>
         </div>
       </div>
     );
   }
 
-  if (!isInitialized) {
+  if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center space-y-4">
-          <p className="text-destructive">Erro ao inicializar dados</p>
+      <div className="flex items-center justify-center min-h-screen bg-background p-4">
+        <div className="text-center space-y-4 max-w-md">
+          <AlertCircle className="h-12 w-12 text-destructive mx-auto" />
+          <h2 className="text-xl font-semibold text-foreground">Erro de Conexão</h2>
+          <p className="text-muted-foreground">{error}</p>
+          <Button onClick={() => setRetryCount(retryCount + 1)}>
+            Tentar Novamente
+          </Button>
         </div>
       </div>
     );

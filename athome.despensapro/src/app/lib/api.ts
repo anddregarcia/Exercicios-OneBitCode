@@ -10,6 +10,7 @@ const headers = {
 // Generic API call helper
 async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
   try {
+    console.log(`[API] Calling ${endpoint}...`);
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       ...options,
       headers: {
@@ -18,7 +19,14 @@ async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
       },
     });
 
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[API] HTTP Error ${response.status} on ${endpoint}:`, errorText);
+      throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
+    }
+
     const data = await response.json();
+    console.log(`[API] Response from ${endpoint}:`, data);
 
     if (!data.success) {
       throw new Error(data.error || "API request failed");
@@ -26,7 +34,7 @@ async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
 
     return data.data as T;
   } catch (error) {
-    console.error(`API Error (${endpoint}):`, error);
+    console.error(`[API] Error on ${endpoint}:`, error);
     throw error;
   }
 }
