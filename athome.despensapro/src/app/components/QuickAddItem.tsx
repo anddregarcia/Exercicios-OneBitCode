@@ -47,6 +47,10 @@ export function QuickAddItem({ open, onOpenChange, onItemCreated }: QuickAddItem
   const [showNewCategory, setShowNewCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
 
+  const [showNewUnit, setShowNewUnit] = useState(false);
+  const [newUnitName, setNewUnitName] = useState("");
+  const [newUnitAbbreviation, setNewUnitAbbreviation] = useState("");
+
   useEffect(() => {
     if (open) {
       loadData();
@@ -113,6 +117,29 @@ export function QuickAddItem({ open, onOpenChange, onItemCreated }: QuickAddItem
     }
   };
 
+  const handleQuickAddUnit = async () => {
+    if (!newUnitName.trim() || !newUnitAbbreviation.trim()) {
+      toast.error("Preencha todos os campos obrigatórios para a unidade");
+      return;
+    }
+
+    try {
+      const unit = await unitsAPI.create({
+        name: newUnitName,
+        abbreviation: newUnitAbbreviation,
+      });
+      setUnits([...units, unit]);
+      setUnitId(unit.id);
+      setShowNewUnit(false);
+      setNewUnitName("");
+      setNewUnitAbbreviation("");
+      toast.success("Unidade cadastrada!");
+    } catch (error) {
+      console.error("Error creating unit:", error);
+      toast.error("Erro ao cadastrar unidade");
+    }
+  };
+
   const handleSave = async () => {
     if (!itemName.trim() || !brandId || !categoryId || !unitId) {
       toast.error("Preencha todos os campos obrigatórios");
@@ -152,6 +179,9 @@ export function QuickAddItem({ open, onOpenChange, onItemCreated }: QuickAddItem
     setNewBrandName("");
     setNewBrandVegan(false);
     setNewCategoryName("");
+    setShowNewUnit(false);
+    setNewUnitName("");
+    setNewUnitAbbreviation("");
   };
 
   return (
@@ -294,19 +324,64 @@ export function QuickAddItem({ open, onOpenChange, onItemCreated }: QuickAddItem
           </div>
 
           <div className="space-y-2">
-            <Label>Unidade *</Label>
-            <Select value={unitId} onValueChange={setUnitId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione a unidade" />
-              </SelectTrigger>
-              <SelectContent>
-                {units.map((unit) => (
-                  <SelectItem key={unit.id} value={unit.id}>
-                    {unit.name} ({unit.abbreviation})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center justify-between">
+              <Label>Unidade *</Label>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowNewUnit(!showNewUnit)}
+                type="button"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Nova
+              </Button>
+            </div>
+            
+            {showNewUnit ? (
+              <div className="rounded-lg border border-border p-3 space-y-3 bg-muted/30">
+                <Input
+                  value={newUnitName}
+                  onChange={(e) => setNewUnitName(e.target.value)}
+                  placeholder="Nome da unidade"
+                />
+                <Input
+                  value={newUnitAbbreviation}
+                  onChange={(e) => setNewUnitAbbreviation(e.target.value)}
+                  placeholder="Abreviação"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={handleQuickAddUnit}
+                    className="flex-1"
+                    type="button"
+                  >
+                    Adicionar Unidade
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowNewUnit(false)}
+                    type="button"
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Select value={unitId} onValueChange={setUnitId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a unidade" />
+                </SelectTrigger>
+                <SelectContent>
+                  {units.map((unit) => (
+                    <SelectItem key={unit.id} value={unit.id}>
+                      {unit.name} ({unit.abbreviation})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           <div className="flex items-center space-x-2">

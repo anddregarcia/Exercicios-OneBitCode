@@ -39,6 +39,7 @@ import { toast } from "sonner";
 import { itemsAPI, storesAPI, purchasesAPI } from "../lib/api";
 import { QuickAddItem } from "../components/QuickAddItem";
 import { QuickAddStore } from "../components/QuickAddStore";
+import { usePurchaseForm } from "../contexts/PurchaseFormContext";
 
 interface PurchaseItem {
   itemId: string;
@@ -56,15 +57,20 @@ export function NewPurchase() {
   const [categories, setCategories] = useState<any[]>([]);
   const [units, setUnits] = useState<any[]>([]);
   
-  const [selectedStore, setSelectedStore] = useState("");
-  const [purchaseDate, setPurchaseDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
+  // Use purchase form context for persistence
+  const {
+    selectedStore,
+    setSelectedStore,
+    purchaseDate,
+    setPurchaseDate,
+    purchaseItems,
+    setPurchaseItems,
+    clearForm,
+  } = usePurchaseForm();
+  
   const [historyDialogItem, setHistoryDialogItem] = useState<string | null>(null);
   const [itemHistory, setItemHistory] = useState<any[]>([]);
   
-  const [purchaseItems, setPurchaseItems] = useState<PurchaseItem[]>([]);
-
   // Quick add dialogs
   const [quickAddItemOpen, setQuickAddItemOpen] = useState(false);
   const [quickAddStoreOpen, setQuickAddStoreOpen] = useState(false);
@@ -84,14 +90,32 @@ export function NewPurchase() {
       setItems(itemsData);
       setStores(storesData);
       
-      setPurchaseItems(
-        itemsData.map((item: any) => ({
-          itemId: item.id,
-          selected: false,
-          price: "",
-          quantity: "",
-        }))
-      );
+      // Only initialize purchase items if they are empty
+      if (purchaseItems.length === 0) {
+        setPurchaseItems(
+          itemsData.map((item: any) => ({
+            itemId: item.id,
+            selected: false,
+            price: "",
+            quantity: "",
+          }))
+        );
+      } else {
+        // Update purchase items to include new items if any
+        const existingItemIds = new Set(purchaseItems.map(pi => pi.itemId));
+        const newItems = itemsData
+          .filter((item: any) => !existingItemIds.has(item.id))
+          .map((item: any) => ({
+            itemId: item.id,
+            selected: false,
+            price: "",
+            quantity: "",
+          }));
+        
+        if (newItems.length > 0) {
+          setPurchaseItems([...purchaseItems, ...newItems]);
+        }
+      }
 
       // Load related data for display
       const brandsAPI = await import("../lib/api").then(m => m.brandsAPI);
@@ -171,14 +195,7 @@ export function NewPurchase() {
       toast.success(`Compra registrada com sucesso! ${selectedItems.length} itens salvos.`);
       
       // Reset form
-      setPurchaseItems(
-        items.map(item => ({
-          itemId: item.id,
-          selected: false,
-          price: "",
-          quantity: "",
-        }))
-      );
+      clearForm();
     } catch (error) {
       console.error("Error saving purchase:", error);
       toast.error("Erro ao salvar compra");

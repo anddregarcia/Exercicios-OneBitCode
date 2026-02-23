@@ -19,15 +19,67 @@ const supabase = createClient(
 // Prefix for all routes
 const prefix = "/make-server-17516063";
 
+// Helper to get authenticated user
+async function getAuthUser(request: Request) {
+  const accessToken = request.headers.get('Authorization')?.split(' ')[1];
+  if (!accessToken) {
+    return null;
+  }
+  
+  const { data: { user }, error } = await supabase.auth.getUser(accessToken);
+  if (error || !user) {
+    console.log("Auth error:", error);
+    return null;
+  }
+  
+  return user;
+}
+
 // Health check
 app.get(`${prefix}/health`, (c) => {
   return c.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
+// ============ SIGNUP ============
+app.post(`${prefix}/signup`, async (c) => {
+  try {
+    const body = await c.req.json();
+    const { email, password, name } = body;
+    
+    if (!email || !password || !name) {
+      return c.json({ success: false, error: "Email, password, and name are required" }, 400);
+    }
+    
+    // Create user with admin privileges
+    const { data, error } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      user_metadata: { name },
+      // Automatically confirm the user's email since an email server hasn't been configured.
+      email_confirm: true
+    });
+    
+    if (error) {
+      console.log("Error creating user:", error);
+      return c.json({ success: false, error: error.message }, 400);
+    }
+    
+    return c.json({ success: true, data: { user: data.user } });
+  } catch (error) {
+    console.log("Error in signup:", error);
+    return c.json({ success: false, error: String(error) }, 500);
+  }
+});
+
 // ============ BRANDS ============
 app.get(`${prefix}/brands`, async (c) => {
   try {
-    const brands = await kv.getByPrefix("brand:");
+    const user = await getAuthUser(c.req.raw);
+    if (!user) {
+      return c.json({ success: false, error: "Unauthorized" }, 401);
+    }
+    
+    const brands = await kv.getByPrefix(`user:${user.id}:brand:`);
     return c.json({ success: true, data: brands });
   } catch (error) {
     console.log("Error fetching brands:", error);
@@ -37,6 +89,11 @@ app.get(`${prefix}/brands`, async (c) => {
 
 app.post(`${prefix}/brands`, async (c) => {
   try {
+    const user = await getAuthUser(c.req.raw);
+    if (!user) {
+      return c.json({ success: false, error: "Unauthorized" }, 401);
+    }
+    
     const body = await c.req.json();
     const { name, isVegan } = body;
     
@@ -47,7 +104,7 @@ app.post(`${prefix}/brands`, async (c) => {
     const id = crypto.randomUUID();
     const brand = { id, name, isVegan: isVegan || false };
     
-    await kv.set(`brand:${id}`, brand);
+    await kv.set(`user:${user.id}:brand:${id}`, brand);
     return c.json({ success: true, data: brand });
   } catch (error) {
     console.log("Error creating brand:", error);
@@ -57,8 +114,13 @@ app.post(`${prefix}/brands`, async (c) => {
 
 app.delete(`${prefix}/brands/:id`, async (c) => {
   try {
+    const user = await getAuthUser(c.req.raw);
+    if (!user) {
+      return c.json({ success: false, error: "Unauthorized" }, 401);
+    }
+    
     const id = c.req.param("id");
-    await kv.del(`brand:${id}`);
+    await kv.del(`user:${user.id}:brand:${id}`);
     return c.json({ success: true });
   } catch (error) {
     console.log("Error deleting brand:", error);
@@ -69,7 +131,12 @@ app.delete(`${prefix}/brands/:id`, async (c) => {
 // ============ CATEGORIES ============
 app.get(`${prefix}/categories`, async (c) => {
   try {
-    const categories = await kv.getByPrefix("category:");
+    const user = await getAuthUser(c.req.raw);
+    if (!user) {
+      return c.json({ success: false, error: "Unauthorized" }, 401);
+    }
+    
+    const categories = await kv.getByPrefix(`user:${user.id}:category:`);
     return c.json({ success: true, data: categories });
   } catch (error) {
     console.log("Error fetching categories:", error);
@@ -79,6 +146,11 @@ app.get(`${prefix}/categories`, async (c) => {
 
 app.post(`${prefix}/categories`, async (c) => {
   try {
+    const user = await getAuthUser(c.req.raw);
+    if (!user) {
+      return c.json({ success: false, error: "Unauthorized" }, 401);
+    }
+    
     const body = await c.req.json();
     const { name } = body;
     
@@ -89,7 +161,7 @@ app.post(`${prefix}/categories`, async (c) => {
     const id = crypto.randomUUID();
     const category = { id, name };
     
-    await kv.set(`category:${id}`, category);
+    await kv.set(`user:${user.id}:category:${id}`, category);
     return c.json({ success: true, data: category });
   } catch (error) {
     console.log("Error creating category:", error);
@@ -99,8 +171,13 @@ app.post(`${prefix}/categories`, async (c) => {
 
 app.delete(`${prefix}/categories/:id`, async (c) => {
   try {
+    const user = await getAuthUser(c.req.raw);
+    if (!user) {
+      return c.json({ success: false, error: "Unauthorized" }, 401);
+    }
+    
     const id = c.req.param("id");
-    await kv.del(`category:${id}`);
+    await kv.del(`user:${user.id}:category:${id}`);
     return c.json({ success: true });
   } catch (error) {
     console.log("Error deleting category:", error);
@@ -111,7 +188,12 @@ app.delete(`${prefix}/categories/:id`, async (c) => {
 // ============ UNITS ============
 app.get(`${prefix}/units`, async (c) => {
   try {
-    const units = await kv.getByPrefix("unit:");
+    const user = await getAuthUser(c.req.raw);
+    if (!user) {
+      return c.json({ success: false, error: "Unauthorized" }, 401);
+    }
+    
+    const units = await kv.getByPrefix(`user:${user.id}:unit:`);
     return c.json({ success: true, data: units });
   } catch (error) {
     console.log("Error fetching units:", error);
@@ -121,6 +203,11 @@ app.get(`${prefix}/units`, async (c) => {
 
 app.post(`${prefix}/units`, async (c) => {
   try {
+    const user = await getAuthUser(c.req.raw);
+    if (!user) {
+      return c.json({ success: false, error: "Unauthorized" }, 401);
+    }
+    
     const body = await c.req.json();
     const { name, abbreviation } = body;
     
@@ -131,7 +218,7 @@ app.post(`${prefix}/units`, async (c) => {
     const id = crypto.randomUUID();
     const unit = { id, name, abbreviation };
     
-    await kv.set(`unit:${id}`, unit);
+    await kv.set(`user:${user.id}:unit:${id}`, unit);
     return c.json({ success: true, data: unit });
   } catch (error) {
     console.log("Error creating unit:", error);
@@ -141,8 +228,13 @@ app.post(`${prefix}/units`, async (c) => {
 
 app.delete(`${prefix}/units/:id`, async (c) => {
   try {
+    const user = await getAuthUser(c.req.raw);
+    if (!user) {
+      return c.json({ success: false, error: "Unauthorized" }, 401);
+    }
+    
     const id = c.req.param("id");
-    await kv.del(`unit:${id}`);
+    await kv.del(`user:${user.id}:unit:${id}`);
     return c.json({ success: true });
   } catch (error) {
     console.log("Error deleting unit:", error);
@@ -153,7 +245,12 @@ app.delete(`${prefix}/units/:id`, async (c) => {
 // ============ STORES ============
 app.get(`${prefix}/stores`, async (c) => {
   try {
-    const stores = await kv.getByPrefix("store:");
+    const user = await getAuthUser(c.req.raw);
+    if (!user) {
+      return c.json({ success: false, error: "Unauthorized" }, 401);
+    }
+    
+    const stores = await kv.getByPrefix(`user:${user.id}:store:`);
     return c.json({ success: true, data: stores });
   } catch (error) {
     console.log("Error fetching stores:", error);
@@ -163,6 +260,11 @@ app.get(`${prefix}/stores`, async (c) => {
 
 app.post(`${prefix}/stores`, async (c) => {
   try {
+    const user = await getAuthUser(c.req.raw);
+    if (!user) {
+      return c.json({ success: false, error: "Unauthorized" }, 401);
+    }
+    
     const body = await c.req.json();
     const { name, address } = body;
     
@@ -173,7 +275,7 @@ app.post(`${prefix}/stores`, async (c) => {
     const id = crypto.randomUUID();
     const store = { id, name, address: address || "" };
     
-    await kv.set(`store:${id}`, store);
+    await kv.set(`user:${user.id}:store:${id}`, store);
     return c.json({ success: true, data: store });
   } catch (error) {
     console.log("Error creating store:", error);
@@ -183,8 +285,13 @@ app.post(`${prefix}/stores`, async (c) => {
 
 app.delete(`${prefix}/stores/:id`, async (c) => {
   try {
+    const user = await getAuthUser(c.req.raw);
+    if (!user) {
+      return c.json({ success: false, error: "Unauthorized" }, 401);
+    }
+    
     const id = c.req.param("id");
-    await kv.del(`store:${id}`);
+    await kv.del(`user:${user.id}:store:${id}`);
     return c.json({ success: true });
   } catch (error) {
     console.log("Error deleting store:", error);
@@ -195,7 +302,12 @@ app.delete(`${prefix}/stores/:id`, async (c) => {
 // ============ ITEMS ============
 app.get(`${prefix}/items`, async (c) => {
   try {
-    const items = await kv.getByPrefix("item:");
+    const user = await getAuthUser(c.req.raw);
+    if (!user) {
+      return c.json({ success: false, error: "Unauthorized" }, 401);
+    }
+    
+    const items = await kv.getByPrefix(`user:${user.id}:item:`);
     return c.json({ success: true, data: items });
   } catch (error) {
     console.log("Error fetching items:", error);
@@ -205,6 +317,11 @@ app.get(`${prefix}/items`, async (c) => {
 
 app.post(`${prefix}/items`, async (c) => {
   try {
+    const user = await getAuthUser(c.req.raw);
+    if (!user) {
+      return c.json({ success: false, error: "Unauthorized" }, 401);
+    }
+    
     const body = await c.req.json();
     const { name, brandId, categoryId, unitId, isVegan } = body;
     
@@ -215,7 +332,7 @@ app.post(`${prefix}/items`, async (c) => {
     const id = crypto.randomUUID();
     const item = { id, name, brandId, categoryId, unitId, isVegan: isVegan || false };
     
-    await kv.set(`item:${id}`, item);
+    await kv.set(`user:${user.id}:item:${id}`, item);
     return c.json({ success: true, data: item });
   } catch (error) {
     console.log("Error creating item:", error);
@@ -225,8 +342,13 @@ app.post(`${prefix}/items`, async (c) => {
 
 app.delete(`${prefix}/items/:id`, async (c) => {
   try {
+    const user = await getAuthUser(c.req.raw);
+    if (!user) {
+      return c.json({ success: false, error: "Unauthorized" }, 401);
+    }
+    
     const id = c.req.param("id");
-    await kv.del(`item:${id}`);
+    await kv.del(`user:${user.id}:item:${id}`);
     return c.json({ success: true });
   } catch (error) {
     console.log("Error deleting item:", error);
@@ -237,7 +359,12 @@ app.delete(`${prefix}/items/:id`, async (c) => {
 // ============ PURCHASES ============
 app.get(`${prefix}/purchases`, async (c) => {
   try {
-    const purchases = await kv.getByPrefix("purchase:");
+    const user = await getAuthUser(c.req.raw);
+    if (!user) {
+      return c.json({ success: false, error: "Unauthorized" }, 401);
+    }
+    
+    const purchases = await kv.getByPrefix(`user:${user.id}:purchase:`);
     return c.json({ success: true, data: purchases });
   } catch (error) {
     console.log("Error fetching purchases:", error);
@@ -247,6 +374,11 @@ app.get(`${prefix}/purchases`, async (c) => {
 
 app.post(`${prefix}/purchases`, async (c) => {
   try {
+    const user = await getAuthUser(c.req.raw);
+    if (!user) {
+      return c.json({ success: false, error: "Unauthorized" }, 401);
+    }
+    
     const body = await c.req.json();
     const { storeId, date, items } = body;
     
@@ -263,7 +395,7 @@ app.post(`${prefix}/purchases`, async (c) => {
     };
     
     // Save main purchase
-    await kv.set(`purchase:${purchaseId}`, purchase);
+    await kv.set(`user:${user.id}:purchase:${purchaseId}`, purchase);
     
     // Save individual purchase items
     const savedItems = [];
@@ -282,7 +414,7 @@ app.post(`${prefix}/purchases`, async (c) => {
         date,
       };
       
-      await kv.set(`purchaseItem:${purchaseItemId}`, purchaseItem);
+      await kv.set(`user:${user.id}:purchaseItem:${purchaseItemId}`, purchaseItem);
       savedItems.push(purchaseItem);
     }
     
@@ -296,8 +428,13 @@ app.post(`${prefix}/purchases`, async (c) => {
 // Get purchase history for a specific item
 app.get(`${prefix}/items/:itemId/history`, async (c) => {
   try {
+    const user = await getAuthUser(c.req.raw);
+    if (!user) {
+      return c.json({ success: false, error: "Unauthorized" }, 401);
+    }
+    
     const itemId = c.req.param("itemId");
-    const allPurchaseItems = await kv.getByPrefix("purchaseItem:");
+    const allPurchaseItems = await kv.getByPrefix(`user:${user.id}:purchaseItem:`);
     
     const history = allPurchaseItems
       .filter((pi: any) => pi.itemId === itemId)
@@ -313,7 +450,12 @@ app.get(`${prefix}/items/:itemId/history`, async (c) => {
 // ============ PANTRY ============
 app.get(`${prefix}/pantry`, async (c) => {
   try {
-    const pantryItems = await kv.getByPrefix("pantry:");
+    const user = await getAuthUser(c.req.raw);
+    if (!user) {
+      return c.json({ success: false, error: "Unauthorized" }, 401);
+    }
+    
+    const pantryItems = await kv.getByPrefix(`user:${user.id}:pantry:`);
     return c.json({ success: true, data: pantryItems });
   } catch (error) {
     console.log("Error fetching pantry:", error);
@@ -323,6 +465,11 @@ app.get(`${prefix}/pantry`, async (c) => {
 
 app.put(`${prefix}/pantry/:itemId`, async (c) => {
   try {
+    const user = await getAuthUser(c.req.raw);
+    if (!user) {
+      return c.json({ success: false, error: "Unauthorized" }, 401);
+    }
+    
     const itemId = c.req.param("itemId");
     const body = await c.req.json();
     const { currentQuantity, openedDate } = body;
@@ -334,7 +481,7 @@ app.put(`${prefix}/pantry/:itemId`, async (c) => {
       updatedAt: new Date().toISOString(),
     };
     
-    await kv.set(`pantry:${itemId}`, pantryItem);
+    await kv.set(`user:${user.id}:pantry:${itemId}`, pantryItem);
     return c.json({ success: true, data: pantryItem });
   } catch (error) {
     console.log("Error updating pantry item:", error);
@@ -345,7 +492,12 @@ app.put(`${prefix}/pantry/:itemId`, async (c) => {
 // ============ SEED DATA ============
 app.post(`${prefix}/seed`, async (c) => {
   try {
-    // Seed initial data
+    const user = await getAuthUser(c.req.raw);
+    if (!user) {
+      return c.json({ success: false, error: "Unauthorized" }, 401);
+    }
+    
+    // Seed initial data for the user
     const brands = [
       { id: "1", name: "Taeq", isVegan: true },
       { id: "2", name: "Nestlé", isVegan: false },
@@ -386,21 +538,21 @@ app.post(`${prefix}/seed`, async (c) => {
       { id: "6", name: "Açúcar Refinado", brandId: "5", categoryId: "1", unitId: "1", isVegan: true },
     ];
 
-    // Save to KV store
+    // Save to KV store with user prefix
     for (const brand of brands) {
-      await kv.set(`brand:${brand.id}`, brand);
+      await kv.set(`user:${user.id}:brand:${brand.id}`, brand);
     }
     for (const category of categories) {
-      await kv.set(`category:${category.id}`, category);
+      await kv.set(`user:${user.id}:category:${category.id}`, category);
     }
     for (const unit of units) {
-      await kv.set(`unit:${unit.id}`, unit);
+      await kv.set(`user:${user.id}:unit:${unit.id}`, unit);
     }
     for (const store of stores) {
-      await kv.set(`store:${store.id}`, store);
+      await kv.set(`user:${user.id}:store:${store.id}`, store);
     }
     for (const item of items) {
-      await kv.set(`item:${item.id}`, item);
+      await kv.set(`user:${user.id}:item:${item.id}`, item);
     }
 
     return c.json({ success: true, message: "Data seeded successfully" });

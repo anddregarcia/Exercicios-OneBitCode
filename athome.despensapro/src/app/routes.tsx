@@ -1,5 +1,6 @@
 import { createBrowserRouter } from "react-router";
 import { Layout } from "./components/Layout";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Dashboard } from "./pages/Dashboard";
 import { NewPurchase } from "./pages/NewPurchase";
 import { Pantry } from "./pages/Pantry";
@@ -24,7 +25,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/",
-    Component: Layout,
+    element: (
+      <ProtectedRoute>
+        <Layout />
+      </ProtectedRoute>
+    ),
     children: [
       { index: true, Component: Dashboard },
       { path: "new-purchase", Component: NewPurchase },

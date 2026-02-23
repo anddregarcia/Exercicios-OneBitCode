@@ -1,16 +1,31 @@
 import { projectId, publicAnonKey } from "/utils/supabase/info";
+import { createClient } from "@supabase/supabase-js";
 
 const BASE_URL = `https://${projectId}.supabase.co/functions/v1/make-server-17516063`;
 
-const headers = {
-  "Content-Type": "application/json",
-  Authorization: `Bearer ${publicAnonKey}`,
-};
+// Create Supabase client for getting auth token
+const supabase = createClient(
+  `https://${projectId}.supabase.co`,
+  publicAnonKey
+);
+
+// Get auth headers with current user's token
+async function getAuthHeaders() {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token || publicAnonKey;
+  
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+}
 
 // Generic API call helper
 async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
   try {
     console.log(`[API] Calling ${endpoint}...`);
+    const headers = await getAuthHeaders();
+    
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       ...options,
       headers: {

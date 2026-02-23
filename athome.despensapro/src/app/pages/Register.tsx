@@ -4,17 +4,20 @@ import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Package } from "lucide-react";
+import { Package, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "../contexts/AuthContext";
 
 export function Register() {
   const navigate = useNavigate();
+  const { signUp } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!name || !email || !password || !confirmPassword) {
@@ -32,8 +35,17 @@ export function Register() {
       return;
     }
 
-    toast.success("Conta criada com sucesso!");
-    navigate("/");
+    setLoading(true);
+    try {
+      await signUp(email, password, name);
+      toast.success("Conta criada com sucesso! Faça login para continuar.");
+      navigate("/login");
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      toast.error(error.message || "Erro ao criar conta. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -61,6 +73,7 @@ export function Register() {
                 placeholder="Seu nome"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                disabled={loading}
               />
             </div>
 
@@ -72,6 +85,7 @@ export function Register() {
                 placeholder="seu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
               />
             </div>
 
@@ -83,6 +97,7 @@ export function Register() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
               />
             </div>
 
@@ -94,11 +109,19 @@ export function Register() {
                 placeholder="••••••••"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                disabled={loading}
               />
             </div>
 
-            <Button type="submit" className="w-full">
-              Criar Conta Gratuita
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Criando conta...
+                </>
+              ) : (
+                "Criar Conta Gratuita"
+              )}
             </Button>
           </form>
 

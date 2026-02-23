@@ -1,18 +1,23 @@
-import { Outlet, Link, useLocation } from "react-router";
+import { Outlet, Link, useLocation, useNavigate } from "react-router";
 import { 
   LayoutDashboard, 
   ShoppingCart, 
   Package, 
   Settings as SettingsIcon,
   Menu,
-  X
+  X,
+  LogOut
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { DataInitializer } from "./DataInitializer";
+import { useAuth } from "../contexts/AuthContext";
+import { toast } from "sonner";
 
 export function Layout() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut, user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navigation = [
@@ -27,6 +32,17 @@ export function Layout() {
       return location.pathname === "/";
     }
     return location.pathname.startsWith(href);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success("Logout realizado com sucesso!");
+      navigate("/login");
+    } catch (error: any) {
+      console.error("Logout error:", error);
+      toast.error("Erro ao fazer logout");
+    }
   };
 
   return (
@@ -63,7 +79,15 @@ export function Layout() {
             </nav>
 
             {/* Footer */}
-            <div className="border-t border-border p-4">
+            <div className="border-t border-border p-4 space-y-3">
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-muted-foreground hover:text-foreground"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sair
+              </Button>
               <div className="rounded-lg bg-accent p-4">
                 <p className="text-sm text-accent-foreground mb-2">Plano Gratuito</p>
                 <Link to="/pricing">
@@ -116,7 +140,18 @@ export function Layout() {
                     </Link>
                   );
                 })}
-                <div className="mt-6 border-t border-border pt-6">
+                <div className="mt-6 border-t border-border pt-6 space-y-2">
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start text-muted-foreground"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      handleLogout();
+                    }}
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sair
+                  </Button>
                   <Link to="/pricing" onClick={() => setMobileMenuOpen(false)}>
                     <Button size="sm" className="w-full">
                       Upgrade para Premium
