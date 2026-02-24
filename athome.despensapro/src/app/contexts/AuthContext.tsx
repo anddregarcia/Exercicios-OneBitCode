@@ -9,6 +9,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signOut: () => Promise<void>;
+  ensureDemoUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -52,33 +53,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, name: string) => {
-    // Call backend to create user with admin privileges
-    const response = await fetch(
-      `https://${projectId}.supabase.co/functions/v1/make-server-17516063/signup`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${publicAnonKey}`,
+    // Use Supabase Auth directly instead of Edge Function
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name: name,
         },
-        body: JSON.stringify({ email, password, name }),
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(error || "Erro ao criar conta");
+        // In development, this will send a confirmation email
+        // For production, configure email settings in Supabase dashboard
+        emailRedirectTo: `${window.location.origin}/`,
+      },
+    });
+    
+    if (error) {
+      throw error;
     }
-
-    const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.error || "Erro ao criar conta");
+    
+    // If email confirmation is disabled, user will be automatically logged in
+    // Otherwise, they need to confirm their email
+    if (data.user && !data.session) {
+      // Email confirmation required
+      throw new Error("Verifique seu email para confirmar o cadastro");
     }
   };
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
+  };
+  
+  const ensureDemoUser = async () => {
+    try {
+      console.log("[Auth] Ensuring demo user exists...");
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-17516063/create-demo-user`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${publicAnonKey}`,
+          },
+        }
+      );
+      
+      if (response.ok) {
+        console.log("[Auth] Demo user is ready");
+      } else {
+        console.error("[Auth] Failed to ensure demo user:", await response.text());
+      }
+    } catch (error) {
+      console.error("[Auth] Error ensuring demo user:", error);
+      // Don't throw - this is a background operation
+    }
   };
 
   const value = {
@@ -88,6 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signIn,
     signUp,
     signOut,
+    ensureDemoUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -100,3 +129,6 @@ export function useAuth() {
   }
   return context;
 }
+
+// Export supabase client for use in other parts of the app
+export { supabase };

@@ -71,6 +71,104 @@ app.post(`${prefix}/signup`, async (c) => {
   }
 });
 
+// ============ CREATE DEMO USER ============
+app.post(`${prefix}/create-demo-user`, async (c) => {
+  try {
+    const demoEmail = "demo@despensapro.com";
+    const demoPassword = "demo123";
+    const demoName = "Usuário Demo";
+    
+    // Check if demo user already exists
+    const { data: existingUsers } = await supabase.auth.admin.listUsers();
+    const demoExists = existingUsers?.users.some(user => user.email === demoEmail);
+    
+    if (demoExists) {
+      return c.json({ success: true, message: "Demo user already exists" });
+    }
+    
+    // Create demo user
+    const { data, error } = await supabase.auth.admin.createUser({
+      email: demoEmail,
+      password: demoPassword,
+      user_metadata: { name: demoName },
+      email_confirm: true
+    });
+    
+    if (error) {
+      console.log("Error creating demo user:", error);
+      return c.json({ success: false, error: error.message }, 400);
+    }
+    
+    // Seed data for demo user
+    if (data.user) {
+      const userId = data.user.id;
+      
+      // Seed brands
+      const brands = [
+        { id: "demo-1", name: "Taeq", isVegan: true },
+        { id: "demo-2", name: "Nestlé", isVegan: false },
+        { id: "demo-3", name: "Qualitá", isVegan: false },
+        { id: "demo-4", name: "Hellmann's", isVegan: false },
+        { id: "demo-5", name: "Açúcar União", isVegan: true },
+      ];
+
+      const categories = [
+        { id: "demo-1", name: "Grãos e Cereais" },
+        { id: "demo-2", name: "Laticínios" },
+        { id: "demo-3", name: "Condimentos" },
+        { id: "demo-4", name: "Bebidas" },
+        { id: "demo-5", name: "Limpeza" },
+      ];
+
+      const units = [
+        { id: "demo-1", name: "Quilograma", abbreviation: "kg" },
+        { id: "demo-2", name: "Litro", abbreviation: "L" },
+        { id: "demo-3", name: "Unidade", abbreviation: "un" },
+        { id: "demo-4", name: "Pacote", abbreviation: "pct" },
+        { id: "demo-5", name: "Caixa", abbreviation: "cx" },
+      ];
+
+      const stores = [
+        { id: "demo-1", name: "Pão de Açúcar", address: "Av. Paulista, 1000" },
+        { id: "demo-2", name: "Carrefour", address: "Rua Augusta, 500" },
+        { id: "demo-3", name: "Extra", address: "Shopping Center Norte" },
+        { id: "demo-4", name: "Dia", address: "Rua da Consolação, 200" },
+      ];
+
+      const items = [
+        { id: "demo-1", name: "Arroz Integral", brandId: "demo-1", categoryId: "demo-1", unitId: "demo-1", isVegan: true },
+        { id: "demo-2", name: "Feijão Preto", brandId: "demo-3", categoryId: "demo-1", unitId: "demo-1", isVegan: true },
+        { id: "demo-3", name: "Leite Integral", brandId: "demo-2", categoryId: "demo-2", unitId: "demo-2", isVegan: false },
+        { id: "demo-4", name: "Azeite de Oliva", brandId: "demo-3", categoryId: "demo-3", unitId: "demo-2", isVegan: true },
+        { id: "demo-5", name: "Maionese", brandId: "demo-4", categoryId: "demo-3", unitId: "demo-4", isVegan: false },
+        { id: "demo-6", name: "Açúcar Refinado", brandId: "demo-5", categoryId: "demo-1", unitId: "demo-1", isVegan: true },
+      ];
+
+      // Save to KV store with user prefix
+      for (const brand of brands) {
+        await kv.set(`user:${userId}:brand:${brand.id}`, brand);
+      }
+      for (const category of categories) {
+        await kv.set(`user:${userId}:category:${category.id}`, category);
+      }
+      for (const unit of units) {
+        await kv.set(`user:${userId}:unit:${unit.id}`, unit);
+      }
+      for (const store of stores) {
+        await kv.set(`user:${userId}:store:${store.id}`, store);
+      }
+      for (const item of items) {
+        await kv.set(`user:${userId}:item:${item.id}`, item);
+      }
+    }
+    
+    return c.json({ success: true, data: { user: data.user } });
+  } catch (error) {
+    console.log("Error in create-demo-user:", error);
+    return c.json({ success: false, error: String(error) }, 500);
+  }
+});
+
 // ============ BRANDS ============
 app.get(`${prefix}/brands`, async (c) => {
   try {
