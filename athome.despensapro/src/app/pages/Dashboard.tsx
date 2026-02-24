@@ -72,7 +72,8 @@ export function Dashboard() {
   const totalSpent = monthPurchases.reduce((sum: number, purchase: any) => 
     sum + (purchase.price * purchase.quantity), 0
   );
-  const totalPurchases = monthPurchases.length;
+  const totalShoppingTrips = new Set(monthPurchases.map((purchase: any) => `${purchase.date}-${purchase.storeId}`)).size;
+  const totalItemsPurchased = monthPurchases.reduce((sum: number, purchase: any) => sum + purchase.quantity, 0);
 
   // Most used store
   const storeFrequency = monthPurchases.reduce((acc: Record<string, number>, purchase: any) => {
@@ -166,7 +167,7 @@ export function Dashboard() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-4">
           <Card className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -184,8 +185,21 @@ export function Dashboard() {
           <Card className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Compras no Mês</p>
-                <p className="mt-2 text-3xl font-semibold text-foreground">{totalPurchases}</p>
+                <p className="text-sm text-muted-foreground">Compras Realizadas no Mês</p>
+                <p className="mt-2 text-3xl font-semibold text-foreground">{totalShoppingTrips}</p>
+              </div>
+              <div className="rounded-full bg-primary/10 p-3">
+                <ShoppingBag className="h-6 w-6 text-primary" />
+              </div>
+            </div>
+          </Card>
+
+
+          <Card className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Itens Comprados no Mês</p>
+                <p className="mt-2 text-3xl font-semibold text-foreground">{totalItemsPurchased}</p>
               </div>
               <div className="rounded-full bg-primary/10 p-3">
                 <ShoppingBag className="h-6 w-6 text-primary" />

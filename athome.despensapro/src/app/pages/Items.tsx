@@ -36,6 +36,7 @@ export function Items() {
   const [activeTab, setActiveTab] = useState<EntityType>("item");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   // Data states
   const [items, setItems] = useState<any[]>([]);
@@ -114,7 +115,44 @@ export function Items() {
   const handleAdd = (type: EntityType) => {
     setActiveTab(type);
     setEditMode(false);
+    setEditingId(null);
     resetForm();
+    setDialogOpen(true);
+  };
+
+  const handleEdit = (type: EntityType, entity: any) => {
+    setActiveTab(type);
+    setEditMode(true);
+    setEditingId(entity.id);
+
+    if (type === "item") {
+      setItemName(entity.name || "");
+      setItemBrand(entity.brandId || "");
+      setItemCategory(entity.categoryId || "");
+      setItemUnit(entity.unitId || "");
+      setItemPackageSize(entity.packageSize || "");
+      setItemVegan(Boolean(entity.isVegan));
+    }
+
+    if (type === "brand") {
+      setBrandName(entity.name || "");
+      setBrandVegan(Boolean(entity.isVegan));
+    }
+
+    if (type === "category") {
+      setCategoryName(entity.name || "");
+    }
+
+    if (type === "unit") {
+      setUnitName(entity.name || "");
+      setUnitAbbreviation(entity.abbreviation || "");
+    }
+
+    if (type === "store") {
+      setStoreName(entity.name || "");
+      setStoreAddress(entity.address || "");
+    }
+
     setDialogOpen(true);
   };
 
@@ -126,16 +164,23 @@ export function Items() {
             toast.error("Preencha todos os campos obrigatórios");
             return;
           }
-          const newItem = await itemsAPI.create({
+          const itemPayload = {
             name: itemName,
             brandId: itemBrand,
             categoryId: itemCategory,
             unitId: itemUnit,
             packageSize: itemPackageSize,
             isVegan: itemVegan,
-          });
-          setItems([...items, newItem]);
-          toast.success(`Item "${itemName}" cadastrado com sucesso!`);
+          };
+          if (editMode && editingId) {
+            const updatedItem = await itemsAPI.update(editingId, itemPayload);
+            setItems(items.map((item) => (item.id === editingId ? updatedItem : item)));
+            toast.success(`Item "${itemName}" atualizado com sucesso!`);
+          } else {
+            const newItem = await itemsAPI.create(itemPayload);
+            setItems([...items, newItem]);
+            toast.success(`Item "${itemName}" cadastrado com sucesso!`);
+          }
           break;
 
         case "brand":
@@ -143,12 +188,16 @@ export function Items() {
             toast.error("Preencha o nome da marca");
             return;
           }
-          const newBrand = await brandsAPI.create({
-            name: brandName,
-            isVegan: brandVegan,
-          });
-          setBrands([...brands, newBrand]);
-          toast.success(`Marca "${brandName}" cadastrada com sucesso!`);
+          const brandPayload = { name: brandName, isVegan: brandVegan };
+          if (editMode && editingId) {
+            const updatedBrand = await brandsAPI.update(editingId, brandPayload);
+            setBrands(brands.map((brand) => (brand.id === editingId ? updatedBrand : brand)));
+            toast.success(`Marca "${brandName}" atualizada com sucesso!`);
+          } else {
+            const newBrand = await brandsAPI.create(brandPayload);
+            setBrands([...brands, newBrand]);
+            toast.success(`Marca "${brandName}" cadastrada com sucesso!`);
+          }
           break;
 
         case "category":
@@ -156,11 +205,16 @@ export function Items() {
             toast.error("Preencha o nome da categoria");
             return;
           }
-          const newCategory = await categoriesAPI.create({
-            name: categoryName,
-          });
-          setCategories([...categories, newCategory]);
-          toast.success(`Categoria "${categoryName}" cadastrada com sucesso!`);
+          const categoryPayload = { name: categoryName };
+          if (editMode && editingId) {
+            const updatedCategory = await categoriesAPI.update(editingId, categoryPayload);
+            setCategories(categories.map((category) => (category.id === editingId ? updatedCategory : category)));
+            toast.success(`Categoria "${categoryName}" atualizada com sucesso!`);
+          } else {
+            const newCategory = await categoriesAPI.create(categoryPayload);
+            setCategories([...categories, newCategory]);
+            toast.success(`Categoria "${categoryName}" cadastrada com sucesso!`);
+          }
           break;
 
         case "unit":
@@ -168,12 +222,16 @@ export function Items() {
             toast.error("Preencha todos os campos");
             return;
           }
-          const newUnit = await unitsAPI.create({
-            name: unitName,
-            abbreviation: unitAbbreviation,
-          });
-          setUnits([...units, newUnit]);
-          toast.success(`Unidade "${unitName}" cadastrada com sucesso!`);
+          const unitPayload = { name: unitName, abbreviation: unitAbbreviation };
+          if (editMode && editingId) {
+            const updatedUnit = await unitsAPI.update(editingId, unitPayload);
+            setUnits(units.map((unit) => (unit.id === editingId ? updatedUnit : unit)));
+            toast.success(`Unidade "${unitName}" atualizada com sucesso!`);
+          } else {
+            const newUnit = await unitsAPI.create(unitPayload);
+            setUnits([...units, newUnit]);
+            toast.success(`Unidade "${unitName}" cadastrada com sucesso!`);
+          }
           break;
 
         case "store":
@@ -181,16 +239,22 @@ export function Items() {
             toast.error("Preencha o nome do mercado");
             return;
           }
-          const newStore = await storesAPI.create({
-            name: storeName,
-            address: storeAddress,
-          });
-          setStores([...stores, newStore]);
-          toast.success(`Mercado "${storeName}" cadastrado com sucesso!`);
+          const storePayload = { name: storeName, address: storeAddress };
+          if (editMode && editingId) {
+            const updatedStore = await storesAPI.update(editingId, storePayload);
+            setStores(stores.map((store) => (store.id === editingId ? updatedStore : store)));
+            toast.success(`Mercado "${storeName}" atualizado com sucesso!`);
+          } else {
+            const newStore = await storesAPI.create(storePayload);
+            setStores([...stores, newStore]);
+            toast.success(`Mercado "${storeName}" cadastrado com sucesso!`);
+          }
           break;
       }
 
       setDialogOpen(false);
+      setEditMode(false);
+      setEditingId(null);
       resetForm();
     } catch (error) {
       console.error("Error saving:", error);
@@ -237,6 +301,7 @@ export function Items() {
 
   const getBrandName = (brandId: string) => brands.find(b => b.id === brandId)?.name || "";
   const getCategoryName = (categoryId: string) => categories.find(c => c.id === categoryId)?.name || "";
+  const getUnitName = (unitId: string) => units.find((u) => u.id === unitId)?.abbreviation || "";
 
   const getDialogTitle = () => {
     const action = editMode ? "Editar" : "Novo";
@@ -295,13 +360,20 @@ export function Items() {
                     className="flex items-center justify-between rounded-lg border border-border p-4 hover:bg-muted/30"
                   >
                     <div>
-                      <p className="font-medium text-foreground">{item.name}{item.packageSize ? ` (${item.packageSize})` : ""}</p>
+                      <p className="font-medium text-foreground">{item.name}{item.packageSize ? ` (${item.packageSize} ${getUnitName(item.unitId)})` : ""}</p>
                       <p className="text-sm text-muted-foreground">
                         {getBrandName(item.brandId)} • {getCategoryName(item.categoryId)}
                         {item.isVegan && " • Vegano"}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit("item", item)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
                       <Button 
                         variant="ghost" 
                         size="sm"
@@ -339,6 +411,13 @@ export function Items() {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit("brand", brand)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
                       <Button 
                         variant="ghost" 
                         size="sm"
@@ -371,6 +450,13 @@ export function Items() {
                   >
                     <p className="font-medium text-foreground">{category.name}</p>
                     <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit("category", category)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
                       <Button 
                         variant="ghost" 
                         size="sm"
@@ -406,6 +492,13 @@ export function Items() {
                       <p className="text-sm text-muted-foreground">{unit.abbreviation}</p>
                     </div>
                     <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit("unit", unit)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
                       <Button 
                         variant="ghost" 
                         size="sm"
@@ -443,6 +536,13 @@ export function Items() {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit("store", store)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
                       <Button 
                         variant="ghost" 
                         size="sm"
@@ -526,9 +626,12 @@ export function Items() {
                 <div className="space-y-2">
                   <Label>Volume da Embalagem *</Label>
                   <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
                     value={itemPackageSize}
                     onChange={(e) => setItemPackageSize(e.target.value)}
-                    placeholder="Ex: 1kg, 5kg, 500ml"
+                    placeholder="Ex: 1, 0.5, 12"
                   />
                 </div>
                 <div className="flex items-center space-x-2">
