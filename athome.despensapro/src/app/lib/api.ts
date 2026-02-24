@@ -51,7 +51,11 @@ type UserData = {
 const STORAGE_PREFIX = "despensapro:user:";
 const USER_DATA_METADATA_KEY = "despensaproData";
 
-async function getCurrentUser() {
+async function getCurrentUser(forceRefresh = false) {
+  if (forceRefresh) {
+    await supabase.auth.refreshSession();
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -93,7 +97,7 @@ function readLocalUserData(userId: string): UserData | null {
 }
 
 async function readUserData(): Promise<UserData> {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser(true);
   const userId = user.id;
   const localData = readLocalUserData(userId);
 
@@ -104,7 +108,6 @@ async function readUserData(): Promise<UserData> {
   }
 
   if (localData) {
-    await writeUserData(localData);
     return localData;
   }
 
