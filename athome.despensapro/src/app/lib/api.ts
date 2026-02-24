@@ -71,6 +71,7 @@ async function getCurrentUser() {
   throw new Error("Usuário não autenticado");
 }
 
+
 function getStorageKey(userId: string) {
   return `${STORAGE_PREFIX}${userId}`;
 }
