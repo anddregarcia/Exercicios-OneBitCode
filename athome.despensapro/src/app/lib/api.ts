@@ -9,14 +9,18 @@ const supabase = createClient(
   publicAnonKey
 );
 
-// Get auth headers with current user's token
+// Get auth headers with current user's token.  If there is no
+// active session the function returns headers *without* an
+// Authorization field.  Sending the anon key to a protected route is
+// what produced the "Invalid JWT" 401 error in the log.
 async function getAuthHeaders() {
   const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token || publicAnonKey;
-  
+  if (!session || !session.access_token) {
+    return { "Content-Type": "application/json" };
+  }
   return {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
+    Authorization: `Bearer ${session.access_token}`,
   };
 }
 

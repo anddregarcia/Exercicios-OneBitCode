@@ -3,12 +3,15 @@ import { seedData, itemsAPI } from "../lib/api";
 import { Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
+import { useAuth } from "../contexts/AuthContext";
 
 export function DataInitializer({ children }: { children: React.ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+
+  const { session } = useAuth();
 
   useEffect(() => {
     checkAndInitialize();
@@ -18,6 +21,15 @@ export function DataInitializer({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     setError(null);
     
+    // don't attempt to call the API if we're not authenticated yet;
+    // the anonymous key is refused by the server and was causing a
+    // 401 error in the console when the user visited the login page.
+    if (!session || !session.access_token) {
+      setIsInitialized(true);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       console.log("[DataInitializer] Checking for existing data...");
       
