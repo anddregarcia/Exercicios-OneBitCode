@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { seedData, itemsAPI } from "../lib/api";
+import { publicAnonKey } from "/utils/supabase/info";
 import { Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
@@ -21,10 +22,17 @@ export function DataInitializer({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     setError(null);
     
-    // don't attempt to call the API if we're not authenticated yet;
-    // the anonymous key is refused by the server and was causing a
-    // 401 error in the console when the user visited the login page.
-    if (!session || !session.access_token) {
+    // Don't attempt to call the API if we're not authenticated yet or
+    // the session only contains the anon key.  `supabase-js` often
+    // returns a non-null session object even when nobody is signed in –
+    // the token will just be the public anon key and `session.user` may
+    // be null or even a placeholder object.  Avoid both situations.
+    if (
+      !session ||
+      !session.access_token ||
+      session.access_token === publicAnonKey ||
+      !session.user
+    ) {
       setIsInitialized(true);
       setIsLoading(false);
       return;
@@ -58,6 +66,12 @@ export function DataInitializer({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       console.error("[DataInitializer] Error initializing data:", error);
       
+      // if the API call already logged us out, avoid showing the
+      // connection dialog (ProtectedRoute will redirect to login)
+      if (error.message?.includes("HTTP 401")) {
+        return;
+      }
+
       // Check if it's a network error
       if (error.message?.includes("Failed to fetch") || error.name === 'AbortError') {
         setError("O servidor está iniciando. Aguarde alguns segundos e clique em 'Tentar Novamente'.");

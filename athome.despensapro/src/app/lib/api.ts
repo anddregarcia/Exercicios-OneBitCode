@@ -16,10 +16,16 @@ const supabase = createClient(
 async function getAuthHeaders() {
   const { data: { session } } = await supabase.auth.getSession();
   // supabase returns a "session" object even when nobody is signed in;
-  // in that case `session.user` will be null and `access_token` is just
-  // the anon key.  Passing the anon key to our protected endpoints leads
-  // to an "Invalid JWT" error, so in that case we drop the header.
-  if (!session || !session.user || !session.access_token) {
+  // because we create the client with the anon key, the session may
+  // include the anon access token and a fake "anon" user object.  We
+  // must not forward that token to our function – it's rejected with a
+  // 401 "Invalid JWT" and causes infinite retry loops.
+  if (
+    !session ||
+    !session.access_token ||
+    session.access_token === publicAnonKey ||
+    !session.user
+  ) {
     return { "Content-Type": "application/json" };
   }
   return {
@@ -45,6 +51,13 @@ async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`[API] HTTP Error ${response.status} on ${endpoint}:`, errorText);
+      // If the server returns 401 it means the JWT is invalid/expired;
+      // clear the auth state so the app can redirect to login instead of
+      // looping on DataInitializer.
+      if (response.status === 401) {
+        console.warn("401 detected, signing out current user");
+        await supabase.auth.signOut();
+      }
       throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
     }
 
