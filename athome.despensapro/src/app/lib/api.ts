@@ -115,6 +115,14 @@ export const brandsAPI = {
     data.brands = data.brands.filter((b) => b.id !== brandId);
     await writeUserData(data);
   },
+  update: async (brandId: string, changes: { name: string; isVegan: boolean }) => {
+    const data = await readUserData();
+    data.brands = data.brands.map((brand) =>
+      brand.id === brandId ? { ...brand, ...changes } : brand
+    );
+    await writeUserData(data);
+    return data.brands.find((brand) => brand.id === brandId);
+  },
 };
 
 export const categoriesAPI = {
@@ -130,6 +138,14 @@ export const categoriesAPI = {
     const data = await readUserData();
     data.categories = data.categories.filter((c) => c.id !== categoryId);
     await writeUserData(data);
+  },
+  update: async (categoryId: string, changes: { name: string }) => {
+    const data = await readUserData();
+    data.categories = data.categories.map((category) =>
+      category.id === categoryId ? { ...category, ...changes } : category
+    );
+    await writeUserData(data);
+    return data.categories.find((category) => category.id === categoryId);
   },
 };
 
@@ -147,6 +163,14 @@ export const unitsAPI = {
     data.units = data.units.filter((u) => u.id !== unitId);
     await writeUserData(data);
   },
+  update: async (unitId: string, changes: { name: string; abbreviation: string }) => {
+    const data = await readUserData();
+    data.units = data.units.map((unit) =>
+      unit.id === unitId ? { ...unit, ...changes } : unit
+    );
+    await writeUserData(data);
+    return data.units.find((unit) => unit.id === unitId);
+  },
 };
 
 export const storesAPI = {
@@ -162,6 +186,14 @@ export const storesAPI = {
     const data = await readUserData();
     data.stores = data.stores.filter((s) => s.id !== storeId);
     await writeUserData(data);
+  },
+  update: async (storeId: string, changes: { name: string; address?: string }) => {
+    const data = await readUserData();
+    data.stores = data.stores.map((store) =>
+      store.id === storeId ? { ...store, ...changes } : store
+    );
+    await writeUserData(data);
+    return data.stores.find((store) => store.id === storeId);
   },
 };
 
@@ -187,6 +219,24 @@ export const itemsAPI = {
     data.pantry = data.pantry.filter((p) => p.itemId !== itemId);
     data.purchases = data.purchases.filter((p) => p.itemId !== itemId);
     await writeUserData(data);
+  },
+  update: async (
+    itemId: string,
+    changes: {
+      name: string;
+      brandId: string;
+      categoryId: string;
+      unitId: string;
+      isVegan: boolean;
+      packageSize: string;
+    }
+  ) => {
+    const data = await readUserData();
+    data.items = data.items.map((item) =>
+      item.id === itemId ? { ...item, ...changes, packageSize: changes.packageSize.trim() } : item
+    );
+    await writeUserData(data);
+    return data.items.find((item) => item.id === itemId);
   },
   getHistory: async (itemId: string) => {
     const data = await readUserData();
