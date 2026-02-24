@@ -67,6 +67,7 @@ async function getCurrentUser(forceRefresh = false) {
   return user;
 }
 
+
 function getStorageKey(userId: string) {
   return `${STORAGE_PREFIX}${userId}`;
 }
