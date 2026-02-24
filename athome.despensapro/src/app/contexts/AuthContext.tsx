@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { createClient, Session, User } from "@supabase/supabase-js";
-import { projectId, publicAnonKey, functionName } from "/utils/supabase/info";
+import { projectId, publicAnonKey } from "/utils/supabase/info";
 
 interface AuthContextType {
   user: User | null;
@@ -9,7 +9,6 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signOut: () => Promise<void>;
-  ensureDemoUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -84,31 +83,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
   };
   
-  const ensureDemoUser = async () => {
-    try {
-      console.log("[Auth] Ensuring demo user exists...");
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/${functionName}/create-demo-user`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${publicAnonKey}`,
-          },
-        }
-      );
-      
-      if (response.ok) {
-        console.log("[Auth] Demo user is ready");
-      } else {
-        console.error("[Auth] Failed to ensure demo user:", await response.text());
-      }
-    } catch (error) {
-      console.error("[Auth] Error ensuring demo user:", error);
-      // Don't throw - this is a background operation
-    }
-  };
-
   const value = {
     user,
     session,
@@ -116,7 +90,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signIn,
     signUp,
     signOut,
-    ensureDemoUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

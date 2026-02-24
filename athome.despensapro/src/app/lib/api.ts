@@ -1,172 +1,264 @@
-import { projectId, publicAnonKey, functionName } from "/utils/supabase/info";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "../contexts/AuthContext";
+import {
+  mockBrands,
+  mockCategories,
+  mockItems,
+  mockPantryItems,
+  mockStores,
+  mockUnits,
+} from "./mockData";
 
-const BASE_URL = `https://${projectId}.supabase.co/functions/v1/${functionName}`;
+type Brand = { id: string; name: string; isVegan: boolean };
+type Category = { id: string; name: string };
+type Unit = { id: string; name: string; abbreviation: string };
+type Store = { id: string; name: string; address?: string };
+type Item = {
+  id: string;
+  name: string;
+  brandId: string;
+  categoryId: string;
+  unitId: string;
+  isVegan: boolean;
+};
+type PurchaseItem = {
+  id: string;
+  itemId: string;
+  storeId: string;
+  price: number;
+  quantity: number;
+  date: string;
+};
+type PantryItem = {
+  itemId: string;
+  currentQuantity: number;
+  openedDate?: string;
+  lastPurchasePrice?: number;
+  lastPurchaseStore?: string;
+};
 
-// Create Supabase client for getting auth token
-const supabase = createClient(
-  `https://${projectId}.supabase.co`,
-  publicAnonKey
-);
+type UserData = {
+  brands: Brand[];
+  categories: Category[];
+  units: Unit[];
+  stores: Store[];
+  items: Item[];
+  purchases: PurchaseItem[];
+  pantry: PantryItem[];
+  seeded: boolean;
+};
 
-// Get auth headers with current user's token.  If there is no
-// active session the function returns headers *without* an
-// Authorization field.  Sending the anon key to a protected route is
-// what produced the "Invalid JWT" 401 error in the log.
-async function getAuthHeaders() {
-  const { data: { session } } = await supabase.auth.getSession();
-  // supabase returns a "session" object even when nobody is signed in;
-  // because we create the client with the anon key, the session may
-  // include the anon access token and a fake "anon" user object.  We
-  // must not forward that token to our function – it's rejected with a
-  // 401 "Invalid JWT" and causes infinite retry loops.
-  if (
-    !session ||
-    !session.access_token ||
-    session.access_token === publicAnonKey ||
-    !session.user
-  ) {
-    return { "Content-Type": "application/json" };
+const STORAGE_PREFIX = "despensapro:user:";
+
+async function getCurrentUserId() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("Usuário não autenticado");
   }
+
+  return user.id;
+}
+
+function getStorageKey(userId: string) {
+  return `${STORAGE_PREFIX}${userId}`;
+}
+
+function createInitialData(): UserData {
   return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${session.access_token}`,
+    brands: [...mockBrands],
+    categories: [...mockCategories],
+    units: [...mockUnits],
+    stores: [...mockStores],
+    items: [...mockItems],
+    purchases: [],
+    pantry: [...mockPantryItems],
+    seeded: true,
   };
 }
 
-// Generic API call helper
-async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  try {
-    console.log(`[API] Calling ${endpoint}...`);
-    const headers = await getAuthHeaders();
-    
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
-      ...options,
-      headers: {
-        ...headers,
-        ...options?.headers,
-      },
-    });
+async function readUserData(): Promise<UserData> {
+  const userId = await getCurrentUserId();
+  const raw = localStorage.getItem(getStorageKey(userId));
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`[API] HTTP Error ${response.status} on ${endpoint}:`, errorText);
-      // If the server returns 401 it means the JWT is invalid/expired;
-      // clear the auth state so the app can redirect to login instead of
-      // looping on DataInitializer.
-      if (response.status === 401) {
-        console.warn("401 detected, signing out current user");
-        await supabase.auth.signOut();
-      }
-      throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
-    }
-
-    const data = await response.json();
-    console.log(`[API] Response from ${endpoint}:`, data);
-
-    if (!data.success) {
-      throw new Error(data.error || "API request failed");
-    }
-
-    return data.data as T;
-  } catch (error) {
-    console.error(`[API] Error on ${endpoint}:`, error);
-    throw error;
+  if (!raw) {
+    const initial = createInitialData();
+    localStorage.setItem(getStorageKey(userId), JSON.stringify(initial));
+    return initial;
   }
+
+  return JSON.parse(raw) as UserData;
 }
 
-// Brands
+async function writeUserData(data: UserData) {
+  const userId = await getCurrentUserId();
+  localStorage.setItem(getStorageKey(userId), JSON.stringify(data));
+}
+
+function id() {
+  return crypto.randomUUID();
+}
+
 export const brandsAPI = {
-  getAll: () => apiCall<any[]>("/brands"),
-  create: (brand: { name: string; isVegan: boolean }) =>
-    apiCall<any>("/brands", {
-      method: "POST",
-      body: JSON.stringify(brand),
-    }),
-  delete: (id: string) =>
-    apiCall<void>(`/brands/${id}`, { method: "DELETE" }),
+  getAll: async () => (await readUserData()).brands,
+  create: async (brand: { name: string; isVegan: boolean }) => {
+    const data = await readUserData();
+    const newBrand = { id: id(), ...brand };
+    data.brands.push(newBrand);
+    await writeUserData(data);
+    return newBrand;
+  },
+  delete: async (brandId: string) => {
+    const data = await readUserData();
+    data.brands = data.brands.filter((b) => b.id !== brandId);
+    await writeUserData(data);
+  },
 };
 
-// Categories
 export const categoriesAPI = {
-  getAll: () => apiCall<any[]>("/categories"),
-  create: (category: { name: string }) =>
-    apiCall<any>("/categories", {
-      method: "POST",
-      body: JSON.stringify(category),
-    }),
-  delete: (id: string) =>
-    apiCall<void>(`/categories/${id}`, { method: "DELETE" }),
+  getAll: async () => (await readUserData()).categories,
+  create: async (category: { name: string }) => {
+    const data = await readUserData();
+    const newCategory = { id: id(), ...category };
+    data.categories.push(newCategory);
+    await writeUserData(data);
+    return newCategory;
+  },
+  delete: async (categoryId: string) => {
+    const data = await readUserData();
+    data.categories = data.categories.filter((c) => c.id !== categoryId);
+    await writeUserData(data);
+  },
 };
 
-// Units
 export const unitsAPI = {
-  getAll: () => apiCall<any[]>("/units"),
-  create: (unit: { name: string; abbreviation: string }) =>
-    apiCall<any>("/units", {
-      method: "POST",
-      body: JSON.stringify(unit),
-    }),
-  delete: (id: string) =>
-    apiCall<void>(`/units/${id}`, { method: "DELETE" }),
+  getAll: async () => (await readUserData()).units,
+  create: async (unit: { name: string; abbreviation: string }) => {
+    const data = await readUserData();
+    const newUnit = { id: id(), ...unit };
+    data.units.push(newUnit);
+    await writeUserData(data);
+    return newUnit;
+  },
+  delete: async (unitId: string) => {
+    const data = await readUserData();
+    data.units = data.units.filter((u) => u.id !== unitId);
+    await writeUserData(data);
+  },
 };
 
-// Stores
 export const storesAPI = {
-  getAll: () => apiCall<any[]>("/stores"),
-  create: (store: { name: string; address?: string }) =>
-    apiCall<any>("/stores", {
-      method: "POST",
-      body: JSON.stringify(store),
-    }),
-  delete: (id: string) =>
-    apiCall<void>(`/stores/${id}`, { method: "DELETE" }),
+  getAll: async () => (await readUserData()).stores,
+  create: async (store: { name: string; address?: string }) => {
+    const data = await readUserData();
+    const newStore = { id: id(), ...store };
+    data.stores.push(newStore);
+    await writeUserData(data);
+    return newStore;
+  },
+  delete: async (storeId: string) => {
+    const data = await readUserData();
+    data.stores = data.stores.filter((s) => s.id !== storeId);
+    await writeUserData(data);
+  },
 };
 
-// Items
 export const itemsAPI = {
-  getAll: () => apiCall<any[]>("/items"),
-  create: (item: {
+  getAll: async () => (await readUserData()).items,
+  create: async (item: {
     name: string;
     brandId: string;
     categoryId: string;
     unitId: string;
     isVegan: boolean;
-  }) =>
-    apiCall<any>("/items", {
-      method: "POST",
-      body: JSON.stringify(item),
-    }),
-  delete: (id: string) =>
-    apiCall<void>(`/items/${id}`, { method: "DELETE" }),
-  getHistory: (itemId: string) =>
-    apiCall<any[]>(`/items/${itemId}/history`),
+  }) => {
+    const data = await readUserData();
+    const newItem = { id: id(), ...item };
+    data.items.push(newItem);
+    await writeUserData(data);
+    return newItem;
+  },
+  delete: async (itemId: string) => {
+    const data = await readUserData();
+    data.items = data.items.filter((i) => i.id !== itemId);
+    data.pantry = data.pantry.filter((p) => p.itemId !== itemId);
+    data.purchases = data.purchases.filter((p) => p.itemId !== itemId);
+    await writeUserData(data);
+  },
+  getHistory: async (itemId: string) => {
+    const data = await readUserData();
+    return data.purchases
+      .filter((purchase) => purchase.itemId === itemId)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  },
 };
 
-// Purchases
 export const purchasesAPI = {
-  getAll: () => apiCall<any[]>("/purchases"),
-  create: (purchase: {
+  getAll: async () => (await readUserData()).purchases,
+  create: async (purchase: {
     storeId: string;
     date: string;
     items: Array<{ itemId: string; price: string; quantity: string }>;
-  }) =>
-    apiCall<any>("/purchases", {
-      method: "POST",
-      body: JSON.stringify(purchase),
-    }),
+  }) => {
+    const data = await readUserData();
+
+    purchase.items.forEach((item) => {
+      const historyItem: PurchaseItem = {
+        id: id(),
+        itemId: item.itemId,
+        storeId: purchase.storeId,
+        date: purchase.date,
+        price: Number(item.price),
+        quantity: Number(item.quantity),
+      };
+
+      data.purchases.push(historyItem);
+
+      const pantryItem = data.pantry.find((p) => p.itemId === item.itemId);
+      if (pantryItem) {
+        pantryItem.currentQuantity += Number(item.quantity);
+        pantryItem.lastPurchasePrice = Number(item.price);
+        pantryItem.lastPurchaseStore = purchase.storeId;
+      } else {
+        data.pantry.push({
+          itemId: item.itemId,
+          currentQuantity: Number(item.quantity),
+          lastPurchasePrice: Number(item.price),
+          lastPurchaseStore: purchase.storeId,
+        });
+      }
+    });
+
+    await writeUserData(data);
+    return { success: true };
+  },
 };
 
-// Pantry
 export const pantryAPI = {
-  getAll: () => apiCall<any[]>("/pantry"),
-  update: (itemId: string, data: { currentQuantity: number; openedDate?: string }) =>
-    apiCall<any>(`/pantry/${itemId}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    }),
+  getAll: async () => (await readUserData()).pantry,
+  update: async (itemId: string, update: { currentQuantity: number; openedDate?: string }) => {
+    const data = await readUserData();
+    const existing = data.pantry.find((item) => item.itemId === itemId);
+
+    if (existing) {
+      existing.currentQuantity = update.currentQuantity;
+      existing.openedDate = update.openedDate;
+    } else {
+      data.pantry.push({ itemId, ...update });
+    }
+
+    await writeUserData(data);
+    return { itemId, ...update };
+  },
 };
 
-// Seed data
-export const seedData = () =>
-  apiCall<any>("/seed", { method: "POST" });
+export const seedData = async () => {
+  const data = await readUserData();
+  if (!data.seeded || data.items.length === 0) {
+    const newData = createInitialData();
+    await writeUserData(newData);
+    return newData;
+  }
+  return data;
+};
