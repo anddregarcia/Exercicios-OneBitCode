@@ -51,20 +51,24 @@ type UserData = {
 const STORAGE_PREFIX = "despensapro:user:";
 const USER_DATA_METADATA_KEY = "despensaproData";
 
-async function getCurrentUser(forceRefresh = false) {
-  if (forceRefresh) {
-    await supabase.auth.refreshSession();
-  }
-
+async function getCurrentUser() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    throw new Error("Usuário não autenticado");
+  if (user) {
+    return user;
   }
 
-  return user;
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (session?.user) {
+    return session.user;
+  }
+
+  throw new Error("Usuário não autenticado");
 }
 
 
@@ -97,7 +101,7 @@ function readLocalUserData(userId: string): UserData | null {
 }
 
 async function readUserData(): Promise<UserData> {
-  const user = await getCurrentUser(true);
+  const user = await getCurrentUser();
   const userId = user.id;
   const localData = readLocalUserData(userId);
 
@@ -108,6 +112,7 @@ async function readUserData(): Promise<UserData> {
   }
 
   if (localData) {
+    await writeUserData(localData);
     return localData;
   }
 
