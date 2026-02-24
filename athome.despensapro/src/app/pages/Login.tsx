@@ -1,24 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Package, Loader2, Info } from "lucide-react";
+import { Package, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../contexts/AuthContext";
 
 export function Login() {
   const navigate = useNavigate();
-  const { signIn, ensureDemoUser } = useAuth();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   
-  // Ensure demo user exists when component mounts
-  useEffect(() => {
-    ensureDemoUser();
-  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,11 +37,6 @@ export function Login() {
     }
   };
   
-  const handleDemoLogin = () => {
-    setEmail("demo@despensapro.com");
-    setPassword("demo123");
-    toast.info("Credenciais demo preenchidas. Clique em 'Entrar' para continuar.");
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -105,20 +96,6 @@ export function Login() {
             </Button>
           </form>
           
-          {/* Demo Login Button */}
-          <div className="mt-4">
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="w-full" 
-              onClick={handleDemoLogin}
-              disabled={loading}
-            >
-              <Info className="h-4 w-4 mr-2" />
-              Usar Credenciais Demo
-            </Button>
-          </div>
-
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
               Não tem uma conta?{" "}

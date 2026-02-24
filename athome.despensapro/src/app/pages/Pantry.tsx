@@ -186,7 +186,7 @@ export function Pantry() {
                       return (
                         <tr key={pantryItem.itemId} className="border-b border-border hover:bg-muted/30">
                           <td className="px-4 py-4">
-                            <span className="font-medium text-foreground">{item.name}</span>
+                            <span className="font-medium text-foreground">{item.name}{item.packageSize ? ` (${item.packageSize})` : ""}</span>
                           </td>
                           <td className="px-4 py-4 text-muted-foreground">
                             {getBrandName(item.brandId)}
@@ -256,7 +256,7 @@ export function Pantry() {
                     <div className="space-y-3">
                       <div className="flex items-start justify-between">
                         <div>
-                          <h4 className="font-semibold text-foreground">{item.name}</h4>
+                          <h4 className="font-semibold text-foreground">{item.name}{item.packageSize ? ` (${item.packageSize})` : ""}</h4>
                           <p className="text-sm text-muted-foreground">{getBrandName(item.brandId)}</p>
                         </div>
                         <Button
@@ -338,7 +338,7 @@ export function Pantry() {
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Editar Quantidade - {selectedItem?.name}</DialogTitle>
+            <DialogTitle>Editar Quantidade - {selectedItem?.name}{selectedItem?.packageSize ? ` (${selectedItem.packageSize})` : ""}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">

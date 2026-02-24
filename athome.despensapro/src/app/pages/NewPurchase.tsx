@@ -412,7 +412,7 @@ export function NewPurchase() {
                         />
                       </td>
                       <td className="px-4 py-4">
-                        <span className="font-medium text-foreground">{item.name}</span>
+                        <span className="font-medium text-foreground">{item.name}{item.packageSize ? ` (${item.packageSize})` : ""}</span>
                       </td>
                       <td className="px-4 py-4 text-muted-foreground">
                         {getBrandName(item.brandId)}
@@ -501,7 +501,7 @@ export function NewPurchase() {
                   />
                   <div className="flex-1 space-y-3">
                     <div>
-                      <h4 className="font-semibold text-foreground">{item.name}</h4>
+                      <h4 className="font-semibold text-foreground">{item.name}{item.packageSize ? ` (${item.packageSize})` : ""}</h4>
                       <p className="text-sm text-muted-foreground">
                         {getBrandName(item.brandId)} • {getCategoryName(item.categoryId)}
                       </p>
@@ -577,7 +577,7 @@ export function NewPurchase() {
           <DialogHeader>
             <DialogTitle>
               Histórico de Preços -{" "}
-              {historyDialogItem && items.find(i => i.id === historyDialogItem)?.name}
+              {historyDialogItem && items.find(i => i.id === historyDialogItem)?.name}{historyDialogItem && items.find(i => i.id === historyDialogItem)?.packageSize ? ` (${items.find(i => i.id === historyDialogItem)?.packageSize})` : ""}
             </DialogTitle>
           </DialogHeader>
 
