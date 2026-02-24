@@ -64,13 +64,12 @@ export function DataInitializer({ children }: { children: React.ReactNode }) {
         throw fetchError;
       }
     } catch (error: any) {
-      console.error("[DataInitializer] Error initializing data:", error);
-      
       // if the API call already logged us out, avoid showing the
       // connection dialog (ProtectedRoute will redirect to login)
       if (error.message?.includes("HTTP 401")) {
         return;
       }
+      console.error("[DataInitializer] Error initializing data:", error);
 
       // Check if it's a network error
       if (error.message?.includes("Failed to fetch") || error.name === 'AbortError') {

@@ -1,7 +1,7 @@
-import { projectId, publicAnonKey } from "/utils/supabase/info";
+import { projectId, publicAnonKey, functionName } from "/utils/supabase/info";
 import { createClient } from "@supabase/supabase-js";
 
-const BASE_URL = `https://${projectId}.supabase.co/functions/v1/make-server-17516063`;
+const BASE_URL = `https://${projectId}.supabase.co/functions/v1/${functionName}`;
 
 // Create Supabase client for getting auth token
 const supabase = createClient(

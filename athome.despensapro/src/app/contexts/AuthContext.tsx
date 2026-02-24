@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { createClient, Session, User } from "@supabase/supabase-js";
-import { projectId, publicAnonKey } from "/utils/supabase/info";
+import { projectId, publicAnonKey, functionName } from "/utils/supabase/info";
 
 interface AuthContextType {
   user: User | null;
@@ -88,7 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log("[Auth] Ensuring demo user exists...");
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-17516063/create-demo-user`,
+        `https://${projectId}.supabase.co/functions/v1/${functionName}/create-demo-user`,
         {
           method: "POST",
           headers: {
