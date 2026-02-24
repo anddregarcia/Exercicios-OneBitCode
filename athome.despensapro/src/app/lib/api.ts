@@ -49,8 +49,9 @@ type UserData = {
 };
 
 const STORAGE_PREFIX = "despensapro:user:";
+const USER_DATA_METADATA_KEY = "despensaproData";
 
-async function getCurrentUserId() {
+async function getCurrentUser() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -59,8 +60,9 @@ async function getCurrentUserId() {
     throw new Error("Usuário não autenticado");
   }
 
-  return user.id;
+  return user;
 }
+
 
 function getStorageKey(userId: string) {
   return `${STORAGE_PREFIX}${userId}`;
@@ -79,22 +81,54 @@ function createInitialData(): UserData {
   };
 }
 
-async function readUserData(): Promise<UserData> {
-  const userId = await getCurrentUserId();
+function readLocalUserData(userId: string): UserData | null {
   const raw = localStorage.getItem(getStorageKey(userId));
+  if (!raw) return null;
 
-  if (!raw) {
-    const initial = createInitialData();
-    localStorage.setItem(getStorageKey(userId), JSON.stringify(initial));
-    return initial;
+  try {
+    return JSON.parse(raw) as UserData;
+  } catch {
+    return null;
+  }
+}
+
+async function readUserData(): Promise<UserData> {
+  const user = await getCurrentUser();
+  const userId = user.id;
+  const localData = readLocalUserData(userId);
+
+  const cloudData = user.user_metadata?.[USER_DATA_METADATA_KEY] as UserData | undefined;
+  if (cloudData) {
+    localStorage.setItem(getStorageKey(userId), JSON.stringify(cloudData));
+    return cloudData;
   }
 
-  return JSON.parse(raw) as UserData;
+  if (localData) {
+    await writeUserData(localData);
+    return localData;
+  }
+
+  const initial = createInitialData();
+  await writeUserData(initial);
+  return initial;
 }
 
 async function writeUserData(data: UserData) {
-  const userId = await getCurrentUserId();
-  localStorage.setItem(getStorageKey(userId), JSON.stringify(data));
+  const user = await getCurrentUser();
+  const currentMetadata = user.user_metadata || {};
+
+  const { error } = await supabase.auth.updateUser({
+    data: {
+      ...currentMetadata,
+      [USER_DATA_METADATA_KEY]: data,
+    },
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  localStorage.setItem(getStorageKey(user.id), JSON.stringify(data));
 }
 
 function id() {
