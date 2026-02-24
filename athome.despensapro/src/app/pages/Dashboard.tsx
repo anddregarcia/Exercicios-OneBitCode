@@ -218,7 +218,7 @@ export function Dashboard() {
                 itemsWithIncrease.map((data: any) => (
                   <div key={data.item.id} className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-foreground">{data.item.name}</p>
+                      <p className="font-medium text-foreground">{data.item.name}{data.item.packageSize ? ` (${data.item.packageSize})` : ""}</p>
                       <p className="text-sm text-muted-foreground">
                         Preço atual: R$ {data.avgPrice.toFixed(2)}
                       </p>
@@ -245,7 +245,7 @@ export function Dashboard() {
                 itemsWithLowestPrice.map((data: any) => (
                   <div key={data.item.id} className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-foreground">{data.item.name}</p>
+                      <p className="font-medium text-foreground">{data.item.name}{data.item.packageSize ? ` (${data.item.packageSize})` : ""}</p>
                       <p className="text-sm text-muted-foreground">
                         Preço: R$ {data.currentPrice.toFixed(2)}
                       </p>

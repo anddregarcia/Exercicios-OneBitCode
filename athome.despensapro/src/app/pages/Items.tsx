@@ -49,6 +49,7 @@ export function Items() {
   const [itemBrand, setItemBrand] = useState("");
   const [itemCategory, setItemCategory] = useState("");
   const [itemUnit, setItemUnit] = useState("");
+  const [itemPackageSize, setItemPackageSize] = useState("");
   const [itemVegan, setItemVegan] = useState(false);
 
   // Brand form state
@@ -99,6 +100,7 @@ export function Items() {
     setItemBrand("");
     setItemCategory("");
     setItemUnit("");
+    setItemPackageSize("");
     setItemVegan(false);
     setBrandName("");
     setBrandVegan(false);
@@ -120,7 +122,7 @@ export function Items() {
     try {
       switch (activeTab) {
         case "item":
-          if (!itemName || !itemBrand || !itemCategory || !itemUnit) {
+          if (!itemName || !itemBrand || !itemCategory || !itemUnit || !itemPackageSize) {
             toast.error("Preencha todos os campos obrigatórios");
             return;
           }
@@ -129,6 +131,7 @@ export function Items() {
             brandId: itemBrand,
             categoryId: itemCategory,
             unitId: itemUnit,
+            packageSize: itemPackageSize,
             isVegan: itemVegan,
           });
           setItems([...items, newItem]);
@@ -292,7 +295,7 @@ export function Items() {
                     className="flex items-center justify-between rounded-lg border border-border p-4 hover:bg-muted/30"
                   >
                     <div>
-                      <p className="font-medium text-foreground">{item.name}</p>
+                      <p className="font-medium text-foreground">{item.name}{item.packageSize ? ` (${item.packageSize})` : ""}</p>
                       <p className="text-sm text-muted-foreground">
                         {getBrandName(item.brandId)} • {getCategoryName(item.categoryId)}
                         {item.isVegan && " • Vegano"}
@@ -519,6 +522,14 @@ export function Items() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Volume da Embalagem *</Label>
+                  <Input
+                    value={itemPackageSize}
+                    onChange={(e) => setItemPackageSize(e.target.value)}
+                    placeholder="Ex: 1kg, 5kg, 500ml"
+                  />
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox

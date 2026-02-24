@@ -37,6 +37,7 @@ export function QuickAddItem({ open, onOpenChange, onItemCreated }: QuickAddItem
   const [brandId, setBrandId] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [unitId, setUnitId] = useState("");
+  const [packageSize, setPackageSize] = useState("");
   const [isVegan, setIsVegan] = useState(false);
 
   // Quick add states
@@ -141,7 +142,7 @@ export function QuickAddItem({ open, onOpenChange, onItemCreated }: QuickAddItem
   };
 
   const handleSave = async () => {
-    if (!itemName.trim() || !brandId || !categoryId || !unitId) {
+    if (!itemName.trim() || !brandId || !categoryId || !unitId || !packageSize.trim()) {
       toast.error("Preencha todos os campos obrigatórios");
       return;
     }
@@ -153,6 +154,7 @@ export function QuickAddItem({ open, onOpenChange, onItemCreated }: QuickAddItem
         brandId,
         categoryId,
         unitId,
+        packageSize,
         isVegan,
       });
       
@@ -173,6 +175,7 @@ export function QuickAddItem({ open, onOpenChange, onItemCreated }: QuickAddItem
     setBrandId("");
     setCategoryId("");
     setUnitId("");
+    setPackageSize("");
     setIsVegan(false);
     setShowNewBrand(false);
     setShowNewCategory(false);
@@ -382,6 +385,14 @@ export function QuickAddItem({ open, onOpenChange, onItemCreated }: QuickAddItem
                 </SelectContent>
               </Select>
             )}
+          </div>
+          <div className="space-y-2">
+            <Label>Volume da Embalagem *</Label>
+            <Input
+              value={packageSize}
+              onChange={(e) => setPackageSize(e.target.value)}
+              placeholder="Ex: 1kg, 5kg, 500ml"
+            />
           </div>
 
           <div className="flex items-center space-x-2">

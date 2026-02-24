@@ -19,6 +19,7 @@ type Item = {
   categoryId: string;
   unitId: string;
   isVegan: boolean;
+  packageSize?: string;
 };
 type PurchaseItem = {
   id: string;
@@ -172,9 +173,10 @@ export const itemsAPI = {
     categoryId: string;
     unitId: string;
     isVegan: boolean;
+    packageSize: string;
   }) => {
     const data = await readUserData();
-    const newItem = { id: id(), ...item };
+    const newItem = { id: id(), ...item, packageSize: item.packageSize.trim() };
     data.items.push(newItem);
     await writeUserData(data);
     return newItem;
