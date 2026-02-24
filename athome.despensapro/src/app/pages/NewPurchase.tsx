@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { Fragment, useState, useEffect } from "react";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -268,6 +268,7 @@ export function NewPurchase() {
   }, {});
 
   const orderedCategories = Object.keys(groupedItems).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  const orderedItems = [...items].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 
   const handleItemCreated = (newItem: any) => {
     setItems([...items, newItem].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")));
@@ -418,7 +419,7 @@ export function NewPurchase() {
                 </tr>
               </thead>
               <tbody>
-                {!groupByCategory && items.map((item) => {
+                {!groupByCategory && orderedItems.map((item) => {
                   const purchaseItem = purchaseItems.find(p => p.itemId === item.id)!;
                   const comparison = getPriceComparison(item.id, purchaseItem?.price || "");
                   const lastPrice = getLastPrice(item.id);
@@ -454,7 +455,7 @@ export function NewPurchase() {
                 })}
 
                 {groupByCategory && orderedCategories.map((categoryName) => (
-                  <>
+                  <Fragment key={categoryName}>
                     <tr key={`header-${categoryName}`} className="border-b border-border bg-muted/50">
                       <td colSpan={8} className="px-4 py-2 font-semibold">{categoryName}</td>
                     </tr>
@@ -478,7 +479,7 @@ export function NewPurchase() {
                           </tr>
                         );
                       })}
-                  </>
+                  </Fragment>
                 ))}
               </tbody>
             </table>
@@ -487,7 +488,7 @@ export function NewPurchase() {
 
         {/* Items List - Mobile */}
         <div className="space-y-4 md:hidden">
-          {items.map((item) => {
+          {!groupByCategory && orderedItems.map((item) => {
             const purchaseItem = purchaseItems.find(p => p.itemId === item.id)!;
             const comparison = getPriceComparison(item.id, purchaseItem?.price || "");
             const lastPrice = getLastPrice(item.id);
@@ -568,6 +569,95 @@ export function NewPurchase() {
               </Card>
             );
           })}
+
+          {groupByCategory && orderedCategories.map((categoryName) => (
+            <div key={`mobile-${categoryName}`} className="space-y-3">
+              <p className="px-1 text-sm font-semibold text-muted-foreground uppercase tracking-wide">{categoryName}</p>
+              {groupedItems[categoryName]
+                .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"))
+                .map((item: any) => {
+                  const purchaseItem = purchaseItems.find(p => p.itemId === item.id)!;
+                  const comparison = getPriceComparison(item.id, purchaseItem?.price || "");
+                  const lastPrice = getLastPrice(item.id);
+
+                  return (
+                    <Card key={item.id} className="p-4">
+                      <div className="flex items-start gap-3">
+                        <Checkbox
+                          checked={purchaseItem?.selected || false}
+                          onCheckedChange={(checked) =>
+                            handleCheckboxChange(item.id, checked as boolean)
+                          }
+                          className="mt-1"
+                        />
+                        <div className="flex-1 space-y-3">
+                          <div>
+                            <h4 className="font-semibold text-foreground">{item.name}{item.packageSize ? ` (${item.packageSize} ${getUnitName(item.unitId)})` : ""}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {getBrandName(item.brandId)} • {getCategoryName(item.categoryId)}
+                            </p>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-xs">Preço (R$)</Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                placeholder="0.00"
+                                value={purchaseItem?.price || ""}
+                                onChange={(e) => handlePriceChange(item.id, e.target.value)}
+                              />
+                              {lastPrice && (
+                                <span className="text-xs text-muted-foreground">
+                                  Último: R$ {lastPrice.toFixed(2)}
+                                </span>
+                              )}
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Quantidade</Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                placeholder="0"
+                                value={purchaseItem?.quantity || ""}
+                                onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                              />
+                            </div>
+                          </div>
+
+                          {comparison && (
+                            <div className="space-y-1">
+                              {comparison.isMinPrice ? (
+                                <div className="flex items-center gap-1 text-xs text-success">
+                                  <CheckCircle2 className="h-3 w-3" />
+                                  <span>Menor preço histórico</span>
+                                </div>
+                              ) : comparison.isAboveAverage ? (
+                                <div className="flex items-center gap-1 text-xs text-warning">
+                                  <AlertCircle className="h-3 w-3" />
+                                  <span>+{comparison.percentDiff.toFixed(0)}% acima da média</span>
+                                </div>
+                              ) : null}
+                            </div>
+                          )}
+
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewHistory(item.id)}
+                            className="w-full"
+                          >
+                            <History className="h-4 w-4 mr-2" />
+                            Ver Histórico
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })}
+            </div>
+          ))}
         </div>
       </div>
 
