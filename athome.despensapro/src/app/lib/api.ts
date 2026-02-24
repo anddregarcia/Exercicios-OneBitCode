@@ -15,7 +15,11 @@ const supabase = createClient(
 // what produced the "Invalid JWT" 401 error in the log.
 async function getAuthHeaders() {
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session || !session.access_token) {
+  // supabase returns a "session" object even when nobody is signed in;
+  // in that case `session.user` will be null and `access_token` is just
+  // the anon key.  Passing the anon key to our protected endpoints leads
+  // to an "Invalid JWT" error, so in that case we drop the header.
+  if (!session || !session.user || !session.access_token) {
     return { "Content-Type": "application/json" };
   }
   return {

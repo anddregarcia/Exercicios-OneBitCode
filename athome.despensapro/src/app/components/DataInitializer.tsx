@@ -15,7 +15,7 @@ export function DataInitializer({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     checkAndInitialize();
-  }, [retryCount]);
+  }, [retryCount, session]);
 
   const checkAndInitialize = async () => {
     setIsLoading(true);
