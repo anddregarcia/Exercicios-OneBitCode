@@ -4,6 +4,7 @@ import {
   ShoppingCart, 
   Package, 
   Settings as SettingsIcon,
+  History,
   Menu,
   X,
   LogOut
@@ -20,11 +21,15 @@ export function Layout() {
   const { signOut, user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const displayName = (user?.user_metadata?.name as string) || user?.email?.split("@")[0] || "Usuário";
+  const displayEmail = user?.email || "";
+
   const navigation = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
     { name: "Nova Compra", href: "/new-purchase", icon: ShoppingCart },
     { name: "Despensa", href: "/pantry", icon: Package },
     { name: "Itens", href: "/items", icon: SettingsIcon },
+    { name: "Histórico", href: "/history", icon: History },
   ];
 
   const isActive = (href: string) => {
@@ -80,6 +85,10 @@ export function Layout() {
 
             {/* Footer */}
             <div className="border-t border-border p-4 space-y-3">
+              <div className="rounded-lg border border-border p-3">
+                <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
+                <p className="text-xs text-muted-foreground truncate">{displayEmail}</p>
+              </div>
               <Button 
                 variant="ghost" 
                 className="w-full justify-start text-muted-foreground hover:text-foreground"
@@ -141,6 +150,10 @@ export function Layout() {
                   );
                 })}
                 <div className="mt-6 border-t border-border pt-6 space-y-2">
+                  <div className="rounded-lg border border-border p-3">
+                    <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
+                    <p className="text-xs text-muted-foreground truncate">{displayEmail}</p>
+                  </div>
                   <Button 
                     variant="ghost" 
                     className="w-full justify-start text-muted-foreground"

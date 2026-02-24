@@ -49,8 +49,13 @@ type UserData = {
 };
 
 const STORAGE_PREFIX = "despensapro:user:";
+const USER_DATA_METADATA_KEY = "despensaproData";
 
-async function getCurrentUserId() {
+async function getCurrentUser(forceRefresh = false) {
+  if (forceRefresh) {
+    await supabase.auth.refreshSession();
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -59,7 +64,7 @@ async function getCurrentUserId() {
     throw new Error("Usuário não autenticado");
   }
 
-  return user.id;
+  return user;
 }
 
 function getStorageKey(userId: string) {
@@ -79,22 +84,53 @@ function createInitialData(): UserData {
   };
 }
 
-async function readUserData(): Promise<UserData> {
-  const userId = await getCurrentUserId();
+function readLocalUserData(userId: string): UserData | null {
   const raw = localStorage.getItem(getStorageKey(userId));
+  if (!raw) return null;
 
-  if (!raw) {
-    const initial = createInitialData();
-    localStorage.setItem(getStorageKey(userId), JSON.stringify(initial));
-    return initial;
+  try {
+    return JSON.parse(raw) as UserData;
+  } catch {
+    return null;
+  }
+}
+
+async function readUserData(): Promise<UserData> {
+  const user = await getCurrentUser(true);
+  const userId = user.id;
+  const localData = readLocalUserData(userId);
+
+  const cloudData = user.user_metadata?.[USER_DATA_METADATA_KEY] as UserData | undefined;
+  if (cloudData) {
+    localStorage.setItem(getStorageKey(userId), JSON.stringify(cloudData));
+    return cloudData;
   }
 
-  return JSON.parse(raw) as UserData;
+  if (localData) {
+    return localData;
+  }
+
+  const initial = createInitialData();
+  await writeUserData(initial);
+  return initial;
 }
 
 async function writeUserData(data: UserData) {
-  const userId = await getCurrentUserId();
-  localStorage.setItem(getStorageKey(userId), JSON.stringify(data));
+  const user = await getCurrentUser();
+  const currentMetadata = user.user_metadata || {};
+
+  const { error } = await supabase.auth.updateUser({
+    data: {
+      ...currentMetadata,
+      [USER_DATA_METADATA_KEY]: data,
+    },
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  localStorage.setItem(getStorageKey(user.id), JSON.stringify(data));
 }
 
 function id() {
@@ -115,6 +151,14 @@ export const brandsAPI = {
     data.brands = data.brands.filter((b) => b.id !== brandId);
     await writeUserData(data);
   },
+  update: async (brandId: string, changes: { name: string; isVegan: boolean }) => {
+    const data = await readUserData();
+    data.brands = data.brands.map((brand) =>
+      brand.id === brandId ? { ...brand, ...changes } : brand
+    );
+    await writeUserData(data);
+    return data.brands.find((brand) => brand.id === brandId);
+  },
 };
 
 export const categoriesAPI = {
@@ -130,6 +174,14 @@ export const categoriesAPI = {
     const data = await readUserData();
     data.categories = data.categories.filter((c) => c.id !== categoryId);
     await writeUserData(data);
+  },
+  update: async (categoryId: string, changes: { name: string }) => {
+    const data = await readUserData();
+    data.categories = data.categories.map((category) =>
+      category.id === categoryId ? { ...category, ...changes } : category
+    );
+    await writeUserData(data);
+    return data.categories.find((category) => category.id === categoryId);
   },
 };
 
@@ -147,6 +199,14 @@ export const unitsAPI = {
     data.units = data.units.filter((u) => u.id !== unitId);
     await writeUserData(data);
   },
+  update: async (unitId: string, changes: { name: string; abbreviation: string }) => {
+    const data = await readUserData();
+    data.units = data.units.map((unit) =>
+      unit.id === unitId ? { ...unit, ...changes } : unit
+    );
+    await writeUserData(data);
+    return data.units.find((unit) => unit.id === unitId);
+  },
 };
 
 export const storesAPI = {
@@ -162,6 +222,14 @@ export const storesAPI = {
     const data = await readUserData();
     data.stores = data.stores.filter((s) => s.id !== storeId);
     await writeUserData(data);
+  },
+  update: async (storeId: string, changes: { name: string; address?: string }) => {
+    const data = await readUserData();
+    data.stores = data.stores.map((store) =>
+      store.id === storeId ? { ...store, ...changes } : store
+    );
+    await writeUserData(data);
+    return data.stores.find((store) => store.id === storeId);
   },
 };
 
@@ -187,6 +255,24 @@ export const itemsAPI = {
     data.pantry = data.pantry.filter((p) => p.itemId !== itemId);
     data.purchases = data.purchases.filter((p) => p.itemId !== itemId);
     await writeUserData(data);
+  },
+  update: async (
+    itemId: string,
+    changes: {
+      name: string;
+      brandId: string;
+      categoryId: string;
+      unitId: string;
+      isVegan: boolean;
+      packageSize: string;
+    }
+  ) => {
+    const data = await readUserData();
+    data.items = data.items.map((item) =>
+      item.id === itemId ? { ...item, ...changes, packageSize: changes.packageSize.trim() } : item
+    );
+    await writeUserData(data);
+    return data.items.find((item) => item.id === itemId);
   },
   getHistory: async (itemId: string) => {
     const data = await readUserData();

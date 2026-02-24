@@ -6,6 +6,7 @@ import { NewPurchase } from "./pages/NewPurchase";
 import { Pantry } from "./pages/Pantry";
 import { Items } from "./pages/Items";
 import { Settings } from "./pages/Settings";
+import { PurchaseHistory } from "./pages/PurchaseHistory";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { Pricing } from "./pages/Pricing";
@@ -36,6 +37,7 @@ export const router = createBrowserRouter([
       { path: "pantry", Component: Pantry },
       { path: "items", Component: Items },
       { path: "settings", Component: Settings },
+      { path: "history", Component: PurchaseHistory },
     ],
   },
 ]);
