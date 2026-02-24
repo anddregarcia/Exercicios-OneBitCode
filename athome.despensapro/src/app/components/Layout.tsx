@@ -4,6 +4,7 @@ import {
   ShoppingCart, 
   Package, 
   Settings as SettingsIcon,
+  History,
   Menu,
   X,
   LogOut
@@ -25,6 +26,7 @@ export function Layout() {
     { name: "Nova Compra", href: "/new-purchase", icon: ShoppingCart },
     { name: "Despensa", href: "/pantry", icon: Package },
     { name: "Itens", href: "/items", icon: SettingsIcon },
+    { name: "Histórico", href: "/history", icon: History },
   ];
 
   const isActive = (href: string) => {

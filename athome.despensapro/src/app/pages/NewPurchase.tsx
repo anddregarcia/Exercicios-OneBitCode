@@ -74,6 +74,7 @@ export function NewPurchase() {
   // Quick add dialogs
   const [quickAddItemOpen, setQuickAddItemOpen] = useState(false);
   const [quickAddStoreOpen, setQuickAddStoreOpen] = useState(false);
+  const [groupByCategory, setGroupByCategory] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -87,13 +88,14 @@ export function NewPurchase() {
         storesAPI.getAll(),
       ]);
 
-      setItems(itemsData);
+      const sortedItemsData = [...itemsData].sort((a: any, b: any) => a.name.localeCompare(b.name, "pt-BR"));
+      setItems(sortedItemsData);
       setStores(storesData);
       
       // Only initialize purchase items if they are empty
       if (purchaseItems.length === 0) {
         setPurchaseItems(
-          itemsData.map((item: any) => ({
+          sortedItemsData.map((item: any) => ({
             itemId: item.id,
             selected: false,
             price: "",
@@ -258,8 +260,17 @@ export function NewPurchase() {
     return stores.find(s => s.id === storeId)?.name || "";
   };
 
+  const groupedItems = items.reduce((acc: Record<string, any[]>, item: any) => {
+    const categoryName = getCategoryName(item.categoryId) || "Sem categoria";
+    if (!acc[categoryName]) acc[categoryName] = [];
+    acc[categoryName].push(item);
+    return acc;
+  }, {});
+
+  const orderedCategories = Object.keys(groupedItems).sort((a, b) => a.localeCompare(b, "pt-BR"));
+
   const handleItemCreated = (newItem: any) => {
-    setItems([...items, newItem]);
+    setItems([...items, newItem].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")));
     setPurchaseItems([
       ...purchaseItems,
       {
@@ -363,6 +374,17 @@ export function NewPurchase() {
           </Button>
         </div>
 
+        <div className="flex items-center gap-3">
+          <Checkbox
+            id="group-by-category"
+            checked={groupByCategory}
+            onCheckedChange={(checked) => setGroupByCategory(checked as boolean)}
+          />
+          <Label htmlFor="group-by-category" className="cursor-pointer">
+            Agrupar itens por categoria
+          </Label>
+        </div>
+
         {/* Items Table - Desktop */}
         <Card className="hidden md:block overflow-hidden">
           <div className="overflow-x-auto">
@@ -396,7 +418,7 @@ export function NewPurchase() {
                 </tr>
               </thead>
               <tbody>
-                {items.map((item) => {
+                {!groupByCategory && items.map((item) => {
                   const purchaseItem = purchaseItems.find(p => p.itemId === item.id)!;
                   const comparison = getPriceComparison(item.id, purchaseItem?.price || "");
                   const lastPrice = getLastPrice(item.id);
@@ -412,71 +434,52 @@ export function NewPurchase() {
                         />
                       </td>
                       <td className="px-4 py-4">
-                        <span className="font-medium text-foreground">{item.name}{item.packageSize ? ` (${item.packageSize})` : ""}</span>
+                        <span className="font-medium text-foreground">{item.name}{item.packageSize ? ` (${item.packageSize} ${getUnitName(item.unitId)})` : ""}</span>
                       </td>
-                      <td className="px-4 py-4 text-muted-foreground">
-                        {getBrandName(item.brandId)}
-                      </td>
-                      <td className="px-4 py-4 text-muted-foreground">
-                        {getCategoryName(item.categoryId)}
-                      </td>
+                      <td className="px-4 py-4 text-muted-foreground">{getBrandName(item.brandId)}</td>
+                      <td className="px-4 py-4 text-muted-foreground">{getCategoryName(item.categoryId)}</td>
                       <td className="px-4 py-4">
                         <div className="space-y-1">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            placeholder="0.00"
-                            value={purchaseItem?.price || ""}
-                            onChange={(e) => handlePriceChange(item.id, e.target.value)}
-                            className="w-24"
-                          />
-                          {lastPrice && (
-                            <span className="text-xs text-muted-foreground">
-                              Último: R$ {lastPrice.toFixed(2)}
-                            </span>
-                          )}
+                          <Input type="number" step="0.01" placeholder="0.00" value={purchaseItem?.price || ""} onChange={(e) => handlePriceChange(item.id, e.target.value)} className="w-24" />
+                          {lastPrice && (<span className="text-xs text-muted-foreground">Último: R$ {lastPrice.toFixed(2)}</span>)}
                         </div>
                       </td>
                       <td className="px-4 py-4">
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0"
-                          value={purchaseItem?.quantity || ""}
-                          onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-                          className="w-20"
-                        />
+                        <Input type="number" step="0.01" placeholder="0" value={purchaseItem?.quantity || ""} onChange={(e) => handleQuantityChange(item.id, e.target.value)} className="w-20" />
                       </td>
-                      <td className="px-4 py-4">
-                        {comparison && (
-                          <div className="space-y-1">
-                            {comparison.isMinPrice ? (
-                              <div className="flex items-center gap-1 text-xs text-success">
-                                <CheckCircle2 className="h-3 w-3" />
-                                <span>Menor preço</span>
-                              </div>
-                            ) : comparison.isAboveAverage ? (
-                              <div className="flex items-center gap-1 text-xs text-warning">
-                                <AlertCircle className="h-3 w-3" />
-                                <span>+{comparison.percentDiff.toFixed(0)}% da média</span>
-                              </div>
-                            ) : null}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-4 py-4">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewHistory(item.id)}
-                        >
-                          <History className="h-4 w-4 mr-1" />
-                          Histórico
-                        </Button>
-                      </td>
+                      <td className="px-4 py-4">{comparison && (<div className="space-y-1">{comparison.isMinPrice ? (<div className="flex items-center gap-1 text-xs text-success"><CheckCircle2 className="h-3 w-3" /><span>Menor preço</span></div>) : comparison.isAboveAverage ? (<div className="flex items-center gap-1 text-xs text-warning"><AlertCircle className="h-3 w-3" /><span>+{comparison.percentDiff.toFixed(0)}% da média</span></div>) : null}</div>)}</td>
+                      <td className="px-4 py-4"><Button variant="ghost" size="sm" onClick={() => handleViewHistory(item.id)}><History className="h-4 w-4 mr-1" />Histórico</Button></td>
                     </tr>
                   );
                 })}
+
+                {groupByCategory && orderedCategories.map((categoryName) => (
+                  <>
+                    <tr key={`header-${categoryName}`} className="border-b border-border bg-muted/50">
+                      <td colSpan={8} className="px-4 py-2 font-semibold">{categoryName}</td>
+                    </tr>
+                    {groupedItems[categoryName]
+                      .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"))
+                      .map((item: any) => {
+                        const purchaseItem = purchaseItems.find(p => p.itemId === item.id)!;
+                        const comparison = getPriceComparison(item.id, purchaseItem?.price || "");
+                        const lastPrice = getLastPrice(item.id);
+
+                        return (
+                          <tr key={item.id} className="border-b border-border hover:bg-muted/30">
+                            <td className="px-4 py-4"><Checkbox checked={purchaseItem?.selected || false} onCheckedChange={(checked) => handleCheckboxChange(item.id, checked as boolean)} /></td>
+                            <td className="px-4 py-4"><span className="font-medium text-foreground">{item.name}{item.packageSize ? ` (${item.packageSize} ${getUnitName(item.unitId)})` : ""}</span></td>
+                            <td className="px-4 py-4 text-muted-foreground">{getBrandName(item.brandId)}</td>
+                            <td className="px-4 py-4 text-muted-foreground">{getCategoryName(item.categoryId)}</td>
+                            <td className="px-4 py-4"><div className="space-y-1"><Input type="number" step="0.01" placeholder="0.00" value={purchaseItem?.price || ""} onChange={(e) => handlePriceChange(item.id, e.target.value)} className="w-24" />{lastPrice && (<span className="text-xs text-muted-foreground">Último: R$ {lastPrice.toFixed(2)}</span>)}</div></td>
+                            <td className="px-4 py-4"><Input type="number" step="0.01" placeholder="0" value={purchaseItem?.quantity || ""} onChange={(e) => handleQuantityChange(item.id, e.target.value)} className="w-20" /></td>
+                            <td className="px-4 py-4">{comparison && (<div className="space-y-1">{comparison.isMinPrice ? (<div className="flex items-center gap-1 text-xs text-success"><CheckCircle2 className="h-3 w-3" /><span>Menor preço</span></div>) : comparison.isAboveAverage ? (<div className="flex items-center gap-1 text-xs text-warning"><AlertCircle className="h-3 w-3" /><span>+{comparison.percentDiff.toFixed(0)}% da média</span></div>) : null}</div>)}</td>
+                            <td className="px-4 py-4"><Button variant="ghost" size="sm" onClick={() => handleViewHistory(item.id)}><History className="h-4 w-4 mr-1" />Histórico</Button></td>
+                          </tr>
+                        );
+                      })}
+                  </>
+                ))}
               </tbody>
             </table>
           </div>
@@ -501,7 +504,7 @@ export function NewPurchase() {
                   />
                   <div className="flex-1 space-y-3">
                     <div>
-                      <h4 className="font-semibold text-foreground">{item.name}{item.packageSize ? ` (${item.packageSize})` : ""}</h4>
+                      <h4 className="font-semibold text-foreground">{item.name}{item.packageSize ? ` (${item.packageSize} ${getUnitName(item.unitId)})` : ""}</h4>
                       <p className="text-sm text-muted-foreground">
                         {getBrandName(item.brandId)} • {getCategoryName(item.categoryId)}
                       </p>
