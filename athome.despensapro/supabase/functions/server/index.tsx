@@ -20,7 +20,7 @@ const supabase = createClient(
 const prefix = "/make-server-17516063";
 
 // Helper to get authenticated user
-async function getAuthUser(request: Request) {
+/*async function getAuthUser(request: Request) {
   const accessToken = request.headers.get('Authorization')?.split(' ')[1];
   if (!accessToken) {
     return null;
@@ -33,6 +33,30 @@ async function getAuthUser(request: Request) {
   }
   
   return user;
+}*/
+async function getAuthUser(request: Request) {
+  const authHeader = request.headers.get("Authorization");
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    console.log("Missing or invalid Authorization header");
+    return null;
+  }
+
+  const accessToken = authHeader.replace("Bearer ", "").trim();
+
+  if (!accessToken) {
+    console.log("Access token missing");
+    return null;
+  }
+
+  const { data, error } = await supabase.auth.getUser(accessToken);
+
+  if (error) {
+    console.log("Auth error:", error.message);
+    return null;
+  }
+
+  return data.user ?? null;
 }
 
 // Health check
@@ -398,6 +422,17 @@ app.delete(`${prefix}/stores/:id`, async (c) => {
 });
 
 // ============ ITEMS ============
+const { data } = await supabase.auth.getSession()
+const token = data.session?.access_token
+
+const response = await fetch(`${BASE_URL}/items`, {
+  method: "GET",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`
+  }
+})
+
 app.get(`${prefix}/items`, async (c) => {
   try {
     const user = await getAuthUser(c.req.raw);
