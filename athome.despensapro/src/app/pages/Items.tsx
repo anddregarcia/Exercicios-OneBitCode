@@ -26,14 +26,15 @@ import {
   categoriesAPI,
   unitsAPI,
   storesAPI,
+  packagingsAPI,
 } from "../lib/api";
 import { toast } from "sonner";
 
-type EntityType = "item" | "brand" | "category" | "unit" | "store";
+type EntityType = "item" | "brand" | "category" | "unit" | "packaging" | "store";
 
 export function Items() {
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<EntityType>("item");
+  const [activeTab, setActiveTab] = useState<EntityType>(() => (localStorage.getItem("cadastros:active-tab") as EntityType) || "item");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -44,12 +45,14 @@ export function Items() {
   const [categories, setCategories] = useState<any[]>([]);
   const [units, setUnits] = useState<any[]>([]);
   const [stores, setStores] = useState<any[]>([]);
+  const [packagings, setPackagings] = useState<any[]>([]);
 
   // Item form state
   const [itemName, setItemName] = useState("");
   const [itemBrand, setItemBrand] = useState("");
   const [itemCategory, setItemCategory] = useState("");
   const [itemUnit, setItemUnit] = useState("");
+  const [itemPackaging, setItemPackaging] = useState("");
   const [itemPackageSize, setItemPackageSize] = useState("");
   const [itemVegan, setItemVegan] = useState(false);
 
@@ -64,6 +67,9 @@ export function Items() {
   const [unitName, setUnitName] = useState("");
   const [unitAbbreviation, setUnitAbbreviation] = useState("");
 
+  // Packaging form state
+  const [packagingName, setPackagingName] = useState("");
+
   // Store form state
   const [storeName, setStoreName] = useState("");
   const [storeAddress, setStoreAddress] = useState("");
@@ -72,14 +78,19 @@ export function Items() {
     loadData();
   }, []);
 
+  useEffect(() => {
+    localStorage.setItem("cadastros:active-tab", activeTab);
+  }, [activeTab]);
+
   const loadData = async () => {
     setLoading(true);
     try {
-      const [itemsData, brandsData, categoriesData, unitsData, storesData] = await Promise.all([
+      const [itemsData, brandsData, categoriesData, unitsData, packagingsData, storesData] = await Promise.all([
         itemsAPI.getAll(),
         brandsAPI.getAll(),
         categoriesAPI.getAll(),
         unitsAPI.getAll(),
+        packagingsAPI.getAll(),
         storesAPI.getAll(),
       ]);
 
@@ -87,6 +98,7 @@ export function Items() {
       setBrands(brandsData);
       setCategories(categoriesData);
       setUnits(unitsData);
+      setPackagings(packagingsData);
       setStores(storesData);
     } catch (error) {
       console.error("Error loading data:", error);
@@ -101,6 +113,7 @@ export function Items() {
     setItemBrand("");
     setItemCategory("");
     setItemUnit("");
+    setItemPackaging("");
     setItemPackageSize("");
     setItemVegan(false);
     setBrandName("");
@@ -108,6 +121,7 @@ export function Items() {
     setCategoryName("");
     setUnitName("");
     setUnitAbbreviation("");
+    setPackagingName("");
     setStoreName("");
     setStoreAddress("");
   };
@@ -130,6 +144,7 @@ export function Items() {
       setItemBrand(entity.brandId || "");
       setItemCategory(entity.categoryId || "");
       setItemUnit(entity.unitId || "");
+      setItemPackaging(entity.packagingId || "");
       setItemPackageSize(entity.packageSize || "");
       setItemVegan(Boolean(entity.isVegan));
     }
@@ -148,6 +163,10 @@ export function Items() {
       setUnitAbbreviation(entity.abbreviation || "");
     }
 
+    if (type === "packaging") {
+      setPackagingName(entity.name || "");
+    }
+
     if (type === "store") {
       setStoreName(entity.name || "");
       setStoreAddress(entity.address || "");
@@ -160,7 +179,7 @@ export function Items() {
     try {
       switch (activeTab) {
         case "item":
-          if (!itemName || !itemBrand || !itemCategory || !itemUnit || !itemPackageSize) {
+          if (!itemName || !itemBrand || !itemCategory || !itemUnit || !itemPackaging || !itemPackageSize) {
             toast.error("Preencha todos os campos obrigatórios");
             return;
           }
@@ -169,6 +188,7 @@ export function Items() {
             brandId: itemBrand,
             categoryId: itemCategory,
             unitId: itemUnit,
+            packagingId: itemPackaging,
             packageSize: itemPackageSize,
             isVegan: itemVegan,
           };
@@ -234,6 +254,23 @@ export function Items() {
           }
           break;
 
+        case "packaging":
+          if (!packagingName) {
+            toast.error("Preencha o nome da embalagem");
+            return;
+          }
+          const packagingPayload = { name: packagingName };
+          if (editMode && editingId) {
+            const updatedPackaging = await packagingsAPI.update(editingId, packagingPayload);
+            setPackagings(packagings.map((packaging) => (packaging.id === editingId ? updatedPackaging : packaging)));
+            toast.success(`Embalagem "${packagingName}" atualizada com sucesso!`);
+          } else {
+            const newPackaging = await packagingsAPI.create(packagingPayload);
+            setPackagings([...packagings, newPackaging]);
+            toast.success(`Embalagem "${packagingName}" cadastrada com sucesso!`);
+          }
+          break;
+
         case "store":
           if (!storeName) {
             toast.error("Preencha o nome do mercado");
@@ -287,6 +324,11 @@ export function Items() {
           setUnits(units.filter(u => u.id !== id));
           toast.success("Unidade excluída");
           break;
+        case "packaging":
+          await packagingsAPI.delete(id);
+          setPackagings(packagings.filter(p => p.id !== id));
+          toast.success("Embalagem excluída");
+          break;
         case "store":
           await storesAPI.delete(id);
           setStores(stores.filter(s => s.id !== id));
@@ -310,6 +352,7 @@ export function Items() {
       case "brand": return `${action} Marca`;
       case "category": return `${action} Categoria`;
       case "unit": return `${action} Unidade`;
+      case "packaging": return `${action} Embalagem`;
       case "store": return `${action} Mercado`;
     }
   };
@@ -329,17 +372,18 @@ export function Items() {
         <div>
           <h1 className="text-3xl font-semibold text-foreground">Cadastros</h1>
           <p className="mt-2 text-muted-foreground">
-            Gerencie itens, marcas, categorias e mercados
+            Gerencie itens, marcas, categorias, unidades, embalagens e mercados
           </p>
         </div>
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as EntityType)}>
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto">
+          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 lg:w-auto">
             <TabsTrigger value="item">Itens</TabsTrigger>
             <TabsTrigger value="brand">Marcas</TabsTrigger>
             <TabsTrigger value="category">Categorias</TabsTrigger>
             <TabsTrigger value="unit">Unidades</TabsTrigger>
+            <TabsTrigger value="packaging">Embalagens</TabsTrigger>
             <TabsTrigger value="store">Mercados</TabsTrigger>
           </TabsList>
 
@@ -362,7 +406,7 @@ export function Items() {
                     <div>
                       <p className="font-medium text-foreground">{item.name}{item.packageSize ? ` (${item.packageSize} ${getUnitName(item.unitId)})` : ""}</p>
                       <p className="text-sm text-muted-foreground">
-                        {getBrandName(item.brandId)} • {getCategoryName(item.categoryId)}
+                        {getBrandName(item.brandId)} • {getCategoryName(item.categoryId)} • {packagings.find((p) => p.id === item.packagingId)?.name || "Sem embalagem"}
                         {item.isVegan && " • Vegano"}
                       </p>
                     </div>
@@ -513,6 +557,46 @@ export function Items() {
             </Card>
           </TabsContent>
 
+
+          {/* Packagings Tab */}
+          <TabsContent value="packaging" className="mt-6">
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold">Embalagens Cadastradas</h3>
+                <Button onClick={() => handleAdd("packaging")}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nova Embalagem
+                </Button>
+              </div>
+              <div className="grid gap-2 md:grid-cols-2">
+                {packagings.map((packaging) => (
+                  <div
+                    key={packaging.id}
+                    className="flex items-center justify-between rounded-lg border border-border p-4 hover:bg-muted/30"
+                  >
+                    <p className="font-medium text-foreground">{packaging.name}</p>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit("packaging", packaging)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete("packaging", packaging.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </TabsContent>
+
           {/* Stores Tab */}
           <TabsContent value="store" className="mt-6">
             <Card className="p-6">
@@ -624,6 +708,22 @@ export function Items() {
                   </Select>
                 </div>
                 <div className="space-y-2">
+                  <Label>Embalagem *</Label>
+                  <Select value={itemPackaging} onValueChange={setItemPackaging}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a embalagem" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {packagings.map((packaging) => (
+                        <SelectItem key={packaging.id} value={packaging.id}>
+                          {packaging.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
                   <Label>Volume da Embalagem *</Label>
                   <Input
                     type="number"
@@ -703,6 +803,18 @@ export function Items() {
                   />
                 </div>
               </>
+            )}
+
+            {/* Packaging Form */}
+            {activeTab === "packaging" && (
+              <div className="space-y-2">
+                <Label>Nome da Embalagem *</Label>
+                <Input
+                  value={packagingName}
+                  onChange={(e) => setPackagingName(e.target.value)}
+                  placeholder="Ex: Lata"
+                />
+              </div>
             )}
 
             {/* Store Form */}

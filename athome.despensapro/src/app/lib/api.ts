@@ -6,18 +6,21 @@ import {
   mockPantryItems,
   mockStores,
   mockUnits,
+  mockPackagings,
 } from "./mockData";
 
 type Brand = { id: string; name: string; isVegan: boolean };
 type Category = { id: string; name: string };
 type Unit = { id: string; name: string; abbreviation: string };
 type Store = { id: string; name: string; address?: string };
+type Packaging = { id: string; name: string };
 type Item = {
   id: string;
   name: string;
   brandId: string;
   categoryId: string;
   unitId: string;
+  packagingId: string;
   isVegan: boolean;
   packageSize?: string;
 };
@@ -42,6 +45,7 @@ type UserData = {
   categories: Category[];
   units: Unit[];
   stores: Store[];
+  packagings: Packaging[];
   items: Item[];
   purchases: PurchaseItem[];
   pantry: PantryItem[];
@@ -82,6 +86,7 @@ function createInitialData(): UserData {
     categories: [...mockCategories],
     units: [...mockUnits],
     stores: [...mockStores],
+    packagings: [...mockPackagings],
     items: [...mockItems],
     purchases: [],
     pantry: [...mockPantryItems],
@@ -107,11 +112,25 @@ async function readUserData(): Promise<UserData> {
 
   const cloudData = user.user_metadata?.[USER_DATA_METADATA_KEY] as UserData | undefined;
   if (cloudData) {
+    if (!cloudData.packagings || cloudData.packagings.length === 0) {
+      cloudData.packagings = [...mockPackagings];
+    }
+    cloudData.items = cloudData.items.map((item) => ({
+      ...item,
+      packagingId: item.packagingId || cloudData.packagings[0]?.id || "",
+    }));
     localStorage.setItem(getStorageKey(userId), JSON.stringify(cloudData));
     return cloudData;
   }
 
   if (localData) {
+    if (!localData.packagings || localData.packagings.length === 0) {
+      localData.packagings = [...mockPackagings];
+    }
+    localData.items = localData.items.map((item) => ({
+      ...item,
+      packagingId: item.packagingId || localData.packagings[0]?.id || "",
+    }));
     await writeUserData(localData);
     return localData;
   }
@@ -239,6 +258,30 @@ export const storesAPI = {
   },
 };
 
+
+export const packagingsAPI = {
+  getAll: async () => (await readUserData()).packagings,
+  create: async (packaging: { name: string }) => {
+    const data = await readUserData();
+    const newPackaging = { id: id(), ...packaging };
+    data.packagings.push(newPackaging);
+    await writeUserData(data);
+    return newPackaging;
+  },
+  delete: async (packagingId: string) => {
+    const data = await readUserData();
+    data.packagings = data.packagings.filter((p) => p.id !== packagingId);
+    await writeUserData(data);
+  },
+  update: async (packagingId: string, changes: { name: string }) => {
+    const data = await readUserData();
+    data.packagings = data.packagings.map((packaging) =>
+      packaging.id === packagingId ? { ...packaging, ...changes } : packaging
+    );
+    await writeUserData(data);
+    return data.packagings.find((packaging) => packaging.id === packagingId);
+  },
+};
 export const itemsAPI = {
   getAll: async () => (await readUserData()).items,
   create: async (item: {
@@ -246,6 +289,7 @@ export const itemsAPI = {
     brandId: string;
     categoryId: string;
     unitId: string;
+    packagingId: string;
     isVegan: boolean;
     packageSize: string;
   }) => {
@@ -269,6 +313,7 @@ export const itemsAPI = {
       brandId: string;
       categoryId: string;
       unitId: string;
+      packagingId: string;
       isVegan: boolean;
       packageSize: string;
     }
