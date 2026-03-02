@@ -19,7 +19,7 @@ import {
 } from "./ui/select";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { itemsAPI, brandsAPI, categoriesAPI, unitsAPI } from "../lib/api";
+import { itemsAPI, brandsAPI, categoriesAPI, unitsAPI, packagingsAPI } from "../lib/api";
 
 interface QuickAddItemProps {
   open: boolean;
@@ -32,11 +32,13 @@ export function QuickAddItem({ open, onOpenChange, onItemCreated }: QuickAddItem
   const [brands, setBrands] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [units, setUnits] = useState<any[]>([]);
+  const [packagings, setPackagings] = useState<any[]>([]);
 
   const [itemName, setItemName] = useState("");
   const [brandId, setBrandId] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [unitId, setUnitId] = useState("");
+  const [packagingId, setPackagingId] = useState("");
   const [packageSize, setPackageSize] = useState("");
   const [isVegan, setIsVegan] = useState(false);
 
@@ -60,14 +62,16 @@ export function QuickAddItem({ open, onOpenChange, onItemCreated }: QuickAddItem
 
   const loadData = async () => {
     try {
-      const [brandsData, categoriesData, unitsData] = await Promise.all([
+      const [brandsData, categoriesData, unitsData, packagingsData] = await Promise.all([
         brandsAPI.getAll(),
         categoriesAPI.getAll(),
         unitsAPI.getAll(),
+        packagingsAPI.getAll(),
       ]);
       setBrands(brandsData);
       setCategories(categoriesData);
       setUnits(unitsData);
+      setPackagings(packagingsData);
     } catch (error) {
       console.error("Error loading data:", error);
       toast.error("Erro ao carregar dados");
@@ -142,7 +146,7 @@ export function QuickAddItem({ open, onOpenChange, onItemCreated }: QuickAddItem
   };
 
   const handleSave = async () => {
-    if (!itemName.trim() || !brandId || !categoryId || !unitId || !packageSize.trim()) {
+    if (!itemName.trim() || !brandId || !categoryId || !unitId || !packagingId || !packageSize.trim()) {
       toast.error("Preencha todos os campos obrigatórios");
       return;
     }
@@ -154,6 +158,7 @@ export function QuickAddItem({ open, onOpenChange, onItemCreated }: QuickAddItem
         brandId,
         categoryId,
         unitId,
+        packagingId,
         packageSize,
         isVegan,
       });
@@ -175,6 +180,7 @@ export function QuickAddItem({ open, onOpenChange, onItemCreated }: QuickAddItem
     setBrandId("");
     setCategoryId("");
     setUnitId("");
+    setPackagingId("");
     setPackageSize("");
     setIsVegan(false);
     setShowNewBrand(false);
@@ -386,6 +392,22 @@ export function QuickAddItem({ open, onOpenChange, onItemCreated }: QuickAddItem
               </Select>
             )}
           </div>
+          <div className="space-y-2">
+            <Label>Embalagem *</Label>
+            <Select value={packagingId} onValueChange={setPackagingId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a embalagem" />
+              </SelectTrigger>
+              <SelectContent>
+                {packagings.map((packaging) => (
+                  <SelectItem key={packaging.id} value={packaging.id}>
+                    {packaging.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="space-y-2">
             <Label>Volume da Embalagem *</Label>
             <Input

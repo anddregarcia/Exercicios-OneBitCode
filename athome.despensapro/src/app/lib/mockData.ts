@@ -21,12 +21,18 @@ export interface Store {
   address?: string;
 }
 
+export interface Packaging {
+  id: string;
+  name: string;
+}
+
 export interface Item {
   id: string;
   name: string;
   brandId: string;
   categoryId: string;
   unitId: string;
+  packagingId: string;
   isVegan: boolean;
   packageSize?: string;
 }
@@ -80,13 +86,19 @@ export const mockStores: Store[] = [
   { id: "4", name: "Dia", address: "Rua da Consolação, 200" },
 ];
 
+export const mockPackagings: Packaging[] = [
+  { id: "1", name: "Lata" },
+  { id: "2", name: "Garrafa" },
+  { id: "3", name: "Pacote" },
+];
+
 export const mockItems: Item[] = [
-  { id: "1", name: "Arroz Integral", brandId: "1", categoryId: "1", unitId: "1", isVegan: true, packageSize: "1kg" },
-  { id: "2", name: "Feijão Preto", brandId: "3", categoryId: "1", unitId: "1", isVegan: true, packageSize: "1kg" },
-  { id: "3", name: "Leite Integral", brandId: "2", categoryId: "2", unitId: "2", isVegan: false, packageSize: "1L" },
-  { id: "4", name: "Azeite de Oliva", brandId: "3", categoryId: "3", unitId: "2", isVegan: true, packageSize: "500ml" },
-  { id: "5", name: "Maionese", brandId: "4", categoryId: "3", unitId: "4", isVegan: false, packageSize: "500g" },
-  { id: "6", name: "Açúcar Refinado", brandId: "5", categoryId: "1", unitId: "1", isVegan: true, packageSize: "1kg" },
+  { id: "1", name: "Arroz Integral", brandId: "1", categoryId: "1", unitId: "1", packagingId: "3", isVegan: true, packageSize: "1" },
+  { id: "2", name: "Feijão Preto", brandId: "3", categoryId: "1", unitId: "1", packagingId: "3", isVegan: true, packageSize: "1" },
+  { id: "3", name: "Leite Integral", brandId: "2", categoryId: "2", unitId: "2", packagingId: "2", isVegan: false, packageSize: "1" },
+  { id: "4", name: "Azeite de Oliva", brandId: "3", categoryId: "3", unitId: "2", packagingId: "2", isVegan: true, packageSize: "0.5" },
+  { id: "5", name: "Maionese", brandId: "4", categoryId: "3", unitId: "4", packagingId: "1", isVegan: false, packageSize: "1" },
+  { id: "6", name: "Açúcar Refinado", brandId: "5", categoryId: "1", unitId: "1", packagingId: "3", isVegan: true, packageSize: "1" },
 ];
 
 export const mockPurchaseHistory: PurchaseHistory[] = [
