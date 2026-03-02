@@ -11,7 +11,7 @@ import {
   DialogFooter,
 } from "../components/ui/dialog";
 import { AlertCircle, Edit, Package2, Loader2 } from "lucide-react";
-import { itemsAPI, pantryAPI, brandsAPI, unitsAPI, storesAPI } from "../lib/api";
+import { itemsAPI, pantryAPI, brandsAPI, unitsAPI, storesAPI, packagingsAPI } from "../lib/api";
 import { toast } from "sonner";
 
 export function Pantry() {
@@ -26,6 +26,7 @@ export function Pantry() {
   const [brands, setBrands] = useState<any[]>([]);
   const [units, setUnits] = useState<any[]>([]);
   const [stores, setStores] = useState<any[]>([]);
+  const [packagings, setPackagings] = useState<any[]>([]);
 
   useEffect(() => {
     loadData();
@@ -34,11 +35,12 @@ export function Pantry() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [pantryData, itemsData, brandsData, unitsData, storesData] = await Promise.all([
+      const [pantryData, itemsData, brandsData, unitsData, packagingsData, storesData] = await Promise.all([
         pantryAPI.getAll(),
         itemsAPI.getAll(),
         brandsAPI.getAll(),
         unitsAPI.getAll(),
+        packagingsAPI.getAll(),
         storesAPI.getAll(),
       ]);
 
@@ -46,6 +48,7 @@ export function Pantry() {
       setItems(itemsData);
       setBrands(brandsData);
       setUnits(unitsData);
+      setPackagings(packagingsData);
       setStores(storesData);
 
       // Load last purchase info for each item
@@ -116,9 +119,31 @@ export function Pantry() {
     return daysSinceOpened > 30;
   };
 
-  const getItemName = (itemId: string) => items.find(i => i.id === itemId)?.name || "";
   const getBrandName = (brandId: string) => brands.find(b => b.id === brandId)?.name || "";
   const getUnitAbbr = (unitId: string) => units.find(u => u.id === unitId)?.abbreviation || "";
+
+  const getPackagingName = (packagingId: string) => packagings.find((p) => p.id === packagingId)?.name || "";
+
+  const getItemDisplaySize = (item: any) => {
+    if (!item?.packageSize) return "";
+    const unit = getUnitAbbr(item.unitId);
+    return unit ? `${item.packageSize} ${unit}` : item.packageSize;
+  };
+
+  const getPantryQuantityLabel = (pantryItem: any, item: any) => {
+    const unit = getUnitAbbr(item.unitId);
+    const packaging = getPackagingName(item.packagingId);
+    const packageSize = getItemDisplaySize(item);
+
+    const parts = [
+      packageSize || null,
+      packaging ? packaging.toLowerCase() : null,
+    ].filter(Boolean);
+
+    const suffix = parts.length > 0 ? ` de ${parts.join(" ")}` : unit ? ` ${unit}` : "";
+
+    return `${pantryItem.currentQuantity}${suffix}`;
+  };
 
   const selectedItem = selectedItemId ? items.find(i => i.id === selectedItemId) : null;
 
@@ -186,7 +211,7 @@ export function Pantry() {
                       return (
                         <tr key={pantryItem.itemId} className="border-b border-border hover:bg-muted/30">
                           <td className="px-4 py-4">
-                            <span className="font-medium text-foreground">{item.name}{item.packageSize ? ` (${item.packageSize})` : ""}</span>
+                            <span className="font-medium text-foreground">{item.name}{getItemDisplaySize(item) ? ` (${getItemDisplaySize(item)})` : ""}</span>
                           </td>
                           <td className="px-4 py-4 text-muted-foreground">
                             {getBrandName(item.brandId)}
@@ -194,7 +219,7 @@ export function Pantry() {
                           <td className="px-4 py-4">
                             <div className="flex items-center gap-2">
                               <span className={`font-semibold ${lowStock ? 'text-destructive' : 'text-foreground'}`}>
-                                {pantryItem.currentQuantity} {getUnitAbbr(item.unitId)}
+                                {getPantryQuantityLabel(pantryItem, item)}
                               </span>
                               {lowStock && (
                                 <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs text-destructive">
@@ -256,7 +281,7 @@ export function Pantry() {
                     <div className="space-y-3">
                       <div className="flex items-start justify-between">
                         <div>
-                          <h4 className="font-semibold text-foreground">{item.name}{item.packageSize ? ` (${item.packageSize})` : ""}</h4>
+                          <h4 className="font-semibold text-foreground">{item.name}{getItemDisplaySize(item) ? ` (${getItemDisplaySize(item)})` : ""}</h4>
                           <p className="text-sm text-muted-foreground">{getBrandName(item.brandId)}</p>
                         </div>
                         <Button
@@ -272,7 +297,7 @@ export function Pantry() {
                         <div>
                           <p className="text-muted-foreground">Quantidade</p>
                           <p className={`font-semibold ${lowStock ? 'text-destructive' : 'text-foreground'}`}>
-                            {pantryItem.currentQuantity} {getUnitAbbr(item.unitId)}
+                            {getPantryQuantityLabel(pantryItem, item)}
                           </p>
                           {lowStock && (
                             <span className="inline-block mt-1 rounded-full bg-destructive/10 px-2 py-0.5 text-xs text-destructive">
@@ -338,7 +363,7 @@ export function Pantry() {
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Editar Quantidade - {selectedItem?.name}{selectedItem?.packageSize ? ` (${selectedItem.packageSize})` : ""}</DialogTitle>
+            <DialogTitle>Editar Quantidade - {selectedItem?.name}{selectedItem && getItemDisplaySize(selectedItem) ? ` (${getItemDisplaySize(selectedItem)})` : ""}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
