@@ -1,7 +1,9 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 
 interface PurchaseItem {
+  key?: string;
   itemId: string;
+  brandId?: string;
   selected: boolean;
   price: string;
   quantity: string;

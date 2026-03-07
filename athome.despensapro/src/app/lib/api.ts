@@ -17,7 +17,7 @@ type Packaging = { id: string; name: string };
 type Item = {
   id: string;
   name: string;
-  brandId: string;
+  brandIds: string[];
   categoryId: string;
   unitId: string;
   packagingId: string;
@@ -27,6 +27,7 @@ type Item = {
 type PurchaseItem = {
   id: string;
   itemId: string;
+  brandId?: string;
   storeId: string;
   price: number;
   quantity: number;
@@ -55,26 +56,49 @@ type UserData = {
 const STORAGE_PREFIX = "despensapro:user:";
 const USER_DATA_METADATA_KEY = "despensaproData";
 
+const sortByName = <T extends { name: string }>(list: T[]) =>
+  [...list].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+
+const normalizeItem = (item: any): Item => {
+  const incomingBrandIds = Array.isArray(item?.brandIds)
+    ? item.brandIds.filter(Boolean)
+    : item?.brandId
+      ? [item.brandId]
+      : [];
+
+  return {
+    ...item,
+    brandIds: incomingBrandIds,
+    packageSize: item?.packageSize?.toString().trim() || "",
+    packagingId: item?.packagingId || "",
+  };
+};
+
+const normalizeUserData = (data: UserData): UserData => {
+  if (!data.packagings || data.packagings.length === 0) {
+    data.packagings = [...mockPackagings];
+  }
+
+  data.items = (data.items || []).map(normalizeItem);
+
+  return data;
+};
+
 async function getCurrentUser() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (user) {
-    return user;
-  }
+  if (user) return user;
 
   const {
     data: { session },
   } = await supabase.auth.getSession();
 
-  if (session?.user) {
-    return session.user;
-  }
+  if (session?.user) return session.user;
 
   throw new Error("Usuário não autenticado");
 }
-
 
 function getStorageKey(userId: string) {
   return `${STORAGE_PREFIX}${userId}`;
@@ -82,12 +106,12 @@ function getStorageKey(userId: string) {
 
 function createInitialData(): UserData {
   return {
-    brands: [...mockBrands],
-    categories: [...mockCategories],
-    units: [...mockUnits],
-    stores: [...mockStores],
-    packagings: [...mockPackagings],
-    items: [...mockItems],
+    brands: sortByName([...mockBrands]),
+    categories: sortByName([...mockCategories]),
+    units: sortByName([...mockUnits]),
+    stores: sortByName([...mockStores]),
+    packagings: sortByName([...mockPackagings]),
+    items: sortByName([...mockItems].map(normalizeItem)),
     purchases: [],
     pantry: [...mockPantryItems],
     seeded: true,
@@ -109,30 +133,18 @@ async function readUserData(): Promise<UserData> {
   const user = await getCurrentUser();
   const userId = user.id;
   const localData = readLocalUserData(userId);
-
   const cloudData = user.user_metadata?.[USER_DATA_METADATA_KEY] as UserData | undefined;
+
   if (cloudData) {
-    if (!cloudData.packagings || cloudData.packagings.length === 0) {
-      cloudData.packagings = [...mockPackagings];
-    }
-    cloudData.items = cloudData.items.map((item) => ({
-      ...item,
-      packagingId: item.packagingId || cloudData.packagings[0]?.id || "",
-    }));
-    localStorage.setItem(getStorageKey(userId), JSON.stringify(cloudData));
-    return cloudData;
+    const normalized = normalizeUserData(cloudData);
+    localStorage.setItem(getStorageKey(userId), JSON.stringify(normalized));
+    return normalized;
   }
 
   if (localData) {
-    if (!localData.packagings || localData.packagings.length === 0) {
-      localData.packagings = [...mockPackagings];
-    }
-    localData.items = localData.items.map((item) => ({
-      ...item,
-      packagingId: item.packagingId || localData.packagings[0]?.id || "",
-    }));
-    await writeUserData(localData);
-    return localData;
+    const normalized = normalizeUserData(localData);
+    await writeUserData(normalized);
+    return normalized;
   }
 
   const initial = createInitialData();
@@ -151,9 +163,7 @@ async function writeUserData(data: UserData) {
     },
   });
 
-  if (error) {
-    throw error;
-  }
+  if (error) throw error;
 
   localStorage.setItem(getStorageKey(user.id), JSON.stringify(data));
 }
@@ -163,7 +173,7 @@ function id() {
 }
 
 export const brandsAPI = {
-  getAll: async () => (await readUserData()).brands,
+  getAll: async () => sortByName((await readUserData()).brands),
   create: async (brand: { name: string; isVegan: boolean }) => {
     const data = await readUserData();
     const newBrand = { id: id(), ...brand };
@@ -174,6 +184,10 @@ export const brandsAPI = {
   delete: async (brandId: string) => {
     const data = await readUserData();
     data.brands = data.brands.filter((b) => b.id !== brandId);
+    data.items = data.items.map((item) => ({
+      ...item,
+      brandIds: item.brandIds.filter((id) => id !== brandId),
+    }));
     await writeUserData(data);
   },
   update: async (brandId: string, changes: { name: string; isVegan: boolean }) => {
@@ -187,7 +201,7 @@ export const brandsAPI = {
 };
 
 export const categoriesAPI = {
-  getAll: async () => (await readUserData()).categories,
+  getAll: async () => sortByName((await readUserData()).categories),
   create: async (category: { name: string }) => {
     const data = await readUserData();
     const newCategory = { id: id(), ...category };
@@ -211,7 +225,7 @@ export const categoriesAPI = {
 };
 
 export const unitsAPI = {
-  getAll: async () => (await readUserData()).units,
+  getAll: async () => sortByName((await readUserData()).units),
   create: async (unit: { name: string; abbreviation: string }) => {
     const data = await readUserData();
     const newUnit = { id: id(), ...unit };
@@ -235,7 +249,7 @@ export const unitsAPI = {
 };
 
 export const storesAPI = {
-  getAll: async () => (await readUserData()).stores,
+  getAll: async () => sortByName((await readUserData()).stores),
   create: async (store: { name: string; address?: string }) => {
     const data = await readUserData();
     const newStore = { id: id(), ...store };
@@ -258,9 +272,8 @@ export const storesAPI = {
   },
 };
 
-
 export const packagingsAPI = {
-  getAll: async () => (await readUserData()).packagings,
+  getAll: async () => sortByName((await readUserData()).packagings),
   create: async (packaging: { name: string }) => {
     const data = await readUserData();
     const newPackaging = { id: id(), ...packaging };
@@ -282,11 +295,12 @@ export const packagingsAPI = {
     return data.packagings.find((packaging) => packaging.id === packagingId);
   },
 };
+
 export const itemsAPI = {
-  getAll: async () => (await readUserData()).items,
+  getAll: async () => sortByName((await readUserData()).items),
   create: async (item: {
     name: string;
-    brandId: string;
+    brandIds: string[];
     categoryId: string;
     unitId: string;
     packagingId: string;
@@ -294,7 +308,7 @@ export const itemsAPI = {
     packageSize: string;
   }) => {
     const data = await readUserData();
-    const newItem = { id: id(), ...item, packageSize: item.packageSize.trim() };
+    const newItem = normalizeItem({ id: id(), ...item });
     data.items.push(newItem);
     await writeUserData(data);
     return newItem;
@@ -310,7 +324,7 @@ export const itemsAPI = {
     itemId: string,
     changes: {
       name: string;
-      brandId: string;
+      brandIds: string[];
       categoryId: string;
       unitId: string;
       packagingId: string;
@@ -320,7 +334,7 @@ export const itemsAPI = {
   ) => {
     const data = await readUserData();
     data.items = data.items.map((item) =>
-      item.id === itemId ? { ...item, ...changes, packageSize: changes.packageSize.trim() } : item
+      item.id === itemId ? normalizeItem({ ...item, ...changes }) : item
     );
     await writeUserData(data);
     return data.items.find((item) => item.id === itemId);
@@ -338,7 +352,7 @@ export const purchasesAPI = {
   create: async (purchase: {
     storeId: string;
     date: string;
-    items: Array<{ itemId: string; price: string; quantity: string }>;
+    items: Array<{ itemId: string; brandId?: string; price: string; quantity: string }>;
   }) => {
     const data = await readUserData();
 
@@ -346,6 +360,7 @@ export const purchasesAPI = {
       const historyItem: PurchaseItem = {
         id: id(),
         itemId: item.itemId,
+        brandId: item.brandId,
         storeId: purchase.storeId,
         date: purchase.date,
         price: Number(item.price),
