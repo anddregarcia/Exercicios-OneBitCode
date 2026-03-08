@@ -29,7 +29,7 @@ export interface Packaging {
 export interface Item {
   id: string;
   name: string;
-  brandId: string;
+  brandIds: string[];
   categoryId: string;
   unitId: string;
   packagingId: string;
@@ -56,49 +56,61 @@ export interface PantryItem {
 
 // Mock Data
 export const mockBrands: Brand[] = [
-  { id: "1", name: "Taeq", isVegan: true },
-  { id: "2", name: "Nestlé", isVegan: false },
-  { id: "3", name: "Qualitá", isVegan: false },
-  { id: "4", name: "Hellmann's", isVegan: false },
-  { id: "5", name: "Açúcar União", isVegan: true },
+  { id: "1", name: "Aurora", isVegan: false },
+  { id: "2", name: "Coca-Cola", isVegan: true },
+  { id: "3", name: "Nestlé", isVegan: false },
+  { id: "4", name: "Piracanjuba", isVegan: false },
+  { id: "5", name: "Qualitá", isVegan: false },
+  { id: "6", name: "Taeq", isVegan: true },
+  { id: "7", name: "Yoki", isVegan: true },
 ];
 
 export const mockCategories: Category[] = [
-  { id: "1", name: "Grãos e Cereais" },
-  { id: "2", name: "Laticínios" },
-  { id: "3", name: "Condimentos" },
-  { id: "4", name: "Bebidas" },
+  { id: "1", name: "Açougue" },
+  { id: "2", name: "Bebidas" },
+  { id: "3", name: "Congelados" },
+  { id: "4", name: "Frios e Laticínios" },
   { id: "5", name: "Limpeza" },
+  { id: "6", name: "Mercearia" },
+  { id: "7", name: "Padaria" },
+  { id: "8", name: "Pet" },
+  { id: "9", name: "Higiene" },
+  { id: "10", name: "Hortifruti" },
 ];
 
 export const mockUnits: Unit[] = [
   { id: "1", name: "Quilograma", abbreviation: "kg" },
-  { id: "2", name: "Litro", abbreviation: "L" },
-  { id: "3", name: "Unidade", abbreviation: "un" },
-  { id: "4", name: "Pacote", abbreviation: "pct" },
-  { id: "5", name: "Caixa", abbreviation: "cx" },
+  { id: "2", name: "Grama", abbreviation: "g" },
+  { id: "3", name: "Litro", abbreviation: "L" },
+  { id: "4", name: "Mililitro", abbreviation: "ml" },
+  { id: "5", name: "Unidade", abbreviation: "un" },
 ];
 
 export const mockStores: Store[] = [
-  { id: "1", name: "Pão de Açúcar", address: "Av. Paulista, 1000" },
+  { id: "1", name: "Atacadão", address: "Rod. Anhanguera, 1200" },
   { id: "2", name: "Carrefour", address: "Rua Augusta, 500" },
   { id: "3", name: "Extra", address: "Shopping Center Norte" },
-  { id: "4", name: "Dia", address: "Rua da Consolação, 200" },
+  { id: "4", name: "Pão de Açúcar", address: "Av. Paulista, 1000" },
+  { id: "5", name: "Assaí", address: "Av. Interlagos, 2300" },
 ];
 
 export const mockPackagings: Packaging[] = [
   { id: "1", name: "Lata" },
   { id: "2", name: "Garrafa" },
   { id: "3", name: "Pacote" },
+  { id: "4", name: "Vidro" },
+  { id: "5", name: "Frasco" },
+  { id: "6", name: "Caixa" },
+  { id: "7", name: "Pote" },
 ];
 
 export const mockItems: Item[] = [
-  { id: "1", name: "Arroz Integral", brandId: "1", categoryId: "1", unitId: "1", packagingId: "3", isVegan: true, packageSize: "1" },
-  { id: "2", name: "Feijão Preto", brandId: "3", categoryId: "1", unitId: "1", packagingId: "3", isVegan: true, packageSize: "1" },
-  { id: "3", name: "Leite Integral", brandId: "2", categoryId: "2", unitId: "2", packagingId: "2", isVegan: false, packageSize: "1" },
-  { id: "4", name: "Azeite de Oliva", brandId: "3", categoryId: "3", unitId: "2", packagingId: "2", isVegan: true, packageSize: "0.5" },
-  { id: "5", name: "Maionese", brandId: "4", categoryId: "3", unitId: "4", packagingId: "1", isVegan: false, packageSize: "1" },
-  { id: "6", name: "Açúcar Refinado", brandId: "5", categoryId: "1", unitId: "1", packagingId: "3", isVegan: true, packageSize: "1" },
+  { id: "1", name: "Arroz", brandIds: ["5", "7"], categoryId: "6", unitId: "1", packagingId: "3", isVegan: true, packageSize: "5" },
+  { id: "2", name: "Feijão Preto", brandIds: ["5", "7"], categoryId: "6", unitId: "1", packagingId: "3", isVegan: true, packageSize: "1" },
+  { id: "3", name: "Leite Integral", brandIds: ["3", "4"], categoryId: "4", unitId: "3", packagingId: "2", isVegan: false, packageSize: "1" },
+  { id: "4", name: "Refrigerante Cola", brandIds: ["2"], categoryId: "2", unitId: "3", packagingId: "2", isVegan: true, packageSize: "2" },
+  { id: "5", name: "Detergente", brandIds: ["5"], categoryId: "5", unitId: "4", packagingId: "5", isVegan: true, packageSize: "500" },
+  { id: "6", name: "Ração para Cães", brandIds: ["1"], categoryId: "8", unitId: "1", packagingId: "3", isVegan: false, packageSize: "10" },
 ];
 
 export const mockPurchaseHistory: PurchaseHistory[] = [

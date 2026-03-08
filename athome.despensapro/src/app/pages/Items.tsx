@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -14,32 +14,49 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "../components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
+import { Edit, Info, Loader2, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import {
-  itemsAPI,
   brandsAPI,
   categoriesAPI,
-  unitsAPI,
-  storesAPI,
+  itemsAPI,
   packagingsAPI,
+  storesAPI,
+  unitsAPI,
 } from "../lib/api";
-import { toast } from "sonner";
 
-type EntityType = "item" | "brand" | "category" | "unit" | "packaging" | "store";
+type EntityType = "item" | "brand" | "category" | "packaging" | "unit" | "store";
+
+const HELP_TEXTS: Record<EntityType, string> = {
+  item: "Nesta tela você pode cadastrar todos os itens da sua despensa. Para aproveitar melhor o gerenciamento, prefira cadastrar o item com nome completo, marcas, embalagem, volume e unidade. Se quiser algo mais simples, também é possível cadastrar somente o nome.",
+  brand: "Cadastre as marcas para associá-las aos itens e comparar os valores entre marcas diferentes.",
+  category: "Cadastre categorias e relacione-as aos itens para facilitar o agrupamento durante novas compras.",
+  unit: "Cadastre as unidades de medida para configurar corretamente embalagem, volume e unidade de cada item.",
+  packaging: "Cadastre os tipos de embalagem e relacione-os aos itens para um gerenciamento mais detalhado da despensa.",
+  store: "Cadastre os mercados em que você compra com frequência. Se quiser, adicione endereço para identificação. Esse cadastro é necessário para novas compras e comparação de gastos por mercado.",
+};
+
+const formatItemDetails = (item: any, units: any[], packagings: any[]) => {
+  if (!item.packageSize) return "";
+  const packaging = packagings.find((p) => p.id === item.packagingId)?.name;
+  const unit = units.find((u) => u.id === item.unitId)?.abbreviation || units.find((u) => u.id === item.unitId)?.name;
+  if (!packaging || !unit) return "";
+  return ` (${packaging} de ${item.packageSize} ${unit})`;
+};
 
 export function Items() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<EntityType>(() => (localStorage.getItem("cadastros:active-tab") as EntityType) || "item");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  // Data states
   const [items, setItems] = useState<any[]>([]);
   const [brands, setBrands] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -47,30 +64,20 @@ export function Items() {
   const [stores, setStores] = useState<any[]>([]);
   const [packagings, setPackagings] = useState<any[]>([]);
 
-  // Item form state
   const [itemName, setItemName] = useState("");
-  const [itemBrand, setItemBrand] = useState("");
+  const [itemBrandIds, setItemBrandIds] = useState<string[]>([]);
   const [itemCategory, setItemCategory] = useState("");
   const [itemUnit, setItemUnit] = useState("");
   const [itemPackaging, setItemPackaging] = useState("");
   const [itemPackageSize, setItemPackageSize] = useState("");
   const [itemVegan, setItemVegan] = useState(false);
 
-  // Brand form state
   const [brandName, setBrandName] = useState("");
   const [brandVegan, setBrandVegan] = useState(false);
-
-  // Category form state
   const [categoryName, setCategoryName] = useState("");
-
-  // Unit form state
   const [unitName, setUnitName] = useState("");
   const [unitAbbreviation, setUnitAbbreviation] = useState("");
-
-  // Packaging form state
   const [packagingName, setPackagingName] = useState("");
-
-  // Store form state
   const [storeName, setStoreName] = useState("");
   const [storeAddress, setStoreAddress] = useState("");
 
@@ -81,6 +88,8 @@ export function Items() {
   useEffect(() => {
     localStorage.setItem("cadastros:active-tab", activeTab);
   }, [activeTab]);
+
+  const sortByName = (list: any[]) => [...list].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 
   const loadData = async () => {
     setLoading(true);
@@ -94,14 +103,14 @@ export function Items() {
         storesAPI.getAll(),
       ]);
 
-      setItems(itemsData);
-      setBrands(brandsData);
-      setCategories(categoriesData);
-      setUnits(unitsData);
-      setPackagings(packagingsData);
-      setStores(storesData);
+      setItems(sortByName(itemsData));
+      setBrands(sortByName(brandsData));
+      setCategories(sortByName(categoriesData));
+      setUnits(sortByName(unitsData));
+      setPackagings(sortByName(packagingsData));
+      setStores(sortByName(storesData));
     } catch (error) {
-      console.error("Error loading data:", error);
+      console.error(error);
       toast.error("Erro ao carregar dados");
     } finally {
       setLoading(false);
@@ -110,12 +119,13 @@ export function Items() {
 
   const resetForm = () => {
     setItemName("");
-    setItemBrand("");
+    setItemBrandIds([]);
     setItemCategory("");
     setItemUnit("");
     setItemPackaging("");
     setItemPackageSize("");
     setItemVegan(false);
+
     setBrandName("");
     setBrandVegan(false);
     setCategoryName("");
@@ -126,7 +136,7 @@ export function Items() {
     setStoreAddress("");
   };
 
-  const handleAdd = (type: EntityType) => {
+  const openCreateDialog = (type: EntityType) => {
     setActiveTab(type);
     setEditMode(false);
     setEditingId(null);
@@ -134,14 +144,14 @@ export function Items() {
     setDialogOpen(true);
   };
 
-  const handleEdit = (type: EntityType, entity: any) => {
+  const openEditDialog = (type: EntityType, entity: any) => {
     setActiveTab(type);
     setEditMode(true);
     setEditingId(entity.id);
 
     if (type === "item") {
       setItemName(entity.name || "");
-      setItemBrand(entity.brandId || "");
+      setItemBrandIds(entity.brandIds || (entity.brandId ? [entity.brandId] : []));
       setItemCategory(entity.categoryId || "");
       setItemUnit(entity.unitId || "");
       setItemPackaging(entity.packagingId || "");
@@ -154,19 +164,12 @@ export function Items() {
       setBrandVegan(Boolean(entity.isVegan));
     }
 
-    if (type === "category") {
-      setCategoryName(entity.name || "");
-    }
-
+    if (type === "category") setCategoryName(entity.name || "");
     if (type === "unit") {
       setUnitName(entity.name || "");
       setUnitAbbreviation(entity.abbreviation || "");
     }
-
-    if (type === "packaging") {
-      setPackagingName(entity.name || "");
-    }
-
+    if (type === "packaging") setPackagingName(entity.name || "");
     if (type === "store") {
       setStoreName(entity.name || "");
       setStoreAddress(entity.address || "");
@@ -175,679 +178,236 @@ export function Items() {
     setDialogOpen(true);
   };
 
+  const getBrandNames = (brandIds: string[]) =>
+    brandIds
+      .map((id) => brands.find((b) => b.id === id)?.name)
+      .filter(Boolean)
+      .join(", ");
+
+  const toggleItemBrand = (brandId: string, checked: boolean) => {
+    setItemBrandIds((prev) => (checked ? [...prev, brandId] : prev.filter((id) => id !== brandId)));
+  };
+
   const handleSave = async () => {
     try {
-      switch (activeTab) {
-        case "item":
-          if (!itemName || !itemBrand || !itemCategory || !itemUnit || !itemPackaging || !itemPackageSize) {
-            toast.error("Preencha todos os campos obrigatórios");
-            return;
-          }
-          const itemPayload = {
-            name: itemName,
-            brandId: itemBrand,
-            categoryId: itemCategory,
-            unitId: itemUnit,
-            packagingId: itemPackaging,
-            packageSize: itemPackageSize,
-            isVegan: itemVegan,
-          };
-          if (editMode && editingId) {
-            const updatedItem = await itemsAPI.update(editingId, itemPayload);
-            setItems(items.map((item) => (item.id === editingId ? updatedItem : item)));
-            toast.success(`Item "${itemName}" atualizado com sucesso!`);
-          } else {
-            const newItem = await itemsAPI.create(itemPayload);
-            setItems([...items, newItem]);
-            toast.success(`Item "${itemName}" cadastrado com sucesso!`);
-          }
-          break;
+      if (activeTab === "item") {
+        if (!itemName.trim()) {
+          toast.error("Preencha o nome do item");
+          return;
+        }
+        const payload = {
+          name: itemName.trim(),
+          brandIds: itemBrandIds,
+          categoryId: itemCategory,
+          unitId: itemUnit,
+          packagingId: itemPackaging,
+          packageSize: itemPackageSize,
+          isVegan: itemVegan,
+        };
+        if (editMode && editingId) {
+          await itemsAPI.update(editingId, payload);
+          toast.success("Item atualizado com sucesso");
+        } else {
+          await itemsAPI.create(payload);
+          toast.success("Item cadastrado com sucesso");
+        }
+      }
 
-        case "brand":
-          if (!brandName) {
-            toast.error("Preencha o nome da marca");
-            return;
-          }
-          const brandPayload = { name: brandName, isVegan: brandVegan };
-          if (editMode && editingId) {
-            const updatedBrand = await brandsAPI.update(editingId, brandPayload);
-            setBrands(brands.map((brand) => (brand.id === editingId ? updatedBrand : brand)));
-            toast.success(`Marca "${brandName}" atualizada com sucesso!`);
-          } else {
-            const newBrand = await brandsAPI.create(brandPayload);
-            setBrands([...brands, newBrand]);
-            toast.success(`Marca "${brandName}" cadastrada com sucesso!`);
-          }
-          break;
+      if (activeTab === "brand") {
+        if (!brandName) return toast.error("Preencha o nome da marca");
+        if (editMode && editingId) await brandsAPI.update(editingId, { name: brandName, isVegan: brandVegan });
+        else await brandsAPI.create({ name: brandName, isVegan: brandVegan });
+      }
 
-        case "category":
-          if (!categoryName) {
-            toast.error("Preencha o nome da categoria");
-            return;
-          }
-          const categoryPayload = { name: categoryName };
-          if (editMode && editingId) {
-            const updatedCategory = await categoriesAPI.update(editingId, categoryPayload);
-            setCategories(categories.map((category) => (category.id === editingId ? updatedCategory : category)));
-            toast.success(`Categoria "${categoryName}" atualizada com sucesso!`);
-          } else {
-            const newCategory = await categoriesAPI.create(categoryPayload);
-            setCategories([...categories, newCategory]);
-            toast.success(`Categoria "${categoryName}" cadastrada com sucesso!`);
-          }
-          break;
+      if (activeTab === "category") {
+        if (!categoryName) return toast.error("Preencha o nome da categoria");
+        if (editMode && editingId) await categoriesAPI.update(editingId, { name: categoryName });
+        else await categoriesAPI.create({ name: categoryName });
+      }
 
-        case "unit":
-          if (!unitName || !unitAbbreviation) {
-            toast.error("Preencha todos os campos");
-            return;
-          }
-          const unitPayload = { name: unitName, abbreviation: unitAbbreviation };
-          if (editMode && editingId) {
-            const updatedUnit = await unitsAPI.update(editingId, unitPayload);
-            setUnits(units.map((unit) => (unit.id === editingId ? updatedUnit : unit)));
-            toast.success(`Unidade "${unitName}" atualizada com sucesso!`);
-          } else {
-            const newUnit = await unitsAPI.create(unitPayload);
-            setUnits([...units, newUnit]);
-            toast.success(`Unidade "${unitName}" cadastrada com sucesso!`);
-          }
-          break;
+      if (activeTab === "packaging") {
+        if (!packagingName) return toast.error("Preencha o nome da embalagem");
+        if (editMode && editingId) await packagingsAPI.update(editingId, { name: packagingName });
+        else await packagingsAPI.create({ name: packagingName });
+      }
 
-        case "packaging":
-          if (!packagingName) {
-            toast.error("Preencha o nome da embalagem");
-            return;
-          }
-          const packagingPayload = { name: packagingName };
-          if (editMode && editingId) {
-            const updatedPackaging = await packagingsAPI.update(editingId, packagingPayload);
-            setPackagings(packagings.map((packaging) => (packaging.id === editingId ? updatedPackaging : packaging)));
-            toast.success(`Embalagem "${packagingName}" atualizada com sucesso!`);
-          } else {
-            const newPackaging = await packagingsAPI.create(packagingPayload);
-            setPackagings([...packagings, newPackaging]);
-            toast.success(`Embalagem "${packagingName}" cadastrada com sucesso!`);
-          }
-          break;
+      if (activeTab === "unit") {
+        if (!unitName || !unitAbbreviation) return toast.error("Preencha nome e abreviação");
+        if (editMode && editingId) await unitsAPI.update(editingId, { name: unitName, abbreviation: unitAbbreviation });
+        else await unitsAPI.create({ name: unitName, abbreviation: unitAbbreviation });
+      }
 
-        case "store":
-          if (!storeName) {
-            toast.error("Preencha o nome do mercado");
-            return;
-          }
-          const storePayload = { name: storeName, address: storeAddress };
-          if (editMode && editingId) {
-            const updatedStore = await storesAPI.update(editingId, storePayload);
-            setStores(stores.map((store) => (store.id === editingId ? updatedStore : store)));
-            toast.success(`Mercado "${storeName}" atualizado com sucesso!`);
-          } else {
-            const newStore = await storesAPI.create(storePayload);
-            setStores([...stores, newStore]);
-            toast.success(`Mercado "${storeName}" cadastrado com sucesso!`);
-          }
-          break;
+      if (activeTab === "store") {
+        if (!storeName) return toast.error("Preencha o nome do mercado");
+        if (editMode && editingId) await storesAPI.update(editingId, { name: storeName, address: storeAddress });
+        else await storesAPI.create({ name: storeName, address: storeAddress });
       }
 
       setDialogOpen(false);
       setEditMode(false);
       setEditingId(null);
       resetForm();
+      await loadData();
     } catch (error) {
-      console.error("Error saving:", error);
+      console.error(error);
       toast.error("Erro ao salvar");
     }
   };
 
   const handleDelete = async (type: EntityType, id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este item?")) return;
-
+    if (!confirm("Tem certeza que deseja excluir este registro?")) return;
     try {
-      switch (type) {
-        case "item":
-          await itemsAPI.delete(id);
-          setItems(items.filter(i => i.id !== id));
-          toast.success("Item excluído");
-          break;
-        case "brand":
-          await brandsAPI.delete(id);
-          setBrands(brands.filter(b => b.id !== id));
-          toast.success("Marca excluída");
-          break;
-        case "category":
-          await categoriesAPI.delete(id);
-          setCategories(categories.filter(c => c.id !== id));
-          toast.success("Categoria excluída");
-          break;
-        case "unit":
-          await unitsAPI.delete(id);
-          setUnits(units.filter(u => u.id !== id));
-          toast.success("Unidade excluída");
-          break;
-        case "packaging":
-          await packagingsAPI.delete(id);
-          setPackagings(packagings.filter(p => p.id !== id));
-          toast.success("Embalagem excluída");
-          break;
-        case "store":
-          await storesAPI.delete(id);
-          setStores(stores.filter(s => s.id !== id));
-          toast.success("Mercado excluído");
-          break;
-      }
+      if (type === "item") await itemsAPI.delete(id);
+      if (type === "brand") await brandsAPI.delete(id);
+      if (type === "category") await categoriesAPI.delete(id);
+      if (type === "packaging") await packagingsAPI.delete(id);
+      if (type === "unit") await unitsAPI.delete(id);
+      if (type === "store") await storesAPI.delete(id);
+      await loadData();
+      toast.success("Registro excluído com sucesso");
     } catch (error) {
-      console.error("Error deleting:", error);
+      console.error(error);
       toast.error("Erro ao excluir");
     }
   };
 
-  const getBrandName = (brandId: string) => brands.find(b => b.id === brandId)?.name || "";
-  const getCategoryName = (categoryId: string) => categories.find(c => c.id === categoryId)?.name || "";
-  const getUnitName = (unitId: string) => units.find((u) => u.id === unitId)?.abbreviation || "";
-
-  const getDialogTitle = () => {
+  const dialogTitle = useMemo(() => {
     const action = editMode ? "Editar" : "Novo";
-    switch (activeTab) {
-      case "item": return `${action} Item`;
-      case "brand": return `${action} Marca`;
-      case "category": return `${action} Categoria`;
-      case "unit": return `${action} Unidade`;
-      case "packaging": return `${action} Embalagem`;
-      case "store": return `${action} Mercado`;
-    }
-  };
+    if (activeTab === "item") return `${action} Item`;
+    if (activeTab === "brand") return `${action} Marca`;
+    if (activeTab === "category") return `${action} Categoria`;
+    if (activeTab === "packaging") return `${action} Embalagem`;
+    if (activeTab === "unit") return `${action} Unidade`;
+    return `${action} Mercado`;
+  }, [activeTab, editMode]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
   return (
     <div className="min-h-screen p-4 md:p-8">
       <div className="mx-auto max-w-7xl space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-semibold text-foreground">Cadastros</h1>
-          <p className="mt-2 text-muted-foreground">
-            Gerencie itens, marcas, categorias, unidades, embalagens e mercados
-          </p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-semibold text-foreground">Cadastros</h1>
+            <p className="mt-2 text-muted-foreground">Gerencie itens, marcas, categorias, embalagem, unidades e mercados.</p>
+          </div>
+          <Button variant="outline" size="icon" onClick={() => setHelpOpen(true)} title="Ver instruções">
+            <Info className="h-4 w-4" />
+          </Button>
         </div>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as EntityType)}>
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as EntityType)}>
           <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 lg:w-auto">
             <TabsTrigger value="item">Itens</TabsTrigger>
             <TabsTrigger value="brand">Marcas</TabsTrigger>
             <TabsTrigger value="category">Categorias</TabsTrigger>
+            <TabsTrigger value="packaging">Embalagem</TabsTrigger>
             <TabsTrigger value="unit">Unidades</TabsTrigger>
-            <TabsTrigger value="packaging">Embalagens</TabsTrigger>
-            <TabsTrigger value="store">Mercados</TabsTrigger>
+            <TabsTrigger value="store">Mercado</TabsTrigger>
           </TabsList>
 
-          {/* Items Tab */}
           <TabsContent value="item" className="mt-6">
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-6">
+            <Card className="p-6 space-y-4">
+              <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Itens Cadastrados</h3>
-                <Button onClick={() => handleAdd("item")}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Novo Item
-                </Button>
+                <Button onClick={() => openCreateDialog("item")}><Plus className="h-4 w-4 mr-2" />Novo Item</Button>
               </div>
-              <div className="space-y-2">
-                {items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between rounded-lg border border-border p-4 hover:bg-muted/30"
-                  >
+              {items.map((item) => (
+                <div key={item.id} className="flex items-center justify-between rounded-lg border border-border p-4">
+                  <div>
+                    <p className="font-medium">{item.name}{formatItemDetails(item, units, packagings)}</p>
+                    <p className="text-sm text-muted-foreground">{[getBrandNames(item.brandIds || []), categories.find((c) => c.id === item.categoryId)?.name || "Sem categoria", item.isVegan ? "Vegano" : ""].filter(Boolean).join(" • ")}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => openEditDialog("item", item)}><Edit className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDelete("item", item.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                  </div>
+                </div>
+              ))}
+            </Card>
+          </TabsContent>
+
+          {([
+            ["brand", "Marcas Cadastradas", brands],
+            ["category", "Categorias Cadastradas", categories],
+            ["packaging", "Embalagens Cadastradas", packagings],
+            ["unit", "Unidades Cadastradas", units],
+            ["store", "Mercados Cadastrados", stores],
+          ] as [EntityType, string, any[]][]).map(([type, title, list]) => (
+            <TabsContent key={type} value={type} className="mt-6">
+              <Card className="p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">{title}</h3>
+                  <Button onClick={() => openCreateDialog(type)}><Plus className="h-4 w-4 mr-2" />Novo</Button>
+                </div>
+                {list.map((entity) => (
+                  <div key={entity.id} className="flex items-center justify-between rounded-lg border border-border p-4">
                     <div>
-                      <p className="font-medium text-foreground">{item.name}{item.packageSize ? ` (${item.packageSize} ${getUnitName(item.unitId)})` : ""}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {getBrandName(item.brandId)} • {getCategoryName(item.categoryId)} • {packagings.find((p) => p.id === item.packagingId)?.name || "Sem embalagem"}
-                        {item.isVegan && " • Vegano"}
-                      </p>
+                      <p className="font-medium">{entity.name}</p>
+                      {type === "unit" && <p className="text-sm text-muted-foreground">{entity.abbreviation}</p>}
+                      {type === "store" && entity.address && <p className="text-sm text-muted-foreground">{entity.address}</p>}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit("item", item)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleDelete("item", item.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => openEditDialog(type, entity)}><Edit className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleDelete(type, entity.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                     </div>
                   </div>
                 ))}
-              </div>
-            </Card>
-          </TabsContent>
-
-          {/* Brands Tab */}
-          <TabsContent value="brand" className="mt-6">
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold">Marcas Cadastradas</h3>
-                <Button onClick={() => handleAdd("brand")}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nova Marca
-                </Button>
-              </div>
-              <div className="grid gap-2 md:grid-cols-2">
-                {brands.map((brand) => (
-                  <div
-                    key={brand.id}
-                    className="flex items-center justify-between rounded-lg border border-border p-4 hover:bg-muted/30"
-                  >
-                    <div>
-                      <p className="font-medium text-foreground">{brand.name}</p>
-                      {brand.isVegan && (
-                        <p className="text-sm text-muted-foreground">Vegana</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit("brand", brand)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleDelete("brand", brand.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </TabsContent>
-
-          {/* Categories Tab */}
-          <TabsContent value="category" className="mt-6">
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold">Categorias Cadastradas</h3>
-                <Button onClick={() => handleAdd("category")}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nova Categoria
-                </Button>
-              </div>
-              <div className="grid gap-2 md:grid-cols-2">
-                {categories.map((category) => (
-                  <div
-                    key={category.id}
-                    className="flex items-center justify-between rounded-lg border border-border p-4 hover:bg-muted/30"
-                  >
-                    <p className="font-medium text-foreground">{category.name}</p>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit("category", category)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleDelete("category", category.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </TabsContent>
-
-          {/* Units Tab */}
-          <TabsContent value="unit" className="mt-6">
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold">Unidades Cadastradas</h3>
-                <Button onClick={() => handleAdd("unit")}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nova Unidade
-                </Button>
-              </div>
-              <div className="grid gap-2 md:grid-cols-2">
-                {units.map((unit) => (
-                  <div
-                    key={unit.id}
-                    className="flex items-center justify-between rounded-lg border border-border p-4 hover:bg-muted/30"
-                  >
-                    <div>
-                      <p className="font-medium text-foreground">{unit.name}</p>
-                      <p className="text-sm text-muted-foreground">{unit.abbreviation}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit("unit", unit)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleDelete("unit", unit.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </TabsContent>
-
-
-          {/* Packagings Tab */}
-          <TabsContent value="packaging" className="mt-6">
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold">Embalagens Cadastradas</h3>
-                <Button onClick={() => handleAdd("packaging")}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nova Embalagem
-                </Button>
-              </div>
-              <div className="grid gap-2 md:grid-cols-2">
-                {packagings.map((packaging) => (
-                  <div
-                    key={packaging.id}
-                    className="flex items-center justify-between rounded-lg border border-border p-4 hover:bg-muted/30"
-                  >
-                    <p className="font-medium text-foreground">{packaging.name}</p>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit("packaging", packaging)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete("packaging", packaging.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </TabsContent>
-
-          {/* Stores Tab */}
-          <TabsContent value="store" className="mt-6">
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold">Mercados Cadastrados</h3>
-                <Button onClick={() => handleAdd("store")}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Novo Mercado
-                </Button>
-              </div>
-              <div className="space-y-2">
-                {stores.map((store) => (
-                  <div
-                    key={store.id}
-                    className="flex items-center justify-between rounded-lg border border-border p-4 hover:bg-muted/30"
-                  >
-                    <div>
-                      <p className="font-medium text-foreground">{store.name}</p>
-                      {store.address && (
-                        <p className="text-sm text-muted-foreground">{store.address}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit("store", store)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleDelete("store", store.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </TabsContent>
+              </Card>
+            </TabsContent>
+          ))}
         </Tabs>
       </div>
 
-      {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{getDialogTitle()}</DialogTitle>
-          </DialogHeader>
-
+          <DialogHeader><DialogTitle>{dialogTitle}</DialogTitle></DialogHeader>
           <div className="space-y-4 py-4">
-            {/* Item Form */}
             {activeTab === "item" && (
               <>
+                <div className="space-y-2"><Label>Nome do Item *</Label><Input value={itemName} onChange={(e) => setItemName(e.target.value)} /></div>
                 <div className="space-y-2">
-                  <Label>Nome do Item *</Label>
-                  <Input
-                    value={itemName}
-                    onChange={(e) => setItemName(e.target.value)}
-                    placeholder="Ex: Arroz Integral"
-                  />
+                  <Label>Marcas (opcional)</Label>
+                  <div className="max-h-40 overflow-y-auto rounded-md border p-3 space-y-2">
+                    {brands.map((brand) => (
+                      <div key={brand.id} className="flex items-center gap-2">
+                        <Checkbox
+                          id={`brand-${brand.id}`}
+                          checked={itemBrandIds.includes(brand.id)}
+                          onCheckedChange={(checked) => toggleItemBrand(brand.id, checked as boolean)}
+                        />
+                        <label htmlFor={`brand-${brand.id}`} className="text-sm cursor-pointer">{brand.name}</label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Marca *</Label>
-                  <Select value={itemBrand} onValueChange={setItemBrand}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a marca" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {brands.map((brand) => (
-                        <SelectItem key={brand.id} value={brand.id}>
-                          {brand.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Categoria *</Label>
-                  <Select value={itemCategory} onValueChange={setItemCategory}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a categoria" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Unidade *</Label>
-                  <Select value={itemUnit} onValueChange={setItemUnit}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a unidade" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {units.map((unit) => (
-                        <SelectItem key={unit.id} value={unit.id}>
-                          {unit.name} ({unit.abbreviation})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Embalagem *</Label>
-                  <Select value={itemPackaging} onValueChange={setItemPackaging}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a embalagem" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {packagings.map((packaging) => (
-                        <SelectItem key={packaging.id} value={packaging.id}>
-                          {packaging.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Volume da Embalagem *</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={itemPackageSize}
-                    onChange={(e) => setItemPackageSize(e.target.value)}
-                    placeholder="Ex: 1, 0.5, 12"
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="vegan"
-                    checked={itemVegan}
-                    onCheckedChange={(checked) => setItemVegan(checked as boolean)}
-                  />
-                  <label htmlFor="vegan" className="text-sm cursor-pointer">
-                    Item vegano
-                  </label>
-                </div>
+                <div className="space-y-2"><Label>Categoria (opcional)</Label><Select value={itemCategory} onValueChange={setItemCategory}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-2"><Label>Embalagem (opcional)</Label><Select value={itemPackaging} onValueChange={setItemPackaging}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{packagings.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-2"><Label>Unidade (opcional)</Label><Select value={itemUnit} onValueChange={setItemUnit}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{units.map((u) => <SelectItem key={u.id} value={u.id}>{u.name} ({u.abbreviation})</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-2"><Label>Volume da embalagem (opcional)</Label><Input value={itemPackageSize} onChange={(e) => setItemPackageSize(e.target.value)} type="number" step="0.01" /></div>
+                <div className="flex items-center gap-2"><Checkbox id="item-vegan" checked={itemVegan} onCheckedChange={(checked) => setItemVegan(checked as boolean)} /><label htmlFor="item-vegan" className="text-sm">Item vegano</label></div>
               </>
             )}
-
-            {/* Brand Form */}
-            {activeTab === "brand" && (
-              <>
-                <div className="space-y-2">
-                  <Label>Nome da Marca *</Label>
-                  <Input
-                    value={brandName}
-                    onChange={(e) => setBrandName(e.target.value)}
-                    placeholder="Ex: Taeq"
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="brand-vegan"
-                    checked={brandVegan}
-                    onCheckedChange={(checked) => setBrandVegan(checked as boolean)}
-                  />
-                  <label htmlFor="brand-vegan" className="text-sm cursor-pointer">
-                    Marca vegana
-                  </label>
-                </div>
-              </>
-            )}
-
-            {/* Category Form */}
-            {activeTab === "category" && (
-              <div className="space-y-2">
-                <Label>Nome da Categoria *</Label>
-                <Input
-                  value={categoryName}
-                  onChange={(e) => setCategoryName(e.target.value)}
-                  placeholder="Ex: Grãos e Cereais"
-                />
-              </div>
-            )}
-
-            {/* Unit Form */}
-            {activeTab === "unit" && (
-              <>
-                <div className="space-y-2">
-                  <Label>Nome da Unidade *</Label>
-                  <Input
-                    value={unitName}
-                    onChange={(e) => setUnitName(e.target.value)}
-                    placeholder="Ex: Quilograma"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Abreviação *</Label>
-                  <Input
-                    value={unitAbbreviation}
-                    onChange={(e) => setUnitAbbreviation(e.target.value)}
-                    placeholder="Ex: kg"
-                  />
-                </div>
-              </>
-            )}
-
-            {/* Packaging Form */}
-            {activeTab === "packaging" && (
-              <div className="space-y-2">
-                <Label>Nome da Embalagem *</Label>
-                <Input
-                  value={packagingName}
-                  onChange={(e) => setPackagingName(e.target.value)}
-                  placeholder="Ex: Lata"
-                />
-              </div>
-            )}
-
-            {/* Store Form */}
-            {activeTab === "store" && (
-              <>
-                <div className="space-y-2">
-                  <Label>Nome do Mercado *</Label>
-                  <Input
-                    value={storeName}
-                    onChange={(e) => setStoreName(e.target.value)}
-                    placeholder="Ex: Pão de Açúcar"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Endereço (opcional)</Label>
-                  <Input
-                    value={storeAddress}
-                    onChange={(e) => setStoreAddress(e.target.value)}
-                    placeholder="Ex: Av. Paulista, 1000"
-                  />
-                </div>
-              </>
-            )}
+            {activeTab === "brand" && <><Label>Nome da Marca *</Label><Input value={brandName} onChange={(e) => setBrandName(e.target.value)} /><div className="flex items-center gap-2"><Checkbox id="brand-vegan" checked={brandVegan} onCheckedChange={(checked) => setBrandVegan(checked as boolean)} /><label htmlFor="brand-vegan" className="text-sm">Marca vegana</label></div></>}
+            {activeTab === "category" && <><Label>Nome da Categoria *</Label><Input value={categoryName} onChange={(e) => setCategoryName(e.target.value)} /></>}
+            {activeTab === "packaging" && <><Label>Nome da Embalagem *</Label><Input value={packagingName} onChange={(e) => setPackagingName(e.target.value)} /></>}
+            {activeTab === "unit" && <><Label>Nome da Unidade *</Label><Input value={unitName} onChange={(e) => setUnitName(e.target.value)} /><Label>Abreviação *</Label><Input value={unitAbbreviation} onChange={(e) => setUnitAbbreviation(e.target.value)} /></>}
+            {activeTab === "store" && <><Label>Nome do Mercado *</Label><Input value={storeName} onChange={(e) => setStoreName(e.target.value)} /><Label>Endereço</Label><Input value={storeAddress} onChange={(e) => setStoreAddress(e.target.value)} /></>}
           </div>
-
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleSave}>
-              {editMode ? "Salvar Alterações" : "Cadastrar"}
-            </Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSave}>{editMode ? "Salvar" : "Cadastrar"}</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Instruções de cadastro</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">{HELP_TEXTS[activeTab]}</p>
+          <DialogFooter><Button onClick={() => setHelpOpen(false)}>Fechar</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
