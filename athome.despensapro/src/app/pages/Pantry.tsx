@@ -119,7 +119,7 @@ export function Pantry() {
     return daysSinceOpened > 30;
   };
 
-  const getBrandName = (brandId: string) => brands.find(b => b.id === brandId)?.name || "";
+  const getBrandName = (brandIds: string[] = []) => brandIds.map((id) => brands.find((b) => b.id === id)?.name).filter(Boolean).join(", ");
   const getUnitAbbr = (unitId: string) => units.find(u => u.id === unitId)?.abbreviation || "";
 
   const getPackagingName = (packagingId: string) => packagings.find((p) => p.id === packagingId)?.name || "";
@@ -127,22 +127,16 @@ export function Pantry() {
   const getItemDisplaySize = (item: any) => {
     if (!item?.packageSize) return "";
     const unit = getUnitAbbr(item.unitId);
-    return unit ? `${item.packageSize} ${unit}` : item.packageSize;
+    const packaging = getPackagingName(item.packagingId);
+    if (!unit || !packaging) return "";
+    return `${packaging} de ${item.packageSize} ${unit}`;
   };
 
   const getPantryQuantityLabel = (pantryItem: any, item: any) => {
-    const unit = getUnitAbbr(item.unitId);
-    const packaging = getPackagingName(item.packagingId);
-    const packageSize = getItemDisplaySize(item);
-
-    const parts = [
-      packageSize || null,
-      packaging ? packaging.toLowerCase() : null,
-    ].filter(Boolean);
-
-    const suffix = parts.length > 0 ? ` de ${parts.join(" ")}` : unit ? ` ${unit}` : "";
-
-    return `${pantryItem.currentQuantity}${suffix}`;
+    const packageDetails = getItemDisplaySize(item);
+    return packageDetails
+      ? `(${pantryItem.currentQuantity} ${packageDetails})`
+      : `(${pantryItem.currentQuantity})`;
   };
 
   const selectedItem = selectedItemId ? items.find(i => i.id === selectedItemId) : null;
@@ -214,7 +208,7 @@ export function Pantry() {
                             <span className="font-medium text-foreground">{item.name}{getItemDisplaySize(item) ? ` (${getItemDisplaySize(item)})` : ""}</span>
                           </td>
                           <td className="px-4 py-4 text-muted-foreground">
-                            {getBrandName(item.brandId)}
+                            {getBrandName(item.brandIds || (item.brandId ? [item.brandId] : []))}
                           </td>
                           <td className="px-4 py-4">
                             <div className="flex items-center gap-2">
@@ -282,7 +276,7 @@ export function Pantry() {
                       <div className="flex items-start justify-between">
                         <div>
                           <h4 className="font-semibold text-foreground">{item.name}{getItemDisplaySize(item) ? ` (${getItemDisplaySize(item)})` : ""}</h4>
-                          <p className="text-sm text-muted-foreground">{getBrandName(item.brandId)}</p>
+                          <p className="text-sm text-muted-foreground">{getBrandName(item.brandIds || (item.brandId ? [item.brandId] : []))}</p>
                         </div>
                         <Button
                           variant="ghost"
