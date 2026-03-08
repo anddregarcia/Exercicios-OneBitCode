@@ -167,6 +167,7 @@ export function NewPurchase() {
   const getBrandName = (brandId: string) => brands.find((b) => b.id === brandId)?.name || "Sem marca";
   const getCategoryName = (categoryId: string) => categories.find((c) => c.id === categoryId)?.name || "Sem categoria";
   const getItemById = (id: string) => items.find((i) => i.id === id);
+  const getStoreName = (storeId: string) => stores.find((store) => store.id === storeId)?.name || "Mercado não informado";
 
   const formatItemDetails = (item: any) => {
     if (!item?.packageSize) return "";
@@ -382,10 +383,18 @@ export function NewPurchase() {
             <DialogTitle>Histórico de preços - {historyDialogItem ? getItemName(historyDialogItem) : ""}</DialogTitle>
           </DialogHeader>
           <div className="space-y-2 max-h-80 overflow-y-auto">
+            {itemHistory.length > 0 && (
+              <p className="text-sm text-muted-foreground">
+                Última compra em: <span className="font-medium text-foreground">{getStoreName(itemHistory[0].storeId)}</span>
+              </p>
+            )}
             {itemHistory.map((purchase) => (
-              <div key={purchase.id} className="border rounded p-3 flex justify-between">
-                <span>{new Date(purchase.date).toLocaleDateString("pt-BR")}</span>
-                <span>R$ {purchase.price.toFixed(2)}</span>
+              <div key={purchase.id} className="border rounded p-3 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm text-muted-foreground">{new Date(purchase.date).toLocaleDateString("pt-BR")}</p>
+                  <p className="text-sm font-medium text-foreground">{getStoreName(purchase.storeId)}</p>
+                </div>
+                <span className="font-medium">R$ {purchase.price.toFixed(2)}</span>
               </div>
             ))}
             {!itemHistory.length && <p className="text-sm text-muted-foreground">Sem histórico para este item.</p>}
