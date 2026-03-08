@@ -256,7 +256,7 @@ export function NewPurchase() {
           </div>
         </div>
 
-        <Card className="overflow-hidden">
+        <Card className="hidden md:block overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -310,6 +310,70 @@ export function NewPurchase() {
             </table>
           </div>
         </Card>
+
+        <div className="space-y-3 md:hidden">
+          {!groupByCategory && rowsWithItem.map((row) => (
+            <Card key={row.key} className="p-4">
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-foreground">{row.item.name}{formatItemDetails(row.item)}</p>
+                    <p className="text-sm text-muted-foreground">{getBrandName(row.brandId)} • {getCategoryName(row.item.categoryId)}</p>
+                  </div>
+                  <Checkbox checked={row.selected} onCheckedChange={(checked) => handleFieldChange(row.key, "selected", checked as boolean)} />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label>Preço</Label>
+                    <Input type="number" step="0.01" value={row.price} onChange={(e) => handleFieldChange(row.key, "price", e.target.value)} />
+                  </div>
+                  <div>
+                    <Label>Quantidade</Label>
+                    <Input type="number" step="0.01" value={row.quantity} onChange={(e) => handleFieldChange(row.key, "quantity", e.target.value)} />
+                  </div>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => handleViewHistory(row.itemId)}><History className="h-4 w-4 mr-1" />Histórico</Button>
+              </div>
+            </Card>
+          ))}
+
+          {groupByCategory && orderedCategories.map((category) => (
+            <div key={category} className="space-y-2">
+              <button
+                type="button"
+                className="w-full rounded-md border bg-muted/50 px-3 py-2 text-left font-semibold flex items-center gap-2"
+                onClick={() => toggleCategoryCollapse(category)}
+              >
+                {collapsedCategories[category] ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                {category}
+              </button>
+              {!collapsedCategories[category] && groupedItems[category].map((row) => (
+                <Card key={row.key} className="p-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-foreground">{row.item.name}{formatItemDetails(row.item)}</p>
+                        <p className="text-sm text-muted-foreground">{getBrandName(row.brandId)} • {category}</p>
+                      </div>
+                      <Checkbox checked={row.selected} onCheckedChange={(checked) => handleFieldChange(row.key, "selected", checked as boolean)} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label>Preço</Label>
+                        <Input type="number" step="0.01" value={row.price} onChange={(e) => handleFieldChange(row.key, "price", e.target.value)} />
+                      </div>
+                      <div>
+                        <Label>Quantidade</Label>
+                        <Input type="number" step="0.01" value={row.quantity} onChange={(e) => handleFieldChange(row.key, "quantity", e.target.value)} />
+                      </div>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => handleViewHistory(row.itemId)}><History className="h-4 w-4 mr-1" />Histórico</Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
 
       <Dialog open={historyDialogItem !== null} onOpenChange={(open) => !open && setHistoryDialogItem(null)}>
