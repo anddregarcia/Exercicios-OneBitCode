@@ -21,6 +21,8 @@ import {
   itemsAPI,
   storesAPI,
   purchasesAPI,
+  unitsAPI,
+  packagingsAPI,
 } from "../lib/api";
 import { toast } from "sonner";
 
@@ -29,6 +31,8 @@ export function Dashboard() {
   const [items, setItems] = useState<any[]>([]);
   const [stores, setStores] = useState<any[]>([]);
   const [purchaseItems, setPurchaseItems] = useState<any[]>([]);
+  const [units, setUnits] = useState<any[]>([]);
+  const [packagings, setPackagings] = useState<any[]>([]);
 
   useEffect(() => {
     loadData();
@@ -37,13 +41,17 @@ export function Dashboard() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [itemsData, storesData] = await Promise.all([
+      const [itemsData, storesData, unitsData, packagingsData] = await Promise.all([
         itemsAPI.getAll(),
         storesAPI.getAll(),
+        unitsAPI.getAll(),
+        packagingsAPI.getAll(),
       ]);
 
       setItems(itemsData);
       setStores(storesData);
+      setUnits(unitsData);
+      setPackagings(packagingsData);
 
       // Load all purchase items
       const allHistory = await Promise.all(
@@ -122,6 +130,21 @@ export function Dashboard() {
     })
     .filter(Boolean)
     .slice(0, 5);
+
+  const getPackagingName = (packagingId: string) => {
+    return packagings.find((packaging) => packaging.id === packagingId)?.name || "";
+  };
+
+  const getUnitAbbr = (unitId: string) => {
+    return units.find((unit) => unit.id === unitId)?.abbreviation || "";
+  };
+
+  const getItemLabel = (item: any) => {
+    if (!item?.packageSize) return item.name;
+    const packaging = getPackagingName(item.packagingId);
+    const unit = getUnitAbbr(item.unitId);
+    return packaging && unit ? `${item.name} (${packaging} de ${item.packageSize} ${unit})` : item.name;
+  };
 
   // Chart data for last 6 months
   const last6Months = Array.from({ length: 6 }, (_, i) => {
@@ -232,7 +255,7 @@ export function Dashboard() {
                 itemsWithIncrease.map((data: any) => (
                   <div key={data.item.id} className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-foreground">{data.item.name}{data.item.packageSize ? ` (${data.item.packageSize})` : ""}</p>
+                      <p className="font-medium text-foreground">{getItemLabel(data.item)}</p>
                       <p className="text-sm text-muted-foreground">
                         Preço atual: R$ {data.avgPrice.toFixed(2)}
                       </p>
@@ -259,7 +282,7 @@ export function Dashboard() {
                 itemsWithLowestPrice.map((data: any) => (
                   <div key={data.item.id} className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-foreground">{data.item.name}{data.item.packageSize ? ` (${data.item.packageSize})` : ""}</p>
+                      <p className="font-medium text-foreground">{getItemLabel(data.item)}</p>
                       <p className="text-sm text-muted-foreground">
                         Preço: R$ {data.currentPrice.toFixed(2)}
                       </p>
