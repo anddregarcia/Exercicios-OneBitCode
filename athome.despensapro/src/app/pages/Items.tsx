@@ -369,7 +369,7 @@ export function Items() {
               <>
                 <div className="space-y-2"><Label>Nome do Item *</Label><Input value={itemName} onChange={(e) => setItemName(e.target.value)} /></div>
                 <div className="space-y-2">
-                  <Label>Marcas (opcional)</Label>
+                  <Label>Marcas</Label>
                   <div className="max-h-40 overflow-y-auto rounded-md border p-3 space-y-2">
                     {brands.map((brand) => (
                       <div key={brand.id} className="flex items-center gap-2">
@@ -383,10 +383,10 @@ export function Items() {
                     ))}
                   </div>
                 </div>
-                <div className="space-y-2"><Label>Categoria (opcional)</Label><Select value={itemCategory} onValueChange={setItemCategory}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div>
-                <div className="space-y-2"><Label>Embalagem (opcional)</Label><Select value={itemPackaging} onValueChange={setItemPackaging}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{packagings.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent></Select></div>
-                <div className="space-y-2"><Label>Unidade (opcional)</Label><Select value={itemUnit} onValueChange={setItemUnit}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{units.map((u) => <SelectItem key={u.id} value={u.id}>{u.name} ({u.abbreviation})</SelectItem>)}</SelectContent></Select></div>
-                <div className="space-y-2"><Label>Volume da embalagem (opcional)</Label><Input value={itemPackageSize} onChange={(e) => setItemPackageSize(e.target.value)} type="number" step="0.01" /></div>
+                <div className="space-y-2"><Label>Categoria</Label><Select value={itemCategory} onValueChange={setItemCategory}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-2"><Label>Embalagem</Label><Select value={itemPackaging} onValueChange={setItemPackaging}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{packagings.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-2"><Label>Unidade</Label><Select value={itemUnit} onValueChange={setItemUnit}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{units.map((u) => <SelectItem key={u.id} value={u.id}>{u.name} ({u.abbreviation})</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-2"><Label>Volume da embalagem</Label><Input value={itemPackageSize} onChange={(e) => setItemPackageSize(e.target.value)} type="number" step="0.01" /></div>
                 <div className="flex items-center gap-2"><Checkbox id="item-vegan" checked={itemVegan} onCheckedChange={(checked) => setItemVegan(checked as boolean)} /><label htmlFor="item-vegan" className="text-sm">Item vegano</label></div>
               </>
             )}
