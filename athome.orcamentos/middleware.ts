@@ -1,6 +1,20 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+type SupabaseCookie = {
+  name: string;
+  value: string;
+  options?: {
+    path?: string;
+    domain?: string;
+    maxAge?: number;
+    expires?: Date;
+    httpOnly?: boolean;
+    secure?: boolean;
+    sameSite?: 'lax' | 'strict' | 'none';
+  };
+};
+
 const publicRoutes = ['/login'];
 
 export async function middleware(request: NextRequest) {
@@ -13,7 +27,7 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: SupabaseCookie[]) {
           cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value));
           cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
         }
