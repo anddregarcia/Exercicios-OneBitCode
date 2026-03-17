@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getScopedClient } from '../_utils';
+import { getScopedClient } from '@/app/api/utils';
 
 export async function GET() {
   const { supabase, user } = await getScopedClient();

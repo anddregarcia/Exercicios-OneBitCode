@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useApi } from '@/hooks/use-api';
 import { PageHelp } from '@/components/page-help';
+import { formatCurrency, formatDate } from '@/utils';
 
 type Item = { id: string; estimate_number: number; status: string; execution_date: string; client_name: string; total_cost: number };
 
@@ -39,8 +40,8 @@ export default function DashboardPage() {
                 <td>{item.estimate_number}</td>
                 <td>{item.client_name}</td>
                 <td>{item.status}</td>
-                <td>{item.execution_date}</td>
-                <td>R$ {Number(item.total_cost || 0).toFixed(2)}</td>
+                <td>{formatDate(item.execution_date)}</td>
+                <td>{formatCurrency(item.total_cost || 0)}</td>
                 <td className="space-x-2 py-2">
                   <Link href={`/estimates/${item.id}`} className="bg-slate-200">Editar</Link>
                   <button onClick={() => duplicateEstimate(item.id)} className="bg-slate-200">Duplicar</button>

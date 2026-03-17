@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getScopedClient } from '../_utils';
+import { getScopedClient } from '@/app/api/utils';
 
 function sortByStatus(a: any, b: any) {
   const weight: Record<string, number> = { approved: 0, pending: 1, canceled: 2 };
