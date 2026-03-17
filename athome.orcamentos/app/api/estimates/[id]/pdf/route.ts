@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import puppeteer from 'puppeteer';
 import { getScopedClient } from '@/app/api/utils';
 
+export const runtime = 'nodejs';
+
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   const { supabase, user } = await getScopedClient();
   const { id } = await params;
@@ -35,9 +37,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   const pdf = await page.pdf({ format: 'A4' });
   await browser.close();
 
-  const pdfArrayBuffer = pdf.buffer.slice(pdf.byteOffset, pdf.byteOffset + pdf.byteLength);
-
-  return new NextResponse(pdfArrayBuffer, {
+  return new NextResponse(Buffer.from(pdf), {
     headers: {
       'Content-Type': 'application/pdf',
       'Content-Disposition': `inline; filename="orcamento-${estimate.estimate_number}.pdf"`
