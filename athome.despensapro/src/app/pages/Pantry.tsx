@@ -119,7 +119,7 @@ export function Pantry() {
     return daysSinceOpened > 30;
   };
 
-  const getBrandName = (brandIds: string[] = []) => brandIds.map((id) => brands.find((b) => b.id === id)?.name).filter(Boolean).join(", ");
+  const getBrandName = (brandId?: string) => brandId ? brands.find((b) => b.id === brandId)?.name || "Sem marca" : "Sem marca";
   const getUnitAbbr = (unitId: string) => units.find(u => u.id === unitId)?.abbreviation || "";
 
   const getPackagingName = (packagingId: string) => packagings.find((p) => p.id === packagingId)?.name || "";
@@ -135,9 +135,27 @@ export function Pantry() {
   const getPantryQuantityLabel = (pantryItem: any, item: any) => {
     const packageDetails = getItemDisplaySize(item);
     return packageDetails
-      ? `${pantryItem.currentQuantity} ${packageDetails}`
-      : `${pantryItem.currentQuantity}`;
+      ? `(${pantryItem.currentQuantity} ${packageDetails})`
+      : `(${pantryItem.currentQuantity})`;
   };
+
+  const expandedPantryRows = pantryItems.flatMap((pantryItem) => {
+    const item = items.find((i) => i.id === pantryItem.itemId);
+    if (!item) return [];
+
+    const brandIds = item.brandIds?.length
+      ? item.brandIds
+      : item.brandId
+        ? [item.brandId]
+        : [undefined];
+
+    return brandIds.map((brandId: string | undefined) => ({
+      key: `${pantryItem.itemId}:${brandId || "none"}`,
+      pantryItem,
+      item,
+      brandId,
+    }));
+  });
 
   const selectedItem = selectedItemId ? items.find(i => i.id === selectedItemId) : null;
 
@@ -161,7 +179,7 @@ export function Pantry() {
         </div>
 
         {/* Desktop Table */}
-        {pantryItems.length > 0 ? (
+        {expandedPantryRows.length > 0 ? (
           <>
             <Card className="hidden md:block overflow-hidden">
               <div className="overflow-x-auto">
@@ -195,20 +213,17 @@ export function Pantry() {
                     </tr>
                   </thead>
                   <tbody>
-                    {pantryItems.map((pantryItem) => {
-                      const item = items.find(i => i.id === pantryItem.itemId);
-                      if (!item) return null;
-
+                    {expandedPantryRows.map(({ key, pantryItem, item, brandId }) => {
                       const lowStock = isLowStock(pantryItem.currentQuantity);
                       const oldProduct = isOldProduct(pantryItem.openedDate);
 
                       return (
-                        <tr key={pantryItem.itemId} className="border-b border-border hover:bg-muted/30">
+                        <tr key={key} className="border-b border-border hover:bg-muted/30">
                           <td className="px-4 py-4">
                             <span className="font-medium text-foreground">{item.name}{getItemDisplaySize(item) ? ` (${getItemDisplaySize(item)})` : ""}</span>
                           </td>
                           <td className="px-4 py-4 text-muted-foreground">
-                            {getBrandName(item.brandIds || (item.brandId ? [item.brandId] : []))}
+                            {getBrandName(brandId)}
                           </td>
                           <td className="px-4 py-4">
                             <div className="flex items-center gap-2">
@@ -263,20 +278,17 @@ export function Pantry() {
 
             {/* Mobile Cards */}
             <div className="space-y-4 md:hidden">
-              {pantryItems.map((pantryItem) => {
-                const item = items.find(i => i.id === pantryItem.itemId);
-                if (!item) return null;
-
+              {expandedPantryRows.map(({ key, pantryItem, item, brandId }) => {
                 const lowStock = isLowStock(pantryItem.currentQuantity);
                 const oldProduct = isOldProduct(pantryItem.openedDate);
 
                 return (
-                  <Card key={pantryItem.itemId} className="p-4">
+                  <Card key={key} className="p-4">
                     <div className="space-y-3">
                       <div className="flex items-start justify-between">
                         <div>
                           <h4 className="font-semibold text-foreground">{item.name}{getItemDisplaySize(item) ? ` (${getItemDisplaySize(item)})` : ""}</h4>
-                          <p className="text-sm text-muted-foreground">{getBrandName(item.brandIds || (item.brandId ? [item.brandId] : []))}</p>
+                          <p className="text-sm text-muted-foreground">{getBrandName(brandId)}</p>
                         </div>
                         <Button
                           variant="ghost"
