@@ -35,7 +35,9 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   const pdf = await page.pdf({ format: 'A4' });
   await browser.close();
 
-  return new NextResponse(pdf, {
+  const pdfArrayBuffer = pdf.buffer.slice(pdf.byteOffset, pdf.byteOffset + pdf.byteLength);
+
+  return new NextResponse(pdfArrayBuffer, {
     headers: {
       'Content-Type': 'application/pdf',
       'Content-Disposition': `inline; filename="orcamento-${estimate.estimate_number}.pdf"`
