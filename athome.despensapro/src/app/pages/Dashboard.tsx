@@ -41,9 +41,10 @@ export function Dashboard() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [itemsData, storesData, unitsData, packagingsData] = await Promise.all([
+      const [itemsData, storesData, purchasesData, unitsData, packagingsData] = await Promise.all([
         itemsAPI.getAll(),
         storesAPI.getAll(),
+        purchasesAPI.getAll(),
         unitsAPI.getAll(),
         packagingsAPI.getAll(),
       ]);
@@ -53,13 +54,7 @@ export function Dashboard() {
       setUnits(unitsData);
       setPackagings(packagingsData);
 
-      // Load all purchase items
-      const allHistory = await Promise.all(
-        itemsData.map((item: any) => itemsAPI.getHistory(item.id))
-      );
-      
-      const flatHistory = allHistory.flat();
-      setPurchaseItems(flatHistory);
+      setPurchaseItems(purchasesData);
     } catch (error) {
       console.error("Error loading dashboard data:", error);
       toast.error("Erro ao carregar dados do dashboard");
@@ -81,7 +76,9 @@ export function Dashboard() {
     sum + (purchase.price * purchase.quantity), 0
   );
   const totalShoppingTrips = new Set(monthPurchases.map((purchase: any) => `${purchase.date}-${purchase.storeId}`)).size;
-  const totalItemsPurchased = monthPurchases.reduce((sum: number, purchase: any) => sum + purchase.quantity, 0);
+  const totalItemsPurchased = Math.round(
+    monthPurchases.reduce((sum: number, purchase: any) => sum + purchase.quantity, 0)
+  );
 
   // Most used store
   const storeFrequency = monthPurchases.reduce((acc: Record<string, number>, purchase: any) => {

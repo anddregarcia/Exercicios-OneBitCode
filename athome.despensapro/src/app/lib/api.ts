@@ -74,14 +74,27 @@ const normalizeItem = (item: any): Item => {
   };
 };
 
-const normalizeUserData = (data: UserData): UserData => {
-  if (!data.packagings || data.packagings.length === 0) {
-    data.packagings = [...mockPackagings];
-  }
+const normalizeUserData = (data?: Partial<UserData>): UserData => {
+  const brands = Array.isArray(data?.brands) ? data.brands : [...mockBrands];
+  const categories = Array.isArray(data?.categories) ? data.categories : [...mockCategories];
+  const units = Array.isArray(data?.units) ? data.units : [...mockUnits];
+  const stores = Array.isArray(data?.stores) ? data.stores : [...mockStores];
+  const packagings = Array.isArray(data?.packagings) ? data.packagings : [...mockPackagings];
+  const items = Array.isArray(data?.items) ? data.items.map(normalizeItem) : [];
+  const purchases = Array.isArray(data?.purchases) ? data.purchases : [];
+  const pantry = Array.isArray(data?.pantry) ? data.pantry : [];
 
-  data.items = (data.items || []).map(normalizeItem);
-
-  return data;
+  return {
+    brands: sortByName(brands),
+    categories: sortByName(categories),
+    units: sortByName(units),
+    stores: sortByName(stores),
+    packagings: sortByName(packagings),
+    items: sortByName(items),
+    purchases,
+    pantry,
+    seeded: data?.seeded ?? true,
+  };
 };
 
 async function getCurrentUser() {
@@ -135,15 +148,15 @@ async function readUserData(): Promise<UserData> {
   const localData = readLocalUserData(userId);
   const cloudData = user.user_metadata?.[USER_DATA_METADATA_KEY] as UserData | undefined;
 
-  if (cloudData) {
-    const normalized = normalizeUserData(cloudData);
+  if (localData) {
+    const normalized = normalizeUserData(localData);
     localStorage.setItem(getStorageKey(userId), JSON.stringify(normalized));
     return normalized;
   }
 
-  if (localData) {
-    const normalized = normalizeUserData(localData);
-    await writeUserData(normalized);
+  if (cloudData) {
+    const normalized = normalizeUserData(cloudData);
+    localStorage.setItem(getStorageKey(userId), JSON.stringify(normalized));
     return normalized;
   }
 
@@ -153,19 +166,20 @@ async function readUserData(): Promise<UserData> {
 }
 
 async function writeUserData(data: UserData) {
+  const normalizedData = normalizeUserData(data);
   const user = await getCurrentUser();
   const currentMetadata = user.user_metadata || {};
 
   const { error } = await supabase.auth.updateUser({
     data: {
       ...currentMetadata,
-      [USER_DATA_METADATA_KEY]: data,
+      [USER_DATA_METADATA_KEY]: normalizedData,
     },
   });
 
   if (error) throw error;
 
-  localStorage.setItem(getStorageKey(user.id), JSON.stringify(data));
+  localStorage.setItem(getStorageKey(user.id), JSON.stringify(normalizedData));
 }
 
 function id() {
