@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import type { Dispatch, SetStateAction } from "react";
 
 interface PurchaseItem {
   key?: string;
@@ -21,7 +22,7 @@ interface PurchaseFormContextType {
   purchaseDate: string;
   setPurchaseDate: (date: string) => void;
   purchaseItems: PurchaseItem[];
-  setPurchaseItems: (items: PurchaseItem[]) => void;
+  setPurchaseItems: Dispatch<SetStateAction<PurchaseItem[]>>;
   clearForm: () => void;
 }
 
@@ -73,7 +74,7 @@ export function PurchaseFormProvider({ children }: { children: React.ReactNode }
     setPurchaseDateState(date);
   }, []);
 
-  const setPurchaseItems = useCallback((items: PurchaseItem[]) => {
+  const setPurchaseItems = useCallback((items: SetStateAction<PurchaseItem[]>) => {
     setPurchaseItemsState(items);
   }, []);
 
