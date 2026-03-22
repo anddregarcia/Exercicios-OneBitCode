@@ -131,10 +131,26 @@ export function Pantry() {
 
   const isLowStock = (quantity: number) => quantity <= 0.3;
   
+  const parseStoredDate = (date?: string) => {
+    if (!date) return null;
+
+    const [year, month, day] = date.split("-").map(Number);
+    if (!year || !month || !day) return null;
+
+    return new Date(year, month - 1, day);
+  };
+
+  const formatStoredDate = (date?: string) => {
+    const parsedDate = parseStoredDate(date);
+    return parsedDate ? parsedDate.toLocaleDateString("pt-BR") : "—";
+  };
+  
   const isOldProduct = (openedDate?: string) => {
-    if (!openedDate) return false;
+    const parsedDate = parseStoredDate(openedDate);
+    if (!parsedDate) return false;
+
     const daysSinceOpened = Math.floor(
-      (new Date().getTime() - new Date(openedDate).getTime()) / (1000 * 60 * 60 * 24)
+      (new Date().getTime() - parsedDate.getTime()) / (1000 * 60 * 60 * 24)
     );
     return daysSinceOpened > 30;
   };
@@ -278,9 +294,7 @@ export function Pantry() {
                             </div>
                           </td>
                           <td className="px-4 py-4 text-muted-foreground">
-                            {pantryItem.openedDate
-                              ? new Date(pantryItem.openedDate).toLocaleDateString('pt-BR')
-                              : "—"}
+                            {formatStoredDate(pantryItem.openedDate)}
                           </td>
                           <td className="px-4 py-4 font-medium text-foreground">
                             {pantryItem.lastPurchasePrice
@@ -364,7 +378,7 @@ export function Pantry() {
                       {pantryItem.openedDate && (
                         <div>
                           <p className="text-xs text-muted-foreground">
-                            Aberto em: {new Date(pantryItem.openedDate).toLocaleDateString('pt-BR')}
+                            Aberto em: {formatStoredDate(pantryItem.openedDate)}
                           </p>
                           {oldProduct && (
                             <div className="mt-1 flex items-center gap-1 text-warning">
