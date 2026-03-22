@@ -81,7 +81,9 @@ export function Dashboard() {
     sum + (purchase.price * purchase.quantity), 0
   );
   const totalShoppingTrips = new Set(monthPurchases.map((purchase: any) => `${purchase.date}-${purchase.storeId}`)).size;
-  const totalItemsPurchased = monthPurchases.reduce((sum: number, purchase: any) => sum + purchase.quantity, 0);
+  const totalItemsPurchased = Math.round(
+    monthPurchases.reduce((sum: number, purchase: any) => sum + purchase.quantity, 0)
+  );
 
   // Most used store
   const storeFrequency = monthPurchases.reduce((acc: Record<string, number>, purchase: any) => {
