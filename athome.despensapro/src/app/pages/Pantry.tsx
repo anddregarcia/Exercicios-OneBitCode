@@ -44,25 +44,29 @@ export function Pantry() {
         storesAPI.getAll(),
       ]);
 
-      setPantryItems(pantryData);
       setItems(itemsData);
       setBrands(brandsData);
       setUnits(unitsData);
       setPackagings(packagingsData);
       setStores(storesData);
 
-      // Load last purchase info for each item
+      const pantryMap = new Map(pantryData.map((pantryItem: any) => [pantryItem.itemId, pantryItem]));
+
+      // Load pantry info for every registered item, even when the current quantity is zero.
       const enrichedPantry = await Promise.all(
-        pantryData.map(async (pantryItem: any) => {
-          const history = await itemsAPI.getHistory(pantryItem.itemId);
-          const lastPurchase = history.length > 0 
-            ? history.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
-            : null;
+        itemsData.map(async (item: any) => {
+          const pantryItem = pantryMap.get(item.id);
+          const history = await itemsAPI.getHistory(item.id);
+          const lastPurchase = history.length > 0 ? history[0] : null;
 
           return {
-            ...pantryItem,
-            lastPurchasePrice: lastPurchase?.price,
-            lastPurchaseStore: lastPurchase ? storesData.find((s: any) => s.id === lastPurchase.storeId)?.name : null,
+            itemId: item.id,
+            currentQuantity: pantryItem?.currentQuantity ?? 0,
+            openedDate: pantryItem?.openedDate || "",
+            lastPurchasePrice: lastPurchase?.price ?? pantryItem?.lastPurchasePrice,
+            lastPurchaseStore: lastPurchase
+              ? storesData.find((store: any) => store.id === lastPurchase.storeId)?.name || null
+              : pantryItem?.lastPurchaseStore || null,
           };
         })
       );
@@ -352,13 +356,13 @@ export function Pantry() {
             <div className="flex flex-col items-center text-center">
               <Package2 className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold text-foreground mb-2">
-                Sua despensa está vazia
+                Nenhum item cadastrado
               </h3>
               <p className="text-muted-foreground mb-6">
-                Registre suas primeiras compras para começar a gerenciar seu estoque
+                Cadastre itens no app para começar a acompanhar sua despensa, mesmo quando a quantidade estiver zerada.
               </p>
-              <Button onClick={() => window.location.href = "/new-purchase"}>
-                Fazer Nova Compra
+              <Button onClick={() => window.location.href = "/items"}>
+                Ir para Itens
               </Button>
             </div>
           </Card>

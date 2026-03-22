@@ -31,6 +31,30 @@ interface PurchaseRow {
 const sortByName = (list: any[]) => [...list].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 const today = () => new Date().toISOString().split("T")[0];
 
+const createRowKey = (itemId: string, brandId?: string) => `${itemId}:${brandId || "none"}`;
+
+const buildPurchaseRows = (itemsData: any[], existingRows: PurchaseRow[] = []) => {
+  const existingRowsMap = new Map(existingRows.map((row) => [row.key, row]));
+
+  return itemsData.flatMap((item) => {
+    const brandIds = item.brandIds?.length ? item.brandIds : ["none"];
+
+    return brandIds.map((brandId: string) => {
+      const key = createRowKey(item.id, brandId);
+      const existingRow = existingRowsMap.get(key);
+
+      return existingRow || {
+        key,
+        itemId: item.id,
+        brandId,
+        selected: false,
+        price: "",
+        quantity: "",
+      };
+    });
+  });
+};
+
 export function NewPurchase() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -63,21 +87,7 @@ export function NewPurchase() {
   }, []);
 
   const resetPurchaseRows = (itemsData: any[]) => {
-    const rows = itemsData.flatMap((item) => {
-      const brandIds = item.brandIds?.length ? item.brandIds : [];
-      if (brandIds.length === 0) {
-        return [{ key: `${item.id}:none`, itemId: item.id, brandId: "none", selected: false, price: "", quantity: "" }];
-      }
-      return brandIds.map((brandId: string) => ({
-        key: `${item.id}:${brandId}`,
-        itemId: item.id,
-        brandId,
-        selected: false,
-        price: "",
-        quantity: "",
-      }));
-    });
-    setPurchaseItems(rows);
+    setPurchaseItems(buildPurchaseRows(itemsData));
   };
 
   const loadData = async () => {
@@ -100,17 +110,7 @@ export function NewPurchase() {
       setUnits(sortByName(unitsData));
       setPackagings(sortByName(packagingsData));
 
-      if (!purchaseItems.length) {
-        resetPurchaseRows(orderedItems);
-      } else {
-        const keys = new Set(purchaseItems.map((row: PurchaseRow) => row.key));
-        const fresh = orderedItems.flatMap((item) => (item.brandIds || []).map((brandId: string) => `${item.id}:${brandId}`));
-        const missing = fresh.filter((key) => !keys.has(key)).map((key) => {
-          const [itemId, brandId] = key.split(":");
-          return { key, itemId, brandId, selected: false, price: "", quantity: "" };
-        });
-        if (missing.length) setPurchaseItems([...(purchaseItems as PurchaseRow[]), ...missing]);
-      }
+      setPurchaseItems((prev) => buildPurchaseRows(orderedItems, prev));
     } catch (error) {
       console.error(error);
       toast.error("Erro ao carregar dados");
@@ -146,8 +146,6 @@ export function NewPurchase() {
       toast.success("Compra registrada com sucesso!");
       clearForm();
       resetPurchaseRows(items);
-      setSelectedStore("");
-      setPurchaseDate(today());
     } catch {
       toast.error("Erro ao salvar compra");
     } finally {
@@ -157,8 +155,6 @@ export function NewPurchase() {
 
   const startNewPurchase = () => {
     clearForm();
-    setSelectedStore("");
-    setPurchaseDate(today());
     resetPurchaseRows(items);
     toast.success("Formulário pronto para uma nova compra");
   };
@@ -204,7 +200,7 @@ export function NewPurchase() {
   const handleItemCreated = (newItem: any) => {
     const ordered = sortByName([...items, newItem]);
     setItems(ordered);
-    resetPurchaseRows(ordered);
+    setPurchaseItems((prev) => buildPurchaseRows(ordered, prev));
   };
 
   const handleStoreCreated = (newStore: any) => {
