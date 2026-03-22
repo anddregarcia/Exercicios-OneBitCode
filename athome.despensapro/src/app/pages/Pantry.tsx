@@ -158,8 +158,8 @@ export function Pantry() {
   const getPantryQuantityLabel = (pantryItem: any, item: any) => {
     const packageDetails = getItemDisplaySize(item);
     return packageDetails
-      ? `(${pantryItem.currentQuantity} ${packageDetails})`
-      : `(${pantryItem.currentQuantity})`;
+      ? `${pantryItem.currentQuantity} ${packageDetails}`
+      : `${pantryItem.currentQuantity}`;
   };
 
   const expandedPantryRows = pantryItems
