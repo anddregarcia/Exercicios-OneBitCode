@@ -95,21 +95,34 @@ export function Pantry() {
 
   const handleSaveQuantity = async () => {
     if (!selectedItemId || !editQuantity) return;
+
+    const currentQuantity = Number.parseFloat(editQuantity);
+    if (Number.isNaN(currentQuantity)) {
+      toast.error("Informe uma quantidade válida");
+      return;
+    }
     
     try {
       await pantryAPI.update(selectedItemId, {
-        currentQuantity: parseFloat(editQuantity),
+        currentQuantity,
         openedDate: editOpenedDate || undefined,
       });
+
+      setPantryItems((prev) => prev.map((pantryItem) => (
+        pantryItem.itemId === selectedItemId
+          ? {
+              ...pantryItem,
+              currentQuantity,
+              openedDate: editOpenedDate || "",
+            }
+          : pantryItem
+      )));
 
       toast.success("Quantidade atualizada com sucesso!");
       setEditDialogOpen(false);
       setSelectedItemId(null);
       setEditQuantity("");
       setEditOpenedDate("");
-      
-      // Reload data
-      loadData();
     } catch (error) {
       console.error("Error updating pantry item:", error);
       toast.error("Erro ao atualizar quantidade");
