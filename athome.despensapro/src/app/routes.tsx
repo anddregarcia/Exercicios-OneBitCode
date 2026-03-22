@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router";
+import { Navigate, createBrowserRouter } from "react-router";
 import { Layout } from "./components/Layout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Dashboard } from "./pages/Dashboard";
@@ -32,7 +32,8 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      { index: true, Component: Dashboard },
+      { index: true, element: <Navigate to="/new-purchase" replace /> },
+      { path: "dashboard", Component: Dashboard },
       { path: "new-purchase", Component: NewPurchase },
       { path: "pantry", Component: Pantry },
       { path: "items", Component: Items },
