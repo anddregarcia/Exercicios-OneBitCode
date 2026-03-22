@@ -41,9 +41,10 @@ export function Dashboard() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [itemsData, storesData, unitsData, packagingsData] = await Promise.all([
+      const [itemsData, storesData, purchasesData, unitsData, packagingsData] = await Promise.all([
         itemsAPI.getAll(),
         storesAPI.getAll(),
+        purchasesAPI.getAll(),
         unitsAPI.getAll(),
         packagingsAPI.getAll(),
       ]);
@@ -53,13 +54,7 @@ export function Dashboard() {
       setUnits(unitsData);
       setPackagings(packagingsData);
 
-      // Load all purchase items
-      const allHistory = await Promise.all(
-        itemsData.map((item: any) => itemsAPI.getHistory(item.id))
-      );
-      
-      const flatHistory = allHistory.flat();
-      setPurchaseItems(flatHistory);
+      setPurchaseItems(purchasesData);
     } catch (error) {
       console.error("Error loading dashboard data:", error);
       toast.error("Erro ao carregar dados do dashboard");

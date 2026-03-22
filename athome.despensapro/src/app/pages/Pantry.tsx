@@ -11,7 +11,7 @@ import {
   DialogFooter,
 } from "../components/ui/dialog";
 import { AlertCircle, Edit, Package2, Loader2 } from "lucide-react";
-import { itemsAPI, pantryAPI, brandsAPI, unitsAPI, storesAPI, packagingsAPI, categoriesAPI } from "../lib/api";
+import { itemsAPI, pantryAPI, brandsAPI, unitsAPI, storesAPI, packagingsAPI, categoriesAPI, purchasesAPI } from "../lib/api";
 import { toast } from "sonner";
 
 export function Pantry() {
@@ -36,7 +36,7 @@ export function Pantry() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [pantryData, itemsData, brandsData, categoriesData, unitsData, packagingsData, storesData] = await Promise.all([
+      const [pantryData, itemsData, brandsData, categoriesData, unitsData, packagingsData, storesData, purchasesData] = await Promise.all([
         pantryAPI.getAll(),
         itemsAPI.getAll(),
         brandsAPI.getAll(),
@@ -44,6 +44,7 @@ export function Pantry() {
         unitsAPI.getAll(),
         packagingsAPI.getAll(),
         storesAPI.getAll(),
+        purchasesAPI.getAll(),
       ]);
 
       setItems(itemsData);
@@ -54,25 +55,30 @@ export function Pantry() {
       setStores(storesData);
 
       const pantryMap = new Map(pantryData.map((pantryItem: any) => [pantryItem.itemId, pantryItem]));
+      const latestPurchaseByItem = new Map<string, any>();
 
-      // Load pantry info for every registered item, even when the current quantity is zero.
-      const enrichedPantry = await Promise.all(
-        itemsData.map(async (item: any) => {
-          const pantryItem = pantryMap.get(item.id);
-          const history = await itemsAPI.getHistory(item.id);
-          const lastPurchase = history.length > 0 ? history[0] : null;
+      [...purchasesData]
+        .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .forEach((purchase: any) => {
+          if (!latestPurchaseByItem.has(purchase.itemId)) {
+            latestPurchaseByItem.set(purchase.itemId, purchase);
+          }
+        });
 
-          return {
-            itemId: item.id,
-            currentQuantity: pantryItem?.currentQuantity ?? 0,
-            openedDate: pantryItem?.openedDate || "",
-            lastPurchasePrice: lastPurchase?.price ?? pantryItem?.lastPurchasePrice,
-            lastPurchaseStore: lastPurchase
-              ? storesData.find((store: any) => store.id === lastPurchase.storeId)?.name || null
-              : pantryItem?.lastPurchaseStore || null,
-          };
-        })
-      );
+      const enrichedPantry = itemsData.map((item: any) => {
+        const pantryItem = pantryMap.get(item.id);
+        const lastPurchase = latestPurchaseByItem.get(item.id);
+
+        return {
+          itemId: item.id,
+          currentQuantity: pantryItem?.currentQuantity ?? 0,
+          openedDate: pantryItem?.openedDate || "",
+          lastPurchasePrice: lastPurchase?.price ?? pantryItem?.lastPurchasePrice,
+          lastPurchaseStore: lastPurchase
+            ? storesData.find((store: any) => store.id === lastPurchase.storeId)?.name || null
+            : pantryItem?.lastPurchaseStore || null,
+        };
+      });
 
       setPantryItems(enrichedPantry);
     } catch (error) {
