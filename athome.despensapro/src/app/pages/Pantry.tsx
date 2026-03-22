@@ -11,7 +11,7 @@ import {
   DialogFooter,
 } from "../components/ui/dialog";
 import { AlertCircle, Edit, Package2, Loader2 } from "lucide-react";
-import { itemsAPI, pantryAPI, brandsAPI, unitsAPI, storesAPI, packagingsAPI } from "../lib/api";
+import { itemsAPI, pantryAPI, brandsAPI, unitsAPI, storesAPI, packagingsAPI, categoriesAPI } from "../lib/api";
 import { toast } from "sonner";
 
 export function Pantry() {
@@ -24,6 +24,7 @@ export function Pantry() {
   const [pantryItems, setPantryItems] = useState<any[]>([]);
   const [items, setItems] = useState<any[]>([]);
   const [brands, setBrands] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [units, setUnits] = useState<any[]>([]);
   const [stores, setStores] = useState<any[]>([]);
   const [packagings, setPackagings] = useState<any[]>([]);
@@ -35,34 +36,40 @@ export function Pantry() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [pantryData, itemsData, brandsData, unitsData, packagingsData, storesData] = await Promise.all([
+      const [pantryData, itemsData, brandsData, categoriesData, unitsData, packagingsData, storesData] = await Promise.all([
         pantryAPI.getAll(),
         itemsAPI.getAll(),
         brandsAPI.getAll(),
+        categoriesAPI.getAll(),
         unitsAPI.getAll(),
         packagingsAPI.getAll(),
         storesAPI.getAll(),
       ]);
 
-      setPantryItems(pantryData);
       setItems(itemsData);
       setBrands(brandsData);
+      setCategories(categoriesData);
       setUnits(unitsData);
       setPackagings(packagingsData);
       setStores(storesData);
 
-      // Load last purchase info for each item
+      const pantryMap = new Map(pantryData.map((pantryItem: any) => [pantryItem.itemId, pantryItem]));
+
+      // Load pantry info for every registered item, even when the current quantity is zero.
       const enrichedPantry = await Promise.all(
-        pantryData.map(async (pantryItem: any) => {
-          const history = await itemsAPI.getHistory(pantryItem.itemId);
-          const lastPurchase = history.length > 0 
-            ? history.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
-            : null;
+        itemsData.map(async (item: any) => {
+          const pantryItem = pantryMap.get(item.id);
+          const history = await itemsAPI.getHistory(item.id);
+          const lastPurchase = history.length > 0 ? history[0] : null;
 
           return {
-            ...pantryItem,
-            lastPurchasePrice: lastPurchase?.price,
-            lastPurchaseStore: lastPurchase ? storesData.find((s: any) => s.id === lastPurchase.storeId)?.name : null,
+            itemId: item.id,
+            currentQuantity: pantryItem?.currentQuantity ?? 0,
+            openedDate: pantryItem?.openedDate || "",
+            lastPurchasePrice: lastPurchase?.price ?? pantryItem?.lastPurchasePrice,
+            lastPurchaseStore: lastPurchase
+              ? storesData.find((store: any) => store.id === lastPurchase.storeId)?.name || null
+              : pantryItem?.lastPurchaseStore || null,
           };
         })
       );
@@ -120,15 +127,18 @@ export function Pantry() {
   };
 
   const getBrandName = (brandId?: string) => brandId ? brands.find((b) => b.id === brandId)?.name || "Sem marca" : "Sem marca";
+  const getCategoryName = (categoryId?: string) => categoryId ? categories.find((category) => category.id === categoryId)?.name || "Sem categoria" : "Sem categoria";
   const getUnitAbbr = (unitId: string) => units.find(u => u.id === unitId)?.abbreviation || "";
 
   const getPackagingName = (packagingId: string) => packagings.find((p) => p.id === packagingId)?.name || "";
 
   const getItemDisplaySize = (item: any) => {
-    if (!item?.packageSize) return "";
-    const unit = getUnitAbbr(item.unitId);
     const packaging = getPackagingName(item.packagingId);
-    if (!unit || !packaging) return "";
+    if (!packaging) return "";
+
+    const unit = getUnitAbbr(item.unitId);
+    if (!item?.packageSize || !unit) return packaging;
+
     return `${packaging} de ${item.packageSize} ${unit}`;
   };
 
@@ -139,23 +149,34 @@ export function Pantry() {
       : `(${pantryItem.currentQuantity})`;
   };
 
-  const expandedPantryRows = pantryItems.flatMap((pantryItem) => {
-    const item = items.find((i) => i.id === pantryItem.itemId);
-    if (!item) return [];
+  const expandedPantryRows = pantryItems
+    .flatMap((pantryItem) => {
+      const item = items.find((i) => i.id === pantryItem.itemId);
+      if (!item) return [];
 
-    const brandIds = item.brandIds?.length
-      ? item.brandIds
-      : item.brandId
-        ? [item.brandId]
-        : [undefined];
+      const brandIds = item.brandIds?.length
+        ? item.brandIds
+        : item.brandId
+          ? [item.brandId]
+          : [undefined];
 
-    return brandIds.map((brandId: string | undefined) => ({
-      key: `${pantryItem.itemId}:${brandId || "none"}`,
-      pantryItem,
-      item,
-      brandId,
-    }));
-  });
+      return brandIds.map((brandId: string | undefined) => ({
+        key: `${pantryItem.itemId}:${brandId || "none"}`,
+        pantryItem,
+        item,
+        brandId,
+        categoryName: getCategoryName(item.categoryId),
+      }));
+    })
+    .sort((a, b) => {
+      const nameComparison = a.item.name.localeCompare(b.item.name, "pt-BR");
+      if (nameComparison !== 0) return nameComparison;
+
+      const categoryComparison = a.categoryName.localeCompare(b.categoryName, "pt-BR");
+      if (categoryComparison !== 0) return categoryComparison;
+
+      return getBrandName(a.brandId).localeCompare(getBrandName(b.brandId), "pt-BR");
+    });
 
   const selectedItem = selectedItemId ? items.find(i => i.id === selectedItemId) : null;
 
@@ -193,6 +214,9 @@ export function Pantry() {
                         Marca
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                        Categoria
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                         Quantidade Atual
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
@@ -213,7 +237,7 @@ export function Pantry() {
                     </tr>
                   </thead>
                   <tbody>
-                    {expandedPantryRows.map(({ key, pantryItem, item, brandId }) => {
+                    {expandedPantryRows.map(({ key, pantryItem, item, brandId, categoryName }) => {
                       const lowStock = isLowStock(pantryItem.currentQuantity);
                       const oldProduct = isOldProduct(pantryItem.openedDate);
 
@@ -224,6 +248,9 @@ export function Pantry() {
                           </td>
                           <td className="px-4 py-4 text-muted-foreground">
                             {getBrandName(brandId)}
+                          </td>
+                          <td className="px-4 py-4 text-muted-foreground">
+                            {categoryName}
                           </td>
                           <td className="px-4 py-4">
                             <div className="flex items-center gap-2">
@@ -278,7 +305,7 @@ export function Pantry() {
 
             {/* Mobile Cards */}
             <div className="space-y-4 md:hidden">
-              {expandedPantryRows.map(({ key, pantryItem, item, brandId }) => {
+              {expandedPantryRows.map(({ key, pantryItem, item, brandId, categoryName }) => {
                 const lowStock = isLowStock(pantryItem.currentQuantity);
                 const oldProduct = isOldProduct(pantryItem.openedDate);
 
@@ -288,7 +315,7 @@ export function Pantry() {
                       <div className="flex items-start justify-between">
                         <div>
                           <h4 className="font-semibold text-foreground">{item.name}{getItemDisplaySize(item) ? ` (${getItemDisplaySize(item)})` : ""}</h4>
-                          <p className="text-sm text-muted-foreground">{getBrandName(brandId)}</p>
+                          <p className="text-sm text-muted-foreground">{getBrandName(brandId)} • {categoryName}</p>
                         </div>
                         <Button
                           variant="ghost"
@@ -352,13 +379,13 @@ export function Pantry() {
             <div className="flex flex-col items-center text-center">
               <Package2 className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold text-foreground mb-2">
-                Sua despensa está vazia
+                Nenhum item cadastrado
               </h3>
               <p className="text-muted-foreground mb-6">
-                Registre suas primeiras compras para começar a gerenciar seu estoque
+                Cadastre itens no app para começar a acompanhar sua despensa, mesmo quando a quantidade estiver zerada.
               </p>
-              <Button onClick={() => window.location.href = "/new-purchase"}>
-                Fazer Nova Compra
+              <Button onClick={() => window.location.href = "/items"}>
+                Ir para Itens
               </Button>
             </div>
           </Card>
