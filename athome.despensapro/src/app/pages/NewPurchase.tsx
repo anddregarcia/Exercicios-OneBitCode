@@ -166,10 +166,12 @@ export function NewPurchase() {
   const getStoreName = (storeId: string) => stores.find((store) => store.id === storeId)?.name || "Mercado não informado";
 
   const formatItemDetails = (item: any) => {
-    if (!item?.packageSize) return "";
     const packaging = packagings.find((p) => p.id === item.packagingId)?.name;
+    if (!packaging) return "";
+
     const unit = units.find((u) => u.id === item.unitId)?.abbreviation || units.find((u) => u.id === item.unitId)?.name;
-    if (!packaging || !unit) return "";
+    if (!item?.packageSize || !unit) return ` (${packaging})`;
+
     return ` (${packaging} de ${item.packageSize} ${unit})`;
   };
 
