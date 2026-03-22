@@ -4,32 +4,87 @@ import { useEffect, useState } from 'react';
 import { useApi } from '@/hooks/use-api';
 import { PageHelp } from '@/components/page-help';
 
+const emptyFeedback = null as { type: 'success' | 'error'; message: string } | null;
+
 export default function SettingsPage() {
   const { data } = useApi<any>(['settings'], '/api/settings');
   const [form, setForm] = useState<any>({});
-  useEffect(() => { if (data) setForm(data); }, [data]);
+  const [saving, setSaving] = useState(false);
+  const [feedback, setFeedback] = useState(emptyFeedback);
+
+  useEffect(() => {
+    if (data) setForm(data);
+  }, [data]);
 
   async function save() {
-    await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
-    alert('Configurações salvas');
+    setSaving(true);
+    setFeedback(null);
+
+    const response = await fetch('/api/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form)
+    });
+
+    setSaving(false);
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => null);
+      setFeedback({ type: 'error', message: error?.error || 'Não foi possível salvar as configurações.' });
+      return;
+    }
+
+    setFeedback({ type: 'success', message: 'Configurações salvas com sucesso no banco.' });
   }
 
+  const fields = [
+    { key: 'company_name', label: 'Nome da empresa' },
+    { key: 'cnpj', label: 'CNPJ' },
+    { key: 'address', label: 'Endereço' },
+    { key: 'phone', label: 'Telefone' },
+    { key: 'email', label: 'Email', type: 'email' },
+    { key: 'instagram', label: 'Instagram' },
+    { key: 'pix_key', label: 'Chave PIX' },
+    { key: 'bank_details', label: 'Dados bancários' },
+    { key: 'logo_url', label: 'URL do logo', type: 'url' },
+    { key: 'default_labor_cost', label: 'Mão de obra padrão', type: 'number' }
+  ];
+
   return (
-    <section className="space-y-4">
-      <PageHelp text="Configure seus dados para preencher o cabeçalho do PDF automaticamente." />
-      <div className="grid gap-2 rounded bg-white p-4 shadow md:grid-cols-2">
-        <input placeholder="Nome da empresa" value={form.company_name || ''} onChange={(e) => setForm({ ...form, company_name: e.target.value })} />
-        <input placeholder="CNPJ" value={form.cnpj || ''} onChange={(e) => setForm({ ...form, cnpj: e.target.value })} />
-        <input placeholder="Endereço" value={form.address || ''} onChange={(e) => setForm({ ...form, address: e.target.value })} />
-        <input placeholder="Telefone" value={form.phone || ''} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-        <input placeholder="Email" value={form.email || ''} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-        <input placeholder="Instagram" value={form.instagram || ''} onChange={(e) => setForm({ ...form, instagram: e.target.value })} />
-        <input placeholder="Chave PIX" value={form.pix_key || ''} onChange={(e) => setForm({ ...form, pix_key: e.target.value })} />
-        <input placeholder="Dados bancários" value={form.bank_details || ''} onChange={(e) => setForm({ ...form, bank_details: e.target.value })} />
-        <input placeholder="URL do logo" value={form.logo_url || ''} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} />
-        <input type="number" placeholder="Mão de obra padrão" value={form.default_labor_cost || 0} onChange={(e) => setForm({ ...form, default_labor_cost: Number(e.target.value) })} />
+    <section className="space-y-5">
+      <div>
+        <h2 className="page-title">Configurações</h2>
+        <p className="page-subtitle mt-2">Personalize os dados da empresa usados no PDF e no cálculo inicial de mão de obra.</p>
       </div>
-      <button onClick={save} className="bg-slate-900 text-white">Salvar configurações</button>
+
+      <PageHelp text="Preencha os dados da sua empresa para deixar seus PDFs e cobranças mais profissionais. Tudo é salvo automaticamente ao clicar no botão abaixo." />
+
+      <div className="page-card space-y-6">
+        <div className="grid gap-4 md:grid-cols-2">
+          {fields.map((field) => (
+            <label className="field-group" key={field.key}>
+              <span className="field-label">{field.label}</span>
+              <input
+                type={field.type || 'text'}
+                value={form[field.key] ?? (field.type === 'number' ? 0 : '')}
+                onChange={(e) => setForm({ ...form, [field.key]: field.type === 'number' ? Number(e.target.value) : e.target.value })}
+              />
+            </label>
+          ))}
+        </div>
+
+        {feedback ? (
+          <p className={`rounded-2xl px-4 py-3 text-sm ${feedback.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+            {feedback.message}
+          </p>
+        ) : null}
+
+        <div className="flex justify-end">
+          <button onClick={save} className="primary-button min-w-48" disabled={saving}>
+            {saving ? 'Salvando...' : 'Salvar configurações'}
+          </button>
+        </div>
+      </div>
     </section>
   );
 }
