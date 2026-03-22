@@ -25,19 +25,14 @@ export function Layout() {
   const displayEmail = user?.email || "";
 
   const navigation = [
-    { name: "Dashboard", href: "/", icon: LayoutDashboard },
+    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Nova Compra", href: "/new-purchase", icon: ShoppingCart },
     { name: "Despensa", href: "/pantry", icon: Package },
     { name: "Itens", href: "/items", icon: SettingsIcon },
     { name: "Histórico", href: "/history", icon: History },
   ];
 
-  const isActive = (href: string) => {
-    if (href === "/") {
-      return location.pathname === "/";
-    }
-    return location.pathname.startsWith(href);
-  };
+  const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(`${href}/`);
 
   const handleLogout = async () => {
     try {

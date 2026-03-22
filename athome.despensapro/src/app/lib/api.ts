@@ -135,15 +135,15 @@ async function readUserData(): Promise<UserData> {
   const localData = readLocalUserData(userId);
   const cloudData = user.user_metadata?.[USER_DATA_METADATA_KEY] as UserData | undefined;
 
-  if (cloudData) {
-    const normalized = normalizeUserData(cloudData);
+  if (localData) {
+    const normalized = normalizeUserData(localData);
     localStorage.setItem(getStorageKey(userId), JSON.stringify(normalized));
     return normalized;
   }
 
-  if (localData) {
-    const normalized = normalizeUserData(localData);
-    await writeUserData(normalized);
+  if (cloudData) {
+    const normalized = normalizeUserData(cloudData);
+    localStorage.setItem(getStorageKey(userId), JSON.stringify(normalized));
     return normalized;
   }
 
