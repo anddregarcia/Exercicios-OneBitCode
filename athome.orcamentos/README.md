@@ -12,7 +12,7 @@ SaaS web para geração de orçamentos de manutenção residencial.
 
 ## Como rodar
 1. Copie `.env.example` para `.env.local` e preencha as chaves do Supabase.
-2. Rode o SQL em `supabase/schema.sql`.
+2. Rode o SQL em `supabase/schema.sql` para criar as tabelas no schema `budget`.
 3. Instale dependências e inicie:
 
 ```bash
