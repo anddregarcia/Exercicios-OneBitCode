@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 
-const DEFAULT_DB_SCHEMA = process.env.SUPABASE_DB_SCHEMA || process.env.NEXT_PUBLIC_SUPABASE_DB_SCHEMA || 'budget';
-let resolvedSchemaCache: string | null = null;
+const DEFAULT_DB_SCHEMA = process.env.SUPABASE_DB_SCHEMA || 'budget';
 
 export async function getScopedClient() {
   const supabase = await createClient();
@@ -15,7 +14,7 @@ export async function getScopedClient() {
     throw new Error('Não autenticado');
   }
 
-  const resolvedSchema = await getBudgetSchemaName(supabase);
+  const resolvedSchema = getBudgetSchemaName();
 
   return {
     supabase: new Proxy(supabase, {
@@ -40,6 +39,9 @@ export function apiErrorResponse(error: unknown) {
   if (message.toLowerCase().includes('invalid schema')) {
     message = 'Schema do banco não encontrado. Confira a variável SUPABASE_DB_SCHEMA ou execute o SQL em supabase/schema.sql.';
   }
+  if (message.toLowerCase().includes("could not find the table 'public.")) {
+    message = 'As rotas estão apontando para o schema public, mas as tabelas do app não estão lá. Configure SUPABASE_DB_SCHEMA=budget no ambiente da aplicação.';
+  }
   const status = message === 'Não autenticado' ? 401 : 500;
   return NextResponse.json({ error: message }, { status });
 }
@@ -53,46 +55,6 @@ export function cleanNumber(value: unknown) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function getErrorMessage(error: unknown) {
-  if (typeof error === 'string') return error;
-  if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') return error.message;
-  return '';
-}
-
-function isInvalidSchemaError(error: unknown) {
-  return getErrorMessage(error).toLowerCase().includes('invalid schema');
-}
-
-function isMissingRelationError(error: unknown) {
-  return getErrorMessage(error).toLowerCase().includes('does not exist');
-}
-
-export async function getBudgetSchemaName(supabase: any) {
-  if (resolvedSchemaCache) {
-    return resolvedSchemaCache;
-  }
-
-  const candidates = DEFAULT_DB_SCHEMA === 'public' ? ['public'] : [DEFAULT_DB_SCHEMA, 'public'];
-
-  for (const candidate of candidates) {
-    const { error } = await supabase.schema(candidate).from('clients').select('id').limit(1);
-
-    if (!error) {
-      resolvedSchemaCache = candidate;
-      return candidate;
-    }
-
-    if (isInvalidSchemaError(error)) {
-      continue;
-    }
-
-    if (candidate === 'public' && isMissingRelationError(error)) {
-      throw new Error('Banco não configurado. Rode o SQL de supabase/schema.sql no projeto Supabase.');
-    }
-
-    resolvedSchemaCache = candidate;
-    return candidate;
-  }
-
-  throw new Error(`Schema inválido. Configure SUPABASE_DB_SCHEMA ou rode o SQL do projeto para criar o schema "${DEFAULT_DB_SCHEMA}".`);
+export function getBudgetSchemaName() {
+  return DEFAULT_DB_SCHEMA;
 }
