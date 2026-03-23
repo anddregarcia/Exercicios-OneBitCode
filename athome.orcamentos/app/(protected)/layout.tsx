@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 const links = [
   { href: '/dashboard', label: 'Orçamentos', icon: '📋' },
@@ -12,10 +13,43 @@ const links = [
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   return (
     <div className="app-shell md:flex">
-      <aside className="border-b border-white/10 bg-slate-950/95 px-5 py-6 text-white shadow-2xl shadow-slate-950/30 backdrop-blur md:sticky md:top-0 md:flex md:min-h-screen md:w-80 md:flex-col md:border-b-0 md:border-r md:px-6 md:py-8">
+      <div className="sticky top-0 z-30 flex items-center justify-between border-b border-white/10 bg-slate-950/95 px-4 py-4 text-white shadow-lg backdrop-blur md:hidden">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-[0.28em] text-sky-300">AtHome</p>
+          <p className="text-base font-semibold">Orçamentos</p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setMobileMenuOpen((prev) => !prev)}
+          className="rounded-2xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold text-white"
+        >
+          {mobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
+        </button>
+      </div>
+
+      {mobileMenuOpen ? (
+        <button
+          type="button"
+          aria-label="Fechar menu"
+          onClick={() => setMobileMenuOpen(false)}
+          className="fixed inset-0 z-20 bg-slate-950/50 backdrop-blur-sm md:hidden"
+        />
+      ) : null}
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-30 w-[82vw] max-w-80 border-r border-white/10 bg-slate-950/95 px-5 py-6 text-white shadow-2xl shadow-slate-950/30 backdrop-blur transition-transform duration-200 md:sticky md:top-0 md:z-auto md:flex md:min-h-screen md:w-80 md:flex-col md:px-6 md:py-8 ${
+          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        }`}
+      >
         <div>
           <p className="text-sm font-medium uppercase tracking-[0.32em] text-sky-300">AtHome</p>
           <h1 className="mt-3 text-2xl font-semibold tracking-tight">Orçamentos</h1>
@@ -31,6 +65,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
               <Link
                 key={link.href}
                 href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
                 className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
                   active ? 'bg-white text-slate-950 shadow-lg shadow-sky-500/20' : 'text-slate-300 hover:bg-white/10 hover:text-white'
                 }`}

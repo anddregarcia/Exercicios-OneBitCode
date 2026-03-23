@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 
-const DEFAULT_DB_SCHEMA = process.env.SUPABASE_DB_SCHEMA || 'budget';
+const DEFAULT_DB_SCHEMA = 'budget';
 
 export async function getScopedClient() {
   const supabase = await createClient();
@@ -37,10 +37,10 @@ export async function getScopedClient() {
 export function apiErrorResponse(error: unknown) {
   let message = error instanceof Error ? error.message : 'Erro interno do servidor';
   if (message.toLowerCase().includes('invalid schema')) {
-    message = 'Schema do banco não encontrado. Confira a variável SUPABASE_DB_SCHEMA ou execute o SQL em supabase/schema.sql.';
+    message = 'Schema budget não encontrado. Execute o SQL em supabase/schema.sql no projeto Supabase para criar as tabelas do app.';
   }
   if (message.toLowerCase().includes("could not find the table 'public.")) {
-    message = 'As rotas estão apontando para o schema public, mas as tabelas do app não estão lá. Configure SUPABASE_DB_SCHEMA=budget no ambiente da aplicação.';
+    message = 'As tabelas do app precisam estar no schema budget. Execute o SQL em supabase/schema.sql no projeto Supabase.';
   }
   const status = message === 'Não autenticado' ? 401 : 500;
   return NextResponse.json({ error: message }, { status });
