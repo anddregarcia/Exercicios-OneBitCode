@@ -41,12 +41,6 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
             );
           })}
         </nav>
-
-        <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-4 text-sm text-slate-300">
-          <p className="font-semibold text-white">Fluxo inteligente</p>
-          <p className="mt-2 leading-6">Preencha os dados, acompanhe seus orçamentos e saia com tudo salvo em um só lugar.</p>
-        </div>
-
         <form action="/api/auth/logout" method="post" className="mt-8 md:mt-auto">
           <button className="flex w-full items-center justify-center gap-2 rounded-2xl bg-rose-500/15 px-4 py-3 text-sm font-semibold text-rose-100 hover:bg-rose-500/25">
             <span>↩</span>

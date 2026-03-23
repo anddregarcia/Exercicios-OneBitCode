@@ -163,14 +163,14 @@ export default function EstimateForm({ estimateId }: { estimateId?: string }) {
               <h3 className="text-lg font-semibold text-slate-950">Materiais do orçamento</h3>
               <p className="text-sm text-slate-500">Adicione, altere ou remova materiais conforme a necessidade do serviço.</p>
             </div>
-            <button className="secondary-button" onClick={() => setForm({ ...form, materials: [...form.materials, emptyMaterial()] })}>
+            <button type="button" className="secondary-button" onClick={() => setForm({ ...form, materials: [...form.materials, emptyMaterial()] })}>
               + Adicionar material
             </button>
           </div>
 
           <div className="space-y-4">
             {form.materials.map((item: MaterialItem, i: number) => (
-              <div key={`${i}-${item.name}`} className="rounded-[26px] border border-slate-200 bg-slate-50/80 p-4">
+              <div key={i} className="rounded-[26px] border border-slate-200 bg-slate-50/80 p-4">
                 <div className="grid gap-4 md:grid-cols-[minmax(0,1.4fr)_160px_180px_180px_auto] md:items-end">
                   <label className="field-group">
                     <span className="field-label">Material</span>
@@ -192,7 +192,7 @@ export default function EstimateForm({ estimateId }: { estimateId?: string }) {
                     <input readOnly value={formatCurrency(item.total_price || 0)} />
                   </label>
 
-                  <button className="danger-button md:mb-0.5" onClick={() => removeMaterial(i)}>
+                  <button type="button" className="danger-button md:mb-0.5" onClick={() => removeMaterial(i)}>
                     Remover
                   </button>
                 </div>
