@@ -96,3 +96,18 @@ export async function getBudgetSchemaName(supabase: any) {
 
   throw new Error(`Schema inválido. Configure SUPABASE_DB_SCHEMA ou rode o SQL do projeto para criar o schema "${DEFAULT_DB_SCHEMA}".`);
 }
+
+export function apiErrorResponse(error: unknown) {
+  const message = error instanceof Error ? error.message : 'Erro interno do servidor';
+  const status = message === 'Não autenticado' ? 401 : 500;
+  return NextResponse.json({ error: message }, { status });
+}
+
+export function cleanText(value: unknown) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+export function cleanNumber(value: unknown) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
