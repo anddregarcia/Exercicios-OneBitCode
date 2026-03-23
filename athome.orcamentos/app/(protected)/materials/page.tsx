@@ -3,15 +3,42 @@
 import { useState } from 'react';
 import { useApi } from '@/hooks/use-api';
 import { PageHelp } from '@/components/page-help';
+import { formatCurrency } from '@/utils';
 
 export default function MaterialsPage() {
   const { data, refetch } = useApi<any[]>(['materials'], '/api/materials');
   const [name, setName] = useState('');
   const [defaultPrice, setDefaultPrice] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   async function add() {
-    await fetch('/api/materials', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, default_price: defaultPrice }) });
-    setName(''); setDefaultPrice(0); refetch();
+    if (!name.trim()) {
+      setFeedback({ type: 'error', message: 'Informe o nome do material.' });
+      return;
+    }
+
+    setSaving(true);
+    setFeedback(null);
+
+    const response = await fetch('/api/materials', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name.trim(), default_price: defaultPrice })
+    });
+
+    setSaving(false);
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => null);
+      setFeedback({ type: 'error', message: error?.error || 'Não foi possível salvar o material.' });
+      return;
+    }
+
+    setName('');
+    setDefaultPrice(0);
+    setFeedback({ type: 'success', message: 'Material salvo com sucesso no banco.' });
+    refetch();
   }
 
   async function remove(id: string) {
@@ -20,11 +47,56 @@ export default function MaterialsPage() {
   }
 
   return (
-    <section className="space-y-4">
-      <PageHelp text="Cadastre materiais e valor padrão. O valor será usado no orçamento." />
-      <div className="rounded bg-white p-4 shadow">
-        <div className="mb-3 grid gap-2 md:grid-cols-3"><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Material" /><input type="number" value={defaultPrice} onChange={(e) => setDefaultPrice(Number(e.target.value))} /><button className="bg-slate-900 text-white" onClick={add}>Salvar</button></div>
-        <ul className="space-y-2">{data?.map((m) => <li key={m.id} className="flex items-center justify-between border-b py-2"><span>{m.name} - R$ {Number(m.default_price).toFixed(2)}</span><button className="bg-red-100" onClick={() => remove(m.id)}>Excluir</button></li>)}</ul>
+    <section className="space-y-5">
+      <div>
+        <h2 className="page-title">Materiais</h2>
+        <p className="page-subtitle mt-2">Monte uma base de materiais reutilizável para agilizar a criação dos orçamentos.</p>
+      </div>
+
+      <PageHelp text="Cadastre materiais com valor padrão. Eles aparecem na criação do orçamento e podem ser reutilizados depois." />
+
+      <div className="page-card space-y-6">
+        <div className="grid gap-4 md:grid-cols-[minmax(0,1.2fr)_minmax(220px,0.6fr)_auto] md:items-end">
+          <label className="field-group">
+            <span className="field-label">Nome do material</span>
+            <input value={name} onChange={(e) => setName(e.target.value)} />
+          </label>
+
+          <label className="field-group">
+            <span className="field-label">Valor padrão</span>
+            <input type="number" min="0" step="0.01" value={defaultPrice} onChange={(e) => setDefaultPrice(Number(e.target.value))} />
+          </label>
+
+          <button className="primary-button md:min-w-40" onClick={add} disabled={saving}>
+            {saving ? 'Salvando...' : 'Salvar material'}
+          </button>
+        </div>
+
+        {feedback ? (
+          <p className={`rounded-2xl px-4 py-3 text-sm ${feedback.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+            {feedback.message}
+          </p>
+        ) : null}
+
+        <div className="grid gap-3">
+          {data?.length ? (
+            data.map((m) => (
+              <div key={m.id} className="flex flex-col gap-3 rounded-[24px] border border-slate-200 bg-white px-5 py-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="font-semibold text-slate-900">{m.name}</p>
+                  <p className="text-sm text-slate-500">Valor padrão: {formatCurrency(Number(m.default_price) || 0)}</p>
+                </div>
+                <button className="danger-button" onClick={() => remove(m.id)}>
+                  Excluir
+                </button>
+              </div>
+            ))
+          ) : (
+            <div className="rounded-[24px] border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500">
+              Nenhum material cadastrado ainda.
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );
