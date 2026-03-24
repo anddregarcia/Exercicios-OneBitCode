@@ -3,8 +3,6 @@ import { createAdminClient, createClient } from '@/lib/supabase-server';
 
 const DEFAULT_DB_SCHEMA = 'budget';
 
-const DEFAULT_DB_SCHEMA = 'budget';
-
 export async function getScopedClient() {
   const authClient = await createClient();
   const {
