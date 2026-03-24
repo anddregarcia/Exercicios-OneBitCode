@@ -29,6 +29,37 @@ export async function POST(request: Request) {
   }
 }
 
+export async function PUT(request: Request) {
+  try {
+    const { supabase, user } = await getScopedClient();
+    const body = await request.json();
+    const id = cleanText(body.id);
+    const name = cleanText(body.name);
+
+    if (!id) {
+      return NextResponse.json({ error: 'Informe o cliente para editar.' }, { status: 400 });
+    }
+
+    if (!name) {
+      return NextResponse.json({ error: 'O nome do cliente é obrigatório.' }, { status: 400 });
+    }
+
+    const { data, error } = await supabase
+      .schema('budget')
+      .from('clients')
+      .update({ name })
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .select('*')
+      .single();
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    return NextResponse.json(data);
+  } catch (error) {
+    return apiErrorResponse(error);
+  }
+}
+
 export async function DELETE(request: Request) {
   try {
     const { supabase, user } = await getScopedClient();

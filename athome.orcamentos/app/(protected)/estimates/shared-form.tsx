@@ -17,38 +17,41 @@ const paymentMethodLabels: Record<PaymentMethod, string> = {
   credit: 'Crédito'
 };
 
+const initialForm = {
+  client_name: '',
+  problem_description: '',
+  problem_cause: '',
+  labor_cost: 0,
+  payment_method: 'pix' as PaymentMethod,
+  installments: null,
+  execution_date: '',
+  execution_time_hours: 1,
+  status: 'pending',
+  materials: [emptyMaterial()]
+};
+
 export default function EstimateForm({ estimateId }: { estimateId?: string }) {
   const { data: clients } = useApi<any[]>(['clients'], '/api/clients');
   const { data: materialsBase } = useApi<any[]>(['materials'], '/api/materials');
   const { data: settings } = useApi<any>(['settings'], '/api/settings');
-  const { data: existing } = useApi<any>(['estimate', estimateId || 'new'], estimateId ? `/api/estimates/${estimateId}` : '/api/drafts');
+  const { data: existing } = useApi<any>(['estimate', estimateId || 'new'], estimateId ? `/api/estimates/${estimateId}` : null);
 
-  const [form, setForm] = useState<any>({
-    client_name: '',
-    problem_description: '',
-    problem_cause: '',
-    labor_cost: 0,
-    payment_method: 'pix' as PaymentMethod,
-    installments: null,
-    execution_date: '',
-    execution_time_hours: 1,
-    status: 'pending',
-    materials: [emptyMaterial()]
-  });
+  const [form, setForm] = useState<any>(initialForm);
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [saveMessage, setSaveMessage] = useState('');
 
   useEffect(() => {
-    if (existing?.draft?.data && !estimateId) {
-      setForm({ ...existing.draft.data, materials: existing.draft.data.materials?.length ? existing.draft.data.materials : [emptyMaterial()] });
-    }
-
     if (existing?.estimate) {
       setForm({
         ...existing.estimate,
         client_name: existing.estimate.clients?.name,
         materials: existing.materials?.length ? existing.materials : [emptyMaterial()]
       });
+      return;
+    }
+
+    if (!estimateId) {
+      setForm(initialForm);
     }
   }, [existing, estimateId]);
 
@@ -57,18 +60,6 @@ export default function EstimateForm({ estimateId }: { estimateId?: string }) {
       setForm((prev: any) => ({ ...prev, labor_cost: prev.labor_cost || settings.default_labor_cost }));
     }
   }, [settings, estimateId]);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      fetch('/api/drafts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: form })
-      }).catch(() => null);
-    }, 700);
-
-    return () => clearTimeout(timeout);
-  }, [form]);
 
   const materialsCost = useMemo(() => form.materials.reduce((acc: number, item: MaterialItem) => acc + Number(item.total_price || 0), 0), [form.materials]);
   const total = Number(form.labor_cost || 0) + materialsCost;
@@ -135,7 +126,7 @@ export default function EstimateForm({ estimateId }: { estimateId?: string }) {
         <p className="page-subtitle mt-2">Monte um orçamento completo com cliente, diagnóstico, materiais, forma de pagamento e totais.</p>
       </div>
 
-      <PageHelp text="Preencha os dados do orçamento com calma. O rascunho segue sendo salvo automaticamente enquanto você digita." />
+      <PageHelp text="Preencha os dados do orçamento com calma. O formulário de novo orçamento inicia limpo para agilizar um novo cadastro." />
 
       <div className="page-card space-y-8">
         <div className="grid gap-4 md:grid-cols-2">

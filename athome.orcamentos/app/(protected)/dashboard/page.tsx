@@ -41,7 +41,7 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      <PageHelp text="Visualize rapidamente os totais, o status de cada orçamento e abra edição, duplicação ou PDF a partir desta tela." />
+      <PageHelp text="Visualize rapidamente os totais, o status de cada orçamento e abra edição, duplicação ou PDF sem ocupar espaço extra na tabela." />
 
       <div className="page-card space-y-6">
         <label className="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
@@ -50,7 +50,7 @@ export default function DashboardPage() {
         </label>
 
         <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white">
-          <div className="hidden grid-cols-[90px_1.2fr_140px_140px_140px_220px] gap-4 border-b border-slate-200 bg-slate-50 px-5 py-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 md:grid">
+          <div className="hidden grid-cols-[90px_1.2fr_140px_140px_140px_170px] gap-4 border-b border-slate-200 bg-slate-50 px-5 py-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 md:grid">
             <span>Nº</span>
             <span>Cliente</span>
             <span>Status</span>
@@ -62,7 +62,7 @@ export default function DashboardPage() {
           <div className="divide-y divide-slate-100">
             {data?.length ? (
               data.map((item) => (
-                <div key={item.id} className="grid gap-4 px-5 py-4 md:grid-cols-[90px_1.2fr_140px_140px_140px_220px] md:items-center">
+                <div key={item.id} className="grid gap-4 px-5 py-4 md:grid-cols-[90px_1.2fr_140px_140px_140px_170px] md:items-center">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 md:hidden">Número</p>
                     <p className="font-semibold text-slate-900">#{item.estimate_number}</p>
@@ -83,15 +83,15 @@ export default function DashboardPage() {
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 md:hidden">Total</p>
                     <p className="font-semibold text-slate-900">{formatCurrency(item.total_cost || 0)}</p>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Link href={`/estimates/${item.id}`} className="secondary-button px-4 py-2 text-xs md:text-sm">
-                      Editar
+                  <div className="flex items-center gap-2">
+                    <Link href={`/estimates/${item.id}`} className="secondary-button px-3 py-2 text-sm" title="Editar">
+                      ✏️
                     </Link>
-                    <button onClick={() => duplicateEstimate(item.id)} className="secondary-button px-4 py-2 text-xs md:text-sm">
-                      Duplicar
+                    <button onClick={() => duplicateEstimate(item.id)} className="secondary-button px-3 py-2 text-sm" title="Duplicar">
+                      📄
                     </button>
-                    <a href={`/api/estimates/${item.id}/pdf`} target="_blank" className="secondary-button px-4 py-2 text-xs md:text-sm">
-                      PDF
+                    <a href={`/api/estimates/${item.id}/pdf`} target="_blank" rel="noreferrer" className="secondary-button px-3 py-2 text-sm" title="PDF">
+                      🧾
                     </a>
                   </div>
                 </div>
