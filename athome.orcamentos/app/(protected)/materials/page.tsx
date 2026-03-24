@@ -10,6 +10,9 @@ export default function MaterialsPage() {
   const [name, setName] = useState('');
   const [defaultPrice, setDefaultPrice] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
+  const [editingPrice, setEditingPrice] = useState(0);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   async function add() {
@@ -41,8 +44,31 @@ export default function MaterialsPage() {
     refetch();
   }
 
+  async function saveEdit() {
+    if (!editingId) return;
+
+    const response = await fetch('/api/materials', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: editingId, name: editingName.trim(), default_price: editingPrice })
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => null);
+      setFeedback({ type: 'error', message: error?.error || 'Não foi possível editar o material.' });
+      return;
+    }
+
+    setEditingId(null);
+    setEditingName('');
+    setEditingPrice(0);
+    setFeedback({ type: 'success', message: 'Material atualizado com sucesso.' });
+    refetch();
+  }
+
   async function remove(id: string) {
     await fetch(`/api/materials?id=${id}`, { method: 'DELETE' });
+    setFeedback({ type: 'success', message: 'Material removido com sucesso.' });
     refetch();
   }
 
@@ -80,17 +106,69 @@ export default function MaterialsPage() {
 
         <div className="grid gap-3">
           {data?.length ? (
-            data.map((m) => (
-              <div key={m.id} className="flex flex-col gap-3 rounded-[24px] border border-slate-200 bg-white px-5 py-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <p className="font-semibold text-slate-900">{m.name}</p>
-                  <p className="text-sm text-slate-500">Valor padrão: {formatCurrency(Number(m.default_price) || 0)}</p>
+            data.map((m) => {
+              const isEditing = editingId === m.id;
+
+              return (
+                <div key={m.id} className="flex flex-col gap-3 rounded-[24px] border border-slate-200 bg-white px-5 py-4 md:flex-row md:items-center md:justify-between">
+                  <div className="w-full">
+                    {isEditing ? (
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <label className="field-group">
+                          <span className="field-label">Nome do material</span>
+                          <input value={editingName} onChange={(e) => setEditingName(e.target.value)} />
+                        </label>
+
+                        <label className="field-group">
+                          <span className="field-label">Valor padrão</span>
+                          <input type="number" min="0" step="0.01" value={editingPrice} onChange={(e) => setEditingPrice(Number(e.target.value))} />
+                        </label>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="font-semibold text-slate-900">{m.name}</p>
+                        <p className="text-sm text-slate-500">Valor padrão: {formatCurrency(Number(m.default_price) || 0)}</p>
+                      </>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {isEditing ? (
+                      <>
+                        <button className="secondary-button" onClick={saveEdit}>
+                          Salvar
+                        </button>
+                        <button
+                          className="secondary-button"
+                          onClick={() => {
+                            setEditingId(null);
+                            setEditingName('');
+                            setEditingPrice(0);
+                          }}
+                        >
+                          Cancelar
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        className="secondary-button"
+                        onClick={() => {
+                          setEditingId(m.id);
+                          setEditingName(m.name);
+                          setEditingPrice(Number(m.default_price) || 0);
+                          setFeedback(null);
+                        }}
+                      >
+                        Editar
+                      </button>
+                    )}
+
+                    <button className="danger-button" onClick={() => remove(m.id)}>
+                      Excluir
+                    </button>
+                  </div>
                 </div>
-                <button className="danger-button" onClick={() => remove(m.id)}>
-                  Excluir
-                </button>
-              </div>
-            ))
+              );
+            })
           ) : (
             <div className="rounded-[24px] border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500">
               Nenhum material cadastrado ainda.
