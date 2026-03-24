@@ -1,20 +1,23 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase-server';
+import { createAdminClient, createClient } from '@/lib/supabase-server';
+
+const DEFAULT_DB_SCHEMA = 'budget';
 
 const DEFAULT_DB_SCHEMA = 'budget';
 
 export async function getScopedClient() {
-  const supabase = await createClient();
+  const authClient = await createClient();
   const {
     data: { user },
     error
-  } = await supabase.auth.getUser();
+  } = await authClient.auth.getUser();
 
   if (error || !user) {
     throw new Error('Não autenticado');
   }
 
   const resolvedSchema = getBudgetSchemaName();
+  const supabase = createAdminClient() || authClient;
 
   return {
     supabase: new Proxy(supabase, {
@@ -37,7 +40,7 @@ export async function getScopedClient() {
 export function apiErrorResponse(error: unknown) {
   let message = error instanceof Error ? error.message : 'Erro interno do servidor';
   if (message.toLowerCase().includes('invalid schema')) {
-    message = 'Schema budget não encontrado. Execute o SQL em supabase/schema.sql no projeto Supabase para criar as tabelas do app.';
+    message = 'Schema budget inválido para a API. No painel do Supabase, adicione o schema budget em Settings > API > Exposed schemas ou configure SUPABASE_SERVICE_ROLE_KEY no ambiente.';
   }
   if (message.toLowerCase().includes("could not find the table 'public.")) {
     message = 'As tabelas do app precisam estar no schema budget. Execute o SQL em supabase/schema.sql no projeto Supabase.';
