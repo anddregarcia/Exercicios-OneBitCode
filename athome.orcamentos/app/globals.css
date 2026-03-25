@@ -77,6 +77,14 @@ button {
     @apply inline-flex items-center justify-center gap-2 rounded-2xl bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-100;
   }
 
+  .icon-action-button {
+    @apply inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900;
+  }
+
+  .icon-action-button-danger {
+    @apply inline-flex h-10 w-10 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-700 transition hover:border-rose-300 hover:bg-rose-100;
+  }
+
   .status-badge {
     @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold;
   }

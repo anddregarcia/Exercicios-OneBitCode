@@ -116,37 +116,41 @@ export default function ClientsPage() {
                         </>
                       )}
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex items-center gap-2 whitespace-nowrap">
                       {isEditing ? (
                         <>
-                          <button className="secondary-button" onClick={saveEdit}>
-                            Salvar
+                          <button className="icon-action-button" onClick={saveEdit} title="Salvar cliente" aria-label="Salvar cliente">
+                            💾
                           </button>
                           <button
-                            className="secondary-button"
+                            className="icon-action-button"
                             onClick={() => {
                               setEditingId(null);
                               setEditingName('');
                             }}
+                            title="Cancelar edição"
+                            aria-label="Cancelar edição"
                           >
-                            Cancelar
+                            ↩️
                           </button>
                         </>
                       ) : (
                         <button
-                          className="secondary-button"
+                          className="icon-action-button"
                           onClick={() => {
                             setEditingId(c.id);
                             setEditingName(c.name);
                             setFeedback(null);
                           }}
+                          title="Editar cliente"
+                          aria-label="Editar cliente"
                         >
-                          Editar
+                          ✏️
                         </button>
                       )}
 
-                      <button className="danger-button" onClick={() => remove(c.id)}>
-                        Excluir
+                      <button className="icon-action-button-danger" onClick={() => remove(c.id)} title="Excluir cliente" aria-label="Excluir cliente">
+                        🗑️
                       </button>
                     </div>
                   </li>

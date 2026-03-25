@@ -263,9 +263,21 @@ export default function EstimateForm({ estimateId }: { estimateId?: string }) {
               {saveState === 'saving' ? 'Salvando...' : 'Salvar orçamento'}
             </button>
             {estimateId ? (
-              <a className="secondary-button" target="_blank" href={`https://wa.me/?text=${encodeURIComponent('Segue orçamento: ' + window.location.origin + '/api/estimates/' + estimateId + '/pdf')}`}>
-                Compartilhar WhatsApp
-              </a>
+              <>
+                <a className="secondary-button" target="_blank" rel="noreferrer" href={`/api/estimates/${estimateId}/pdf`}>
+                  Gerar PDF
+                </a>
+                <a
+                  className="secondary-button"
+                  target="_blank"
+                  rel="noreferrer"
+                  href={`https://wa.me/?text=${encodeURIComponent(
+                    'Segue o relatório em PDF do orçamento: ' + window.location.origin + '/api/estimates/' + estimateId + '/pdf'
+                  )}`}
+                >
+                  Compartilhar WhatsApp
+                </a>
+              </>
             ) : null}
           </div>
         </div>
