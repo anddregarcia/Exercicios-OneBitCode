@@ -73,6 +73,8 @@ export function PurchaseHistory() {
       }),
     [groupedPurchases, stores]
   );
+  const getPurchaseTotal = (date: string) =>
+    groupedPurchases[date].reduce((acc, purchase) => acc + Number(purchase.price) * Number(purchase.quantity), 0);
 
   const togglePurchase = (groupKey: string) => {
     setExpandedPurchases((prev) => ({ ...prev, [groupKey]: !prev[groupKey] }));
