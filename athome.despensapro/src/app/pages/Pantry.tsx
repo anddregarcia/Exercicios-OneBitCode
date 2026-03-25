@@ -2,24 +2,13 @@ import { useState, useEffect } from "react";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "../components/ui/dialog";
-import { AlertCircle, Edit, Package2, Loader2 } from "lucide-react";
+import { AlertCircle, Package2, Loader2 } from "lucide-react";
 import { itemsAPI, pantryAPI, brandsAPI, unitsAPI, storesAPI, packagingsAPI, categoriesAPI, purchasesAPI } from "../lib/api";
 import { toast } from "sonner";
 
 export function Pantry() {
   const [loading, setLoading] = useState(true);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-  const [editQuantity, setEditQuantity] = useState("");
-  const [editOpenedDate, setEditOpenedDate] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const [pantryItems, setPantryItems] = useState<any[]>([]);
   const [items, setItems] = useState<any[]>([]);
@@ -28,6 +17,7 @@ export function Pantry() {
   const [units, setUnits] = useState<any[]>([]);
   const [stores, setStores] = useState<any[]>([]);
   const [packagings, setPackagings] = useState<any[]>([]);
+  const [draftPantryByItemId, setDraftPantryByItemId] = useState<Record<string, { currentQuantity: string; openedDate: string }>>({});
 
   useEffect(() => {
     loadData();
@@ -81,6 +71,17 @@ export function Pantry() {
       });
 
       setPantryItems(enrichedPantry);
+      setDraftPantryByItemId(
+        Object.fromEntries(
+          enrichedPantry.map((pantryItem: any) => [
+            pantryItem.itemId,
+            {
+              currentQuantity: pantryItem.currentQuantity?.toString() ?? "0",
+              openedDate: pantryItem.openedDate || "",
+            },
+          ])
+        )
+      );
     } catch (error) {
       console.error("Error loading pantry data:", error);
       toast.error("Erro ao carregar dados da despensa");
@@ -89,49 +90,68 @@ export function Pantry() {
     }
   };
 
-  const handleEditClick = (itemId: string) => {
-    const pantryItem = pantryItems.find(p => p.itemId === itemId);
-    if (pantryItem) {
-      setSelectedItemId(itemId);
-      setEditQuantity(pantryItem.currentQuantity?.toString() || "0");
-      setEditOpenedDate(pantryItem.openedDate || "");
-      setEditDialogOpen(true);
-    }
+  const handleDraftChange = (itemId: string, field: "currentQuantity" | "openedDate", value: string) => {
+    setDraftPantryByItemId((prev) => ({
+      ...prev,
+      [itemId]: {
+        currentQuantity: prev[itemId]?.currentQuantity ?? "0",
+        openedDate: prev[itemId]?.openedDate ?? "",
+        [field]: value,
+      },
+    }));
   };
 
-  const handleSaveQuantity = async () => {
-    if (!selectedItemId || !editQuantity) return;
+  const getDirtyPantryUpdates = () => pantryItems.reduce<Array<{ itemId: string; currentQuantity: number; openedDate?: string }>>((acc, pantryItem) => {
+    const draft = draftPantryByItemId[pantryItem.itemId];
+    if (!draft) return acc;
 
-    const currentQuantity = Number.parseFloat(editQuantity);
-    if (Number.isNaN(currentQuantity)) {
-      toast.error("Informe uma quantidade válida");
+    const parsedQuantity = Number.parseFloat(draft.currentQuantity);
+    if (Number.isNaN(parsedQuantity)) return acc;
+
+    const openedDate = draft.openedDate || "";
+    const quantityChanged = parsedQuantity !== pantryItem.currentQuantity;
+    const openedDateChanged = openedDate !== (pantryItem.openedDate || "");
+
+    if (quantityChanged || openedDateChanged) {
+      acc.push({
+        itemId: pantryItem.itemId,
+        currentQuantity: parsedQuantity,
+        openedDate: openedDate || undefined,
+      });
+    }
+    return acc;
+  }, []);
+
+  const hasPendingChanges = getDirtyPantryUpdates().length > 0;
+
+  const handleSaveAllChanges = async () => {
+    const dirtyUpdates = getDirtyPantryUpdates();
+    if (!dirtyUpdates.length) {
+      toast.info("Não há alterações pendentes");
       return;
     }
-    
+
+    const hasInvalidQuantity = Object.values(draftPantryByItemId).some((draft) => Number.isNaN(Number.parseFloat(draft.currentQuantity)));
+    if (hasInvalidQuantity) {
+      toast.error("Revise as quantidades informadas antes de salvar");
+      return;
+    }
+
+    setSaving(true);
     try {
-      await pantryAPI.update(selectedItemId, {
-        currentQuantity,
-        openedDate: editOpenedDate || undefined,
-      });
-
-      setPantryItems((prev) => prev.map((pantryItem) => (
-        pantryItem.itemId === selectedItemId
-          ? {
-              ...pantryItem,
-              currentQuantity,
-              openedDate: editOpenedDate || "",
-            }
-          : pantryItem
-      )));
-
-      toast.success("Quantidade atualizada com sucesso!");
-      setEditDialogOpen(false);
-      setSelectedItemId(null);
-      setEditQuantity("");
-      setEditOpenedDate("");
+      await pantryAPI.updateMany(dirtyUpdates);
+      setPantryItems((prev) => prev.map((pantryItem) => {
+        const updated = dirtyUpdates.find((change) => change.itemId === pantryItem.itemId);
+        return updated
+          ? { ...pantryItem, currentQuantity: updated.currentQuantity, openedDate: updated.openedDate || "" }
+          : pantryItem;
+      }));
+      toast.success("Alterações da despensa salvas com sucesso!");
     } catch (error) {
-      console.error("Error updating pantry item:", error);
-      toast.error("Erro ao atualizar quantidade");
+      console.error("Error updating pantry items:", error);
+      toast.error("Erro ao salvar alterações");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -169,18 +189,18 @@ export function Pantry() {
 
   const getItemDisplaySize = (item: any) => {
     const packaging = getPackagingName(item.packagingId);
-    if (!packaging) return "";
-
     const unit = getUnitAbbr(item.unitId);
+    if (!packaging && unit) return unit;
+    if (!packaging) return "";
     if (!item?.packageSize || !unit) return packaging;
 
     return `${packaging} de ${item.packageSize} ${unit}`;
   };
 
   const getPantryQuantityLabel = (pantryItem: any, item: any) => {
-    const packageDetails = getItemDisplaySize(item);
-    return packageDetails
-      ? `${pantryItem.currentQuantity} ${packageDetails}`
+    const unit = getUnitAbbr(item.unitId);
+    return unit
+      ? `${pantryItem.currentQuantity} ${unit}`
       : `${pantryItem.currentQuantity}`;
   };
 
@@ -213,7 +233,7 @@ export function Pantry() {
       return getBrandName(a.brandId).localeCompare(getBrandName(b.brandId), "pt-BR");
     });
 
-  const selectedItem = selectedItemId ? items.find(i => i.id === selectedItemId) : null;
+  const isEssentialZero = (item: any, quantity: number) => Boolean(item?.isEssential) && quantity <= 0;
 
   if (loading) {
     return (
@@ -227,11 +247,16 @@ export function Pantry() {
     <div className="min-h-screen p-4 md:p-8">
       <div className="mx-auto max-w-7xl space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-semibold text-foreground">Gestão de Despensa</h1>
-          <p className="mt-2 text-muted-foreground">
-            Acompanhe o estoque e validade dos seus produtos
-          </p>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-semibold text-foreground">Gestão de Despensa</h1>
+            <p className="mt-2 text-muted-foreground">
+              Acompanhe o estoque e validade dos seus produtos
+            </p>
+          </div>
+          <Button onClick={handleSaveAllChanges} disabled={!hasPendingChanges || saving}>
+            {saving ? "Salvando alterações..." : "Salvar alterações da despensa"}
+          </Button>
         </div>
 
         {/* Desktop Table */}
@@ -266,18 +291,18 @@ export function Pantry() {
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                         Status
                       </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        Ações
-                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {expandedPantryRows.map(({ key, pantryItem, item, brandId, categoryName }) => {
-                      const lowStock = isLowStock(pantryItem.currentQuantity);
+                      const draft = draftPantryByItemId[pantryItem.itemId] || { currentQuantity: "0", openedDate: "" };
+                      const draftQuantity = Number.parseFloat(draft.currentQuantity) || 0;
+                      const lowStock = isLowStock(draftQuantity);
                       const oldProduct = isOldProduct(pantryItem.openedDate);
+                      const essentialOutOfStock = isEssentialZero(item, draftQuantity);
 
                       return (
-                        <tr key={key} className="border-b border-border hover:bg-muted/30">
+                        <tr key={key} className={`border-b border-border hover:bg-muted/30 ${essentialOutOfStock ? "bg-warning/10" : ""}`}>
                           <td className="px-4 py-4">
                             <span className="font-medium text-foreground">{item.name}{getItemDisplaySize(item) ? ` (${getItemDisplaySize(item)})` : ""}</span>
                           </td>
@@ -290,17 +315,36 @@ export function Pantry() {
                           <td className="px-4 py-4">
                             <div className="flex items-center gap-2">
                               <span className={`font-semibold ${lowStock ? 'text-destructive' : 'text-foreground'}`}>
-                                {getPantryQuantityLabel(pantryItem, item)}
+                                {getPantryQuantityLabel({ ...pantryItem, currentQuantity: draftQuantity }, item)}
                               </span>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                className="w-24"
+                                value={draft.currentQuantity}
+                                onChange={(e) => handleDraftChange(pantryItem.itemId, "currentQuantity", e.target.value)}
+                              />
                               {lowStock && (
                                 <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs text-destructive">
                                   Estoque baixo
                                 </span>
                               )}
+                              {essentialOutOfStock && (
+                                <span className="rounded-full bg-warning/20 px-2 py-0.5 text-xs text-warning-foreground">
+                                  Essencial em falta
+                                </span>
+                              )}
                             </div>
                           </td>
-                          <td className="px-4 py-4 text-muted-foreground">
-                            {formatStoredDate(pantryItem.openedDate)}
+                          <td className="px-4 py-4">
+                            <div className="space-y-2">
+                              <p className="text-xs text-muted-foreground">{formatStoredDate(draft.openedDate)}</p>
+                              <Input
+                                type="date"
+                                value={draft.openedDate}
+                                onChange={(e) => handleDraftChange(pantryItem.itemId, "openedDate", e.target.value)}
+                              />
+                            </div>
                           </td>
                           <td className="px-4 py-4 font-medium text-foreground">
                             {pantryItem.lastPurchasePrice
@@ -317,16 +361,9 @@ export function Pantry() {
                                 <span className="text-xs">Aberto há 30+ dias</span>
                               </div>
                             )}
-                          </td>
-                          <td className="px-4 py-4">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditClick(pantryItem.itemId)}
-                            >
-                              <Edit className="h-4 w-4 mr-1" />
-                              Editar
-                            </Button>
+                            {essentialOutOfStock && (
+                              <p className="text-xs text-warning-foreground">Item essencial zerado</p>
+                            )}
                           </td>
                         </tr>
                       );
@@ -339,35 +376,42 @@ export function Pantry() {
             {/* Mobile Cards */}
             <div className="space-y-4 md:hidden">
               {expandedPantryRows.map(({ key, pantryItem, item, brandId, categoryName }) => {
-                const lowStock = isLowStock(pantryItem.currentQuantity);
+                const draft = draftPantryByItemId[pantryItem.itemId] || { currentQuantity: "0", openedDate: "" };
+                const draftQuantity = Number.parseFloat(draft.currentQuantity) || 0;
+                const lowStock = isLowStock(draftQuantity);
                 const oldProduct = isOldProduct(pantryItem.openedDate);
+                const essentialOutOfStock = isEssentialZero(item, draftQuantity);
 
                 return (
-                  <Card key={key} className="p-4">
+                  <Card key={key} className={`p-4 ${essentialOutOfStock ? "bg-warning/10" : ""}`}>
                     <div className="space-y-3">
                       <div className="flex items-start justify-between">
                         <div>
                           <h4 className="font-semibold text-foreground">{item.name}{getItemDisplaySize(item) ? ` (${getItemDisplaySize(item)})` : ""}</h4>
                           <p className="text-sm text-muted-foreground">{getBrandName(brandId)} • {categoryName}</p>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditClick(pantryItem.itemId)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
                       </div>
 
                       <div className="grid grid-cols-2 gap-3 text-sm">
                         <div>
                           <p className="text-muted-foreground">Quantidade</p>
                           <p className={`font-semibold ${lowStock ? 'text-destructive' : 'text-foreground'}`}>
-                            {getPantryQuantityLabel(pantryItem, item)}
+                            {getPantryQuantityLabel({ ...pantryItem, currentQuantity: draftQuantity }, item)}
                           </p>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={draft.currentQuantity}
+                            onChange={(e) => handleDraftChange(pantryItem.itemId, "currentQuantity", e.target.value)}
+                          />
                           {lowStock && (
                             <span className="inline-block mt-1 rounded-full bg-destructive/10 px-2 py-0.5 text-xs text-destructive">
                               Estoque baixo
+                            </span>
+                          )}
+                          {essentialOutOfStock && (
+                            <span className="inline-block mt-1 rounded-full bg-warning/20 px-2 py-0.5 text-xs text-warning-foreground">
+                              Essencial em falta
                             </span>
                           )}
                         </div>
@@ -381,20 +425,26 @@ export function Pantry() {
                         </div>
                       </div>
 
-                      {pantryItem.openedDate && (
-                        <div>
-                          <p className="text-xs text-muted-foreground">
-                            Aberto em: {formatStoredDate(pantryItem.openedDate)}
-                          </p>
-                          {oldProduct && (
-                            <div className="mt-1 flex items-center gap-1 text-warning">
-                              <AlertCircle className="h-3 w-3" />
-                              <span className="text-xs">Aberto há mais de 30 dias</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          Aberto em: {formatStoredDate(draft.openedDate)}
+                        </p>
+                        <Input
+                          type="date"
+                          value={draft.openedDate}
+                          onChange={(e) => handleDraftChange(pantryItem.itemId, "openedDate", e.target.value)}
+                        />
+                        {oldProduct && (
+                          <div className="mt-1 flex items-center gap-1 text-warning">
+                            <AlertCircle className="h-3 w-3" />
+                            <span className="text-xs">Aberto há mais de 30 dias</span>
+                          </div>
+                        )}
+                        {essentialOutOfStock && (
+                          <p className="mt-1 text-xs text-warning-foreground">Item essencial zerado</p>
+                        )}
+                      </div>
+                      
                       {pantryItem.lastPurchaseStore && (
                         <p className="text-xs text-muted-foreground">
                           Último mercado: {pantryItem.lastPurchaseStore}
@@ -424,41 +474,6 @@ export function Pantry() {
           </Card>
         )}
       </div>
-
-      {/* Edit Quantity Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Editar Quantidade - {selectedItem?.name}{selectedItem && getItemDisplaySize(selectedItem) ? ` (${getItemDisplaySize(selectedItem)})` : ""}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Quantidade Atual</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={editQuantity}
-                onChange={(e) => setEditQuantity(e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Data de Abertura (opcional)</Label>
-              <Input
-                type="date"
-                value={editOpenedDate}
-                onChange={(e) => setEditOpenedDate(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleSaveQuantity}>Salvar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

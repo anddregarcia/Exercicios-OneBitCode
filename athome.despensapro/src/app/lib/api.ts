@@ -22,6 +22,7 @@ type Item = {
   unitId: string;
   packagingId: string;
   isVegan: boolean;
+  isEssential?: boolean;
   packageSize?: string;
 };
 type PurchaseItem = {
@@ -69,6 +70,7 @@ const normalizeItem = (item: any): Item => {
   return {
     ...item,
     brandIds: incomingBrandIds,
+    isEssential: Boolean(item?.isEssential),
     packageSize: item?.packageSize?.toString().trim() || "",
     packagingId: item?.packagingId || "",
   };
@@ -319,6 +321,7 @@ export const itemsAPI = {
     unitId: string;
     packagingId: string;
     isVegan: boolean;
+    isEssential?: boolean;
     packageSize: string;
   }) => {
     const data = await readUserData();
@@ -343,6 +346,7 @@ export const itemsAPI = {
       unitId: string;
       packagingId: string;
       isVegan: boolean;
+      isEssential?: boolean;
       packageSize: string;
     }
   ) => {
@@ -418,6 +422,22 @@ export const pantryAPI = {
 
     await writeUserData(data);
     return { itemId, ...update };
+  },
+  updateMany: async (updates: Array<{ itemId: string; currentQuantity: number; openedDate?: string }>) => {
+    const data = await readUserData();
+
+    updates.forEach((update) => {
+      const existing = data.pantry.find((item) => item.itemId === update.itemId);
+      if (existing) {
+        existing.currentQuantity = update.currentQuantity;
+        existing.openedDate = update.openedDate;
+      } else {
+        data.pantry.push(update);
+      }
+    });
+
+    await writeUserData(data);
+    return updates;
   },
 };
 
