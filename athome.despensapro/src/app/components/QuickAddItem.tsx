@@ -43,6 +43,7 @@ export function QuickAddItem({ open, onOpenChange, onItemCreated }: QuickAddItem
   const [packagingId, setPackagingId] = useState("");
   const [packageSize, setPackageSize] = useState("");
   const [isVegan, setIsVegan] = useState(false);
+  const [isEssential, setIsEssential] = useState(false);
 
   const [showNewBrand, setShowNewBrand] = useState(false);
   const [newBrandName, setNewBrandName] = useState("");
@@ -77,6 +78,7 @@ export function QuickAddItem({ open, onOpenChange, onItemCreated }: QuickAddItem
     setPackagingId("");
     setPackageSize("");
     setIsVegan(false);
+    setIsEssential(false);
     setShowNewBrand(false);
     setNewBrandName("");
     setNewBrandVegan(false);
@@ -117,6 +119,7 @@ export function QuickAddItem({ open, onOpenChange, onItemCreated }: QuickAddItem
         packagingId,
         packageSize,
         isVegan,
+        isEssential,
       });
       toast.success("Item cadastrado com sucesso!");
       onItemCreated(item);
@@ -164,9 +167,10 @@ export function QuickAddItem({ open, onOpenChange, onItemCreated }: QuickAddItem
 
           <div className="space-y-2"><Label>Categoria</Label><Select value={categoryId} onValueChange={setCategoryId}><SelectTrigger><SelectValue placeholder="Selecione a categoria" /></SelectTrigger><SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div>
           <div className="space-y-2"><Label>Embalagem</Label><Select value={packagingId} onValueChange={setPackagingId}><SelectTrigger><SelectValue placeholder="Selecione a embalagem" /></SelectTrigger><SelectContent>{packagings.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent></Select></div>
-          <div className="space-y-2"><Label>Unidade</Label><Select value={unitId} onValueChange={setUnitId}><SelectTrigger><SelectValue placeholder="Selecione a unidade" /></SelectTrigger><SelectContent>{units.map((u) => <SelectItem key={u.id} value={u.id}>{u.name} ({u.abbreviation})</SelectItem>)}</SelectContent></Select></div>
           <div className="space-y-2"><Label>Volume da Embalagem</Label><Input value={packageSize} type="number" step="0.01" onChange={(e) => setPackageSize(e.target.value)} /></div>
+          <div className="space-y-2"><Label>Unidade</Label><Select value={unitId} onValueChange={setUnitId}><SelectTrigger><SelectValue placeholder="Selecione a unidade" /></SelectTrigger><SelectContent>{units.map((u) => <SelectItem key={u.id} value={u.id}>{u.name} ({u.abbreviation})</SelectItem>)}</SelectContent></Select></div>
           <div className="flex items-center gap-2"><Checkbox id="quick-item-vegan" checked={isVegan} onCheckedChange={(checked) => setIsVegan(checked as boolean)} /><label htmlFor="quick-item-vegan" className="text-sm">Item vegano</label></div>
+          <div className="flex items-center gap-2"><Checkbox id="quick-item-essential" checked={isEssential} onCheckedChange={(checked) => setIsEssential(checked as boolean)} /><label htmlFor="quick-item-essential" className="text-sm">Essencial</label></div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>Cancelar</Button>

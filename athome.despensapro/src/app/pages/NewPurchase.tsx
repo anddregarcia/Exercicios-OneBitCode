@@ -14,7 +14,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import { ChevronDown, ChevronRight, History, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { brandsAPI, categoriesAPI, itemsAPI, purchasesAPI, storesAPI, unitsAPI, packagingsAPI } from "../lib/api";
+import { brandsAPI, categoriesAPI, itemsAPI, purchasesAPI, storesAPI, unitsAPI, packagingsAPI, pantryAPI } from "../lib/api";
 import { QuickAddItem } from "../components/QuickAddItem";
 import { QuickAddStore } from "../components/QuickAddStore";
 import { usePurchaseForm } from "../contexts/PurchaseFormContext";
@@ -64,6 +64,7 @@ export function NewPurchase() {
   const [categories, setCategories] = useState<any[]>([]);
   const [units, setUnits] = useState<any[]>([]);
   const [packagings, setPackagings] = useState<any[]>([]);
+  const [pantryByItemId, setPantryByItemId] = useState<Record<string, number>>({});
 
   const {
     selectedStore,
@@ -93,13 +94,14 @@ export function NewPurchase() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [itemsData, storesData, brandsData, categoriesData, unitsData, packagingsData] = await Promise.all([
+      const [itemsData, storesData, brandsData, categoriesData, unitsData, packagingsData, pantryData] = await Promise.all([
         itemsAPI.getAll(),
         storesAPI.getAll(),
         brandsAPI.getAll(),
         categoriesAPI.getAll(),
         unitsAPI.getAll(),
         packagingsAPI.getAll(),
+        pantryAPI.getAll(),
       ]);
 
       const orderedItems = sortByName(itemsData);
@@ -109,6 +111,11 @@ export function NewPurchase() {
       setCategories(sortByName(categoriesData));
       setUnits(sortByName(unitsData));
       setPackagings(sortByName(packagingsData));
+      setPantryByItemId(
+        Object.fromEntries(
+          pantryData.map((pantryItem: any) => [pantryItem.itemId, pantryItem.currentQuantity || 0])
+        )
+      );
 
       setPurchaseItems((prev) => buildPurchaseRows(orderedItems, prev));
     } catch (error) {
@@ -164,6 +171,8 @@ export function NewPurchase() {
   const getCategoryName = (categoryId: string) => categories.find((c) => c.id === categoryId)?.name || "Sem categoria";
   const getItemById = (id: string) => items.find((i) => i.id === id);
   const getStoreName = (storeId: string) => stores.find((store) => store.id === storeId)?.name || "Mercado não informado";
+  const getCurrentQuantity = (itemId: string) => pantryByItemId[itemId] ?? 0;
+  const isEssentialOutOfStock = (item: any) => Boolean(item?.isEssential) && getCurrentQuantity(item.id) <= 0;
 
   const formatItemDetails = (item: any) => {
     const packaging = packagings.find((p) => p.id === item.packagingId)?.name;
@@ -264,6 +273,7 @@ export function NewPurchase() {
                   <th className="px-4 py-3 text-left text-sm">Item</th>
                   <th className="px-4 py-3 text-left text-sm">Marca</th>
                   <th className="px-4 py-3 text-left text-sm">Categoria</th>
+                  <th className="px-4 py-3 text-left text-sm">Qtd. Atual</th>
                   <th className="px-4 py-3 text-left text-sm">Preço</th>
                   <th className="px-4 py-3 text-left text-sm">Quantidade</th>
                   <th className="px-4 py-3 text-left text-sm">Ações</th>
@@ -271,11 +281,15 @@ export function NewPurchase() {
               </thead>
               <tbody>
                 {!groupByCategory && rowsWithItem.map((row) => (
-                  <tr key={row.key} className="border-b hover:bg-muted/20">
+                  <tr key={row.key} className={`border-b hover:bg-muted/20 ${isEssentialOutOfStock(row.item) ? "bg-warning/10" : ""}`}>
                     <td className="px-4 py-3"><Checkbox checked={row.selected} onCheckedChange={(checked) => handleFieldChange(row.key, "selected", checked as boolean)} /></td>
                     <td className="px-4 py-3 font-medium">{row.item.name}{formatItemDetails(row.item)}</td>
                     <td className="px-4 py-3 text-muted-foreground">{getBrandName(row.brandId)}</td>
                     <td className="px-4 py-3 text-muted-foreground">{getCategoryName(row.item.categoryId)}</td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {getCurrentQuantity(row.item.id)}
+                      {isEssentialOutOfStock(row.item) && <span className="ml-2 text-xs text-warning-foreground">Essencial em falta</span>}
+                    </td>
                     <td className="px-4 py-3"><Input type="number" step="0.01" className="w-24" value={row.price} onChange={(e) => handleFieldChange(row.key, "price", e.target.value)} /></td>
                     <td className="px-4 py-3"><Input type="number" step="0.01" className="w-24" value={row.quantity} onChange={(e) => handleFieldChange(row.key, "quantity", e.target.value)} /></td>
                     <td className="px-4 py-3"><Button variant="ghost" size="sm" onClick={() => handleViewHistory(row.itemId)}><History className="h-4 w-4 mr-1" />Histórico</Button></td>
@@ -285,7 +299,7 @@ export function NewPurchase() {
                 {groupByCategory && orderedCategories.map((category) => (
                   <Fragment key={category}>
                     <tr className="border-b bg-muted/50">
-                      <td colSpan={7} className="px-4 py-2">
+                      <td colSpan={8} className="px-4 py-2">
                         <button type="button" className="flex items-center gap-2 font-semibold" onClick={() => toggleCategoryCollapse(category)}>
                           {collapsedCategories[category] ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                           {category}
@@ -293,11 +307,15 @@ export function NewPurchase() {
                       </td>
                     </tr>
                     {!collapsedCategories[category] && groupedItems[category].map((row) => (
-                      <tr key={row.key} className="border-b hover:bg-muted/20">
+                      <tr key={row.key} className={`border-b hover:bg-muted/20 ${isEssentialOutOfStock(row.item) ? "bg-warning/10" : ""}`}>
                         <td className="px-4 py-3"><Checkbox checked={row.selected} onCheckedChange={(checked) => handleFieldChange(row.key, "selected", checked as boolean)} /></td>
                         <td className="px-4 py-3 font-medium">{row.item.name}{formatItemDetails(row.item)}</td>
                         <td className="px-4 py-3 text-muted-foreground">{getBrandName(row.brandId)}</td>
                         <td className="px-4 py-3 text-muted-foreground">{category}</td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {getCurrentQuantity(row.item.id)}
+                          {isEssentialOutOfStock(row.item) && <span className="ml-2 text-xs text-warning-foreground">Essencial em falta</span>}
+                        </td>
                         <td className="px-4 py-3"><Input type="number" step="0.01" className="w-24" value={row.price} onChange={(e) => handleFieldChange(row.key, "price", e.target.value)} /></td>
                         <td className="px-4 py-3"><Input type="number" step="0.01" className="w-24" value={row.quantity} onChange={(e) => handleFieldChange(row.key, "quantity", e.target.value)} /></td>
                         <td className="px-4 py-3"><Button variant="ghost" size="sm" onClick={() => handleViewHistory(row.itemId)}><History className="h-4 w-4 mr-1" />Histórico</Button></td>
@@ -312,12 +330,16 @@ export function NewPurchase() {
 
         <div className="space-y-3 md:hidden">
           {!groupByCategory && rowsWithItem.map((row) => (
-            <Card key={row.key} className="p-4">
+            <Card key={row.key} className={`p-4 ${isEssentialOutOfStock(row.item) ? "bg-warning/10" : ""}`}>
               <div className="space-y-3">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-semibold text-foreground">{row.item.name}{formatItemDetails(row.item)}</p>
                     <p className="text-sm text-muted-foreground">{getBrandName(row.brandId)} • {getCategoryName(row.item.categoryId)}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Qtd. atual: {getCurrentQuantity(row.item.id)}
+                      {isEssentialOutOfStock(row.item) ? " • Essencial em falta" : ""}
+                    </p>
                   </div>
                   <Checkbox checked={row.selected} onCheckedChange={(checked) => handleFieldChange(row.key, "selected", checked as boolean)} />
                 </div>
@@ -347,12 +369,16 @@ export function NewPurchase() {
                 {category}
               </button>
               {!collapsedCategories[category] && groupedItems[category].map((row) => (
-                <Card key={row.key} className="p-4">
+                <Card key={row.key} className={`p-4 ${isEssentialOutOfStock(row.item) ? "bg-warning/10" : ""}`}>
                   <div className="space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-semibold text-foreground">{row.item.name}{formatItemDetails(row.item)}</p>
                         <p className="text-sm text-muted-foreground">{getBrandName(row.brandId)} • {category}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Qtd. atual: {getCurrentQuantity(row.item.id)}
+                          {isEssentialOutOfStock(row.item) ? " • Essencial em falta" : ""}
+                        </p>
                       </div>
                       <Checkbox checked={row.selected} onCheckedChange={(checked) => handleFieldChange(row.key, "selected", checked as boolean)} />
                     </div>

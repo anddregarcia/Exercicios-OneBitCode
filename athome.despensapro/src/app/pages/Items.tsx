@@ -33,7 +33,7 @@ import {
 type EntityType = "item" | "brand" | "category" | "packaging" | "unit" | "store";
 
 const HELP_TEXTS: Record<EntityType, string> = {
-  item: "Nesta tela você pode cadastrar todos os itens da sua despensa. Para aproveitar melhor o gerenciamento, prefira cadastrar o item com nome completo, marcas, embalagem, volume e unidade. Se quiser algo mais simples, também é possível cadastrar somente o nome.",
+  item: "Nesta tela você pode cadastrar todos os itens da sua despensa. Para aproveitar melhor o gerenciamento, prefira cadastrar o item com nome completo, marcas, embalagem, volume da embalagem e unidade. Se quiser algo mais simples, também é possível cadastrar somente o nome. Os itens marcados como essencial serão destacados na despensa e na nova compra.",
   brand: "Cadastre as marcas para associá-las aos itens e comparar os valores entre marcas diferentes.",
   category: "Cadastre categorias e relacione-as aos itens para facilitar o agrupamento durante novas compras.",
   unit: "Cadastre as unidades de medida para configurar corretamente embalagem, volume e unidade de cada item.",
@@ -71,6 +71,7 @@ export function Items() {
   const [itemPackaging, setItemPackaging] = useState("");
   const [itemPackageSize, setItemPackageSize] = useState("");
   const [itemVegan, setItemVegan] = useState(false);
+  const [itemEssential, setItemEssential] = useState(false);
 
   const [brandName, setBrandName] = useState("");
   const [brandVegan, setBrandVegan] = useState(false);
@@ -125,6 +126,7 @@ export function Items() {
     setItemPackaging("");
     setItemPackageSize("");
     setItemVegan(false);
+    setItemEssential(false);
 
     setBrandName("");
     setBrandVegan(false);
@@ -157,6 +159,7 @@ export function Items() {
       setItemPackaging(entity.packagingId || "");
       setItemPackageSize(entity.packageSize || "");
       setItemVegan(Boolean(entity.isVegan));
+      setItemEssential(Boolean(entity.isEssential));
     }
 
     if (type === "brand") {
@@ -203,6 +206,7 @@ export function Items() {
           packagingId: itemPackaging,
           packageSize: itemPackageSize,
           isVegan: itemVegan,
+          isEssential: itemEssential,
         };
         if (editMode && editingId) {
           await itemsAPI.update(editingId, payload);
@@ -318,7 +322,12 @@ export function Items() {
                 <div key={item.id} className="flex items-center justify-between rounded-lg border border-border p-4">
                   <div>
                     <p className="font-medium">{item.name}{formatItemDetails(item, units, packagings)}</p>
-                    <p className="text-sm text-muted-foreground">{[getBrandNames(item.brandIds || []), categories.find((c) => c.id === item.categoryId)?.name || "Sem categoria", item.isVegan ? "Vegano" : ""].filter(Boolean).join(" • ")}</p>
+                    <p className="text-sm text-muted-foreground">{[
+                      getBrandNames(item.brandIds || []),
+                      categories.find((c) => c.id === item.categoryId)?.name || "Sem categoria",
+                      item.isVegan ? "Vegano" : "",
+                      item.isEssential ? "Essencial" : "",
+                    ].filter(Boolean).join(" • ")}</p>
                   </div>
                   <div className="flex gap-2">
                     <Button variant="ghost" size="sm" onClick={() => openEditDialog("item", item)}><Edit className="h-4 w-4" /></Button>
@@ -385,9 +394,10 @@ export function Items() {
                 </div>
                 <div className="space-y-2"><Label>Categoria</Label><Select value={itemCategory} onValueChange={setItemCategory}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div>
                 <div className="space-y-2"><Label>Embalagem</Label><Select value={itemPackaging} onValueChange={setItemPackaging}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{packagings.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent></Select></div>
-                <div className="space-y-2"><Label>Unidade</Label><Select value={itemUnit} onValueChange={setItemUnit}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{units.map((u) => <SelectItem key={u.id} value={u.id}>{u.name} ({u.abbreviation})</SelectItem>)}</SelectContent></Select></div>
                 <div className="space-y-2"><Label>Volume da embalagem</Label><Input value={itemPackageSize} onChange={(e) => setItemPackageSize(e.target.value)} type="number" step="0.01" /></div>
+                <div className="space-y-2"><Label>Unidade</Label><Select value={itemUnit} onValueChange={setItemUnit}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{units.map((u) => <SelectItem key={u.id} value={u.id}>{u.name} ({u.abbreviation})</SelectItem>)}</SelectContent></Select></div>
                 <div className="flex items-center gap-2"><Checkbox id="item-vegan" checked={itemVegan} onCheckedChange={(checked) => setItemVegan(checked as boolean)} /><label htmlFor="item-vegan" className="text-sm">Item vegano</label></div>
+                <div className="flex items-center gap-2"><Checkbox id="item-essential" checked={itemEssential} onCheckedChange={(checked) => setItemEssential(checked as boolean)} /><label htmlFor="item-essential" className="text-sm">Essencial</label></div>
               </>
             )}
             {activeTab === "brand" && <><Label>Nome da Marca *</Label><Input value={brandName} onChange={(e) => setBrandName(e.target.value)} /><div className="flex items-center gap-2"><Checkbox id="brand-vegan" checked={brandVegan} onCheckedChange={(checked) => setBrandVegan(checked as boolean)} /><label htmlFor="brand-vegan" className="text-sm">Marca vegana</label></div></>}

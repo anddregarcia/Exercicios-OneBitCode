@@ -34,6 +34,7 @@ export interface Item {
   unitId: string;
   packagingId: string;
   isVegan: boolean;
+  isEssential?: boolean;
   packageSize?: string;
 }
 
