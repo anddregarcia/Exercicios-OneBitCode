@@ -131,39 +131,43 @@ export default function MaterialsPage() {
                       </>
                     )}
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex items-center gap-2 whitespace-nowrap">
                     {isEditing ? (
                       <>
-                        <button className="secondary-button" onClick={saveEdit}>
-                          Salvar
+                        <button className="icon-action-button" onClick={saveEdit} title="Salvar material" aria-label="Salvar material">
+                          💾
                         </button>
                         <button
-                          className="secondary-button"
+                          className="icon-action-button"
                           onClick={() => {
                             setEditingId(null);
                             setEditingName('');
                             setEditingPrice(0);
                           }}
+                          title="Cancelar edição"
+                          aria-label="Cancelar edição"
                         >
-                          Cancelar
+                          ↩️
                         </button>
                       </>
                     ) : (
                       <button
-                        className="secondary-button"
+                        className="icon-action-button"
                         onClick={() => {
                           setEditingId(m.id);
                           setEditingName(m.name);
                           setEditingPrice(Number(m.default_price) || 0);
                           setFeedback(null);
                         }}
+                        title="Editar material"
+                        aria-label="Editar material"
                       >
-                        Editar
+                        ✏️
                       </button>
                     )}
 
-                    <button className="danger-button" onClick={() => remove(m.id)}>
-                      Excluir
+                    <button className="icon-action-button-danger" onClick={() => remove(m.id)} title="Excluir material" aria-label="Excluir material">
+                      🗑️
                     </button>
                   </div>
                 </div>
