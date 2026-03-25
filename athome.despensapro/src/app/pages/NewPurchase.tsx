@@ -127,7 +127,20 @@ export function NewPurchase() {
   };
 
   const handleFieldChange = (key: string, field: "selected" | "price" | "quantity", value: boolean | string) => {
-    setPurchaseItems((prev: any[]) => prev.map((row) => (row.key === key ? { ...row, [field]: value } : row)));
+    setPurchaseItems((prev: any[]) =>
+      prev.map((row) => {
+        if (row.key !== key) return row;
+
+        const updatedRow = { ...row, [field]: value };
+        if (field === "price" || field === "quantity") {
+          const hasPrice = String(updatedRow.price).trim() !== "";
+          const hasQuantity = String(updatedRow.quantity).trim() !== "";
+          updatedRow.selected = hasPrice || hasQuantity;
+        }
+
+        return updatedRow;
+      })
+    );
   };
 
   const handleSavePurchase = async () => {
@@ -197,6 +210,17 @@ export function NewPurchase() {
   }, {}), [rowsWithItem, categories]);
 
   const orderedCategories = useMemo(() => Object.keys(groupedItems).sort((a, b) => a.localeCompare(b, "pt-BR")), [groupedItems]);
+  const purchaseTotal = useMemo(
+    () =>
+      (purchaseItems as PurchaseRow[]).reduce((acc, row) => {
+        if (!row.selected) return acc;
+        const price = Number(row.price);
+        const quantity = Number(row.quantity);
+        if (!Number.isFinite(price) || !Number.isFinite(quantity) || price <= 0 || quantity <= 0) return acc;
+        return acc + price * quantity;
+      }, 0),
+    [purchaseItems]
+  );
 
   const toggleCategoryCollapse = (category: string) => {
     setCollapsedCategories((prev) => ({ ...prev, [category]: !prev[category] }));
@@ -242,6 +266,9 @@ export function NewPurchase() {
                 </Select>
                 <Button variant="outline" size="icon" onClick={() => setQuickAddStoreOpen(true)}><Plus className="h-4 w-4" /></Button>
               </div>
+              <p className="text-sm text-muted-foreground">
+                Total da compra: <span className="font-semibold text-foreground">R$ {purchaseTotal.toFixed(2)}</span>
+              </p>
             </div>
             <div className="space-y-2">
               <Label>Data da Compra</Label>

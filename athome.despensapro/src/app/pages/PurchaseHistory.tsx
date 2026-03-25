@@ -47,6 +47,8 @@ export function PurchaseHistory() {
   const orderedDates = Object.keys(groupedPurchases).sort((a, b) =>
     new Date(b).getTime() - new Date(a).getTime()
   );
+  const getPurchaseTotal = (date: string) =>
+    groupedPurchases[date].reduce((acc, purchase) => acc + Number(purchase.price) * Number(purchase.quantity), 0);
 
   if (loading) {
     return (
@@ -70,9 +72,15 @@ export function PurchaseHistory() {
 
         {orderedDates.map((date) => (
           <Card key={date} className="p-6">
-            <h2 className="text-lg font-semibold mb-4">
-              {new Date(`${date}T00:00:00`).toLocaleDateString("pt-BR")}
-            </h2>
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <h2 className="text-lg font-semibold">
+                {new Date(`${date}T00:00:00`).toLocaleDateString("pt-BR")}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Total da compra:{" "}
+                <span className="font-semibold text-foreground">R$ {getPurchaseTotal(date).toFixed(2)}</span>
+              </p>
+            </div>
 
             <div className="space-y-3">
               {groupedPurchases[date]
