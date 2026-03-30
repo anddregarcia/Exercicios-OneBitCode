@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import { AlertCircle, Package2, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
+import { AlertCircle, Info, Package2, Loader2 } from "lucide-react";
 import { itemsAPI, pantryAPI, brandsAPI, unitsAPI, storesAPI, packagingsAPI, categoriesAPI, purchasesAPI } from "../lib/api";
 import { toast } from "sonner";
 
@@ -18,6 +19,7 @@ export function Pantry() {
   const [stores, setStores] = useState<any[]>([]);
   const [packagings, setPackagings] = useState<any[]>([]);
   const [draftPantryByItemId, setDraftPantryByItemId] = useState<Record<string, { currentQuantity: string; openedDate: string }>>({});
+  const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -254,9 +256,14 @@ export function Pantry() {
               Acompanhe o estoque e validade dos seus produtos
             </p>
           </div>
-          <Button onClick={handleSaveAllChanges} disabled={!hasPendingChanges || saving}>
-            {saving ? "Salvando alterações..." : "Salvar alterações da despensa"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" onClick={() => setHelpOpen(true)} title="Ver instruções">
+              <Info className="h-4 w-4" />
+            </Button>
+            <Button onClick={handleSaveAllChanges} disabled={!hasPendingChanges || saving}>
+              {saving ? "Salvando alterações..." : "Salvar alterações da despensa"}
+            </Button>
+          </div>
         </div>
 
         {/* Desktop Table */}
@@ -474,6 +481,17 @@ export function Pantry() {
           </Card>
         )}
       </div>
+
+      <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Dica de uso</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Nesta tela, você pode verificar e atualizar o estado atual da sua despensa. Para cada item listado, é possível atualizar a quantidade disponível e informar a data em que a embalagem foi aberta, nos casos em que o produto deve ser consumido após a abertura. Aqui também é possível ver o último valor pago e o mercado onde o item foi comprado. Ao finalizar suas alterações, é só tocar em “Salvar alterações da despensa”.
+          </p>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

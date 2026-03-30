@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { ChevronDown, ChevronRight, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
+import { ChevronDown, ChevronRight, Info, Loader2 } from "lucide-react";
 import { itemsAPI, storesAPI, purchasesAPI } from "../lib/api";
 import { toast } from "sonner";
 
@@ -18,6 +19,7 @@ export function PurchaseHistory() {
   const [items, setItems] = useState<any[]>([]);
   const [stores, setStores] = useState<any[]>([]);
   const [expandedPurchases, setExpandedPurchases] = useState<Record<string, boolean>>({});
+  const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -88,9 +90,14 @@ export function PurchaseHistory() {
   return (
     <div className="min-h-screen p-4 md:p-8">
       <div className="mx-auto max-w-5xl space-y-6">
-        <div>
-          <h1 className="text-3xl font-semibold text-foreground">Histórico de Compras</h1>
-          <p className="mt-2 text-muted-foreground">Compras organizadas por data</p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-semibold text-foreground">Histórico de Compras</h1>
+            <p className="mt-2 text-muted-foreground">Compras organizadas por data</p>
+          </div>
+          <Button variant="outline" size="icon" onClick={() => setHelpOpen(true)} title="Ver instruções">
+            <Info className="h-4 w-4" />
+          </Button>
         </div>
 
         {orderedGroups.length === 0 && (
@@ -113,8 +120,8 @@ export function PurchaseHistory() {
                   </p>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => togglePurchase(group.key)}>
-                  {isExpanded ? <ChevronDown className="h-4 w-4 mr-1" /> : <ChevronRight className="h-4 w-4 mr-1" />}
-                  {isExpanded ? "Recolher" : "Expandir"}
+                  {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  <span className="sr-only">{isExpanded ? "Recolher" : "Expandir"}</span>
                 </Button>
               </div>
 
@@ -140,6 +147,17 @@ export function PurchaseHistory() {
           );
         })}
       </div>
+
+      <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Dica de uso</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Nesta tela, você encontra todo o histórico de compras registradas no app, organizado por data. Também é exibido o valor total de cada compra, o mercado e os itens comprados.
+          </p>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
