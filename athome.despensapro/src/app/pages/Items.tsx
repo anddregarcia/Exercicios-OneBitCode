@@ -33,7 +33,7 @@ import {
 type EntityType = "item" | "brand" | "category" | "packaging" | "unit" | "store";
 
 const HELP_TEXTS: Record<EntityType, string> = {
-  item: "Nesta tela você pode cadastrar todos os itens da sua despensa. Para aproveitar melhor o gerenciamento, prefira cadastrar o item com nome completo, marcas, embalagem, volume da embalagem e unidade. Se quiser algo mais simples, também é possível cadastrar somente o nome. Os itens marcados como essencial serão destacados na despensa e na nova compra.",
+  item: "Nesta tela, você pode cadastrar os itens da sua despensa. Você pode informar apenas o nome do item, da forma como ele é conhecido no dia a dia, ou, se preferir, usar também os recursos de marca, embalagem, volume e unidade para um gerenciamento mais detalhado.",
   brand: "Cadastre as marcas para associá-las aos itens e comparar os valores entre marcas diferentes.",
   category: "Cadastre categorias e relacione-as aos itens para facilitar o agrupamento durante novas compras.",
   unit: "Cadastre as unidades de medida para configurar corretamente embalagem, volume e unidade de cada item.",

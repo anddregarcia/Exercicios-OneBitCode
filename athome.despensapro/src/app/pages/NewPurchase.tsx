@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "../components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
-import { ChevronDown, ChevronRight, History, Loader2, Plus } from "lucide-react";
+import { ChevronDown, ChevronRight, History, Info, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { brandsAPI, categoriesAPI, itemsAPI, purchasesAPI, storesAPI, unitsAPI, packagingsAPI, pantryAPI } from "../lib/api";
 import { QuickAddItem } from "../components/QuickAddItem";
@@ -82,6 +82,7 @@ export function NewPurchase() {
   const [quickAddStoreOpen, setQuickAddStoreOpen] = useState(false);
   const [groupByCategory, setGroupByCategory] = useState(false);
   const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
+  const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -250,9 +251,14 @@ export function NewPurchase() {
   return (
     <div className="min-h-screen p-4 md:p-8">
       <div className="mx-auto max-w-7xl space-y-6">
-        <div>
-          <h1 className="text-3xl font-semibold text-foreground">Nova Compra</h1>
-          <p className="mt-2 text-muted-foreground">Registre os itens comprados e seus preços.</p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-semibold text-foreground">Nova Compra</h1>
+            <p className="mt-2 text-muted-foreground">Registre os itens comprados e seus preços.</p>
+          </div>
+          <Button variant="outline" size="icon" onClick={() => setHelpOpen(true)} title="Ver instruções">
+            <Info className="h-4 w-4" />
+          </Button>
         </div>
 
         <Card className="p-6">
@@ -450,6 +456,17 @@ export function NewPurchase() {
             ))}
             {!itemHistory.length && <p className="text-sm text-muted-foreground">Sem histórico para este item.</p>}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Dica de uso</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Nesta tela, você pode realizar seu checklist de compras, informando em qual mercado está comprando, a data da compra e os itens, com quantidade e valor de cada um. Para facilitar a identificação, você pode agrupar os itens por categorias. Também é possível consultar o histórico da última compra e o último valor de cada item. Caso precise, você pode navegar pelas outras telas do app sem perder o que já preencheu aqui: manteremos tudo salvo até que você inicie uma nova compra.
+          </p>
         </DialogContent>
       </Dialog>
 

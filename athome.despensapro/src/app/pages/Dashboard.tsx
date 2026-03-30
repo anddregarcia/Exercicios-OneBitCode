@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import { Card } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import { 
   TrendingUp, 
   TrendingDown, 
   ShoppingBag, 
   Store,
   DollarSign,
+  Info,
   Loader2
 } from "lucide-react";
 import {
@@ -33,6 +36,7 @@ export function Dashboard() {
   const [purchaseItems, setPurchaseItems] = useState<any[]>([]);
   const [units, setUnits] = useState<any[]>([]);
   const [packagings, setPackagings] = useState<any[]>([]);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -179,11 +183,16 @@ export function Dashboard() {
     <div className="min-h-screen p-6 md:p-8">
       <div className="mx-auto max-w-7xl space-y-8">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-semibold text-foreground">Dashboard</h1>
-          <p className="mt-2 text-muted-foreground">
-            Visão geral das suas compras e despensa
-          </p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-semibold text-foreground">Dashboard</h1>
+            <p className="mt-2 text-muted-foreground">
+              Visão geral das suas compras e despensa
+            </p>
+          </div>
+          <Button variant="outline" size="icon" onClick={() => setHelpOpen(true)} title="Ver instruções">
+            <Info className="h-4 w-4" />
+          </Button>
         </div>
 
         {/* Stats Cards */}
@@ -339,6 +348,17 @@ export function Dashboard() {
           </div>
         </Card>
       </div>
+
+      <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Dica de uso</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Aqui você pode visualizar informações gerais e resumidas das suas atividades.
+          </p>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
