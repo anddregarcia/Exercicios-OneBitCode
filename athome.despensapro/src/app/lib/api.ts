@@ -52,6 +52,7 @@ type UserData = {
   purchases: PurchaseItem[];
   pantry: PantryItem[];
   seeded: boolean;
+  lastSyncedAt?: string;
 };
 
 const STORAGE_PREFIX = "despensapro:user:";
@@ -96,7 +97,14 @@ const normalizeUserData = (data?: Partial<UserData>): UserData => {
     purchases,
     pantry,
     seeded: data?.seeded ?? true,
+    lastSyncedAt: data?.lastSyncedAt,
   };
+};
+
+const getTimestamp = (date?: string) => {
+  if (!date) return 0;
+  const time = new Date(date).getTime();
+  return Number.isNaN(time) ? 0 : time;
 };
 
 async function getCurrentUser() {
@@ -150,16 +158,26 @@ async function readUserData(): Promise<UserData> {
   const localData = readLocalUserData(userId);
   const cloudData = user.user_metadata?.[USER_DATA_METADATA_KEY] as UserData | undefined;
 
-  if (localData) {
-    const normalized = normalizeUserData(localData);
-    localStorage.setItem(getStorageKey(userId), JSON.stringify(normalized));
-    return normalized;
+  if (localData && cloudData) {
+    const normalizedLocalData = normalizeUserData(localData);
+    const normalizedCloudData = normalizeUserData(cloudData);
+    const localTimestamp = getTimestamp(normalizedLocalData.lastSyncedAt);
+    const cloudTimestamp = getTimestamp(normalizedCloudData.lastSyncedAt);
+    const dataToUse = cloudTimestamp >= localTimestamp ? normalizedCloudData : normalizedLocalData;
+    localStorage.setItem(getStorageKey(userId), JSON.stringify(dataToUse));
+    return dataToUse;
   }
 
   if (cloudData) {
-    const normalized = normalizeUserData(cloudData);
-    localStorage.setItem(getStorageKey(userId), JSON.stringify(normalized));
-    return normalized;
+    const normalizedCloudData = normalizeUserData(cloudData);
+    localStorage.setItem(getStorageKey(userId), JSON.stringify(normalizedCloudData));
+    return normalizedCloudData;
+  }
+
+  if (localData) {
+    const normalizedLocalData = normalizeUserData(localData);
+    localStorage.setItem(getStorageKey(userId), JSON.stringify(normalizedLocalData));
+    return normalizedLocalData;
   }
 
   const initial = createInitialData();
@@ -168,7 +186,10 @@ async function readUserData(): Promise<UserData> {
 }
 
 async function writeUserData(data: UserData) {
-  const normalizedData = normalizeUserData(data);
+  const normalizedData = normalizeUserData({
+    ...data,
+    lastSyncedAt: new Date().toISOString(),
+  });
   const user = await getCurrentUser();
   const currentMetadata = user.user_metadata || {};
 

@@ -70,6 +70,9 @@ export function Dashboard() {
   // Calculate month statistics
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
+  const previousDate = new Date(currentYear, currentMonth - 1, 1);
+  const previousMonth = previousDate.getMonth();
+  const previousYear = previousDate.getFullYear();
   
   const monthPurchases = purchaseItems.filter((purchase: any) => {
     const purchaseDate = new Date(purchase.date);
@@ -77,6 +80,13 @@ export function Dashboard() {
   });
 
   const totalSpent = monthPurchases.reduce((sum: number, purchase: any) => 
+    sum + (purchase.price * purchase.quantity), 0
+  );
+  const previousMonthPurchases = purchaseItems.filter((purchase: any) => {
+    const purchaseDate = new Date(purchase.date);
+    return purchaseDate.getMonth() === previousMonth && purchaseDate.getFullYear() === previousYear;
+  });
+  const totalSpentPreviousMonth = previousMonthPurchases.reduce((sum: number, purchase: any) =>
     sum + (purchase.price * purchase.quantity), 0
   );
   const totalShoppingTrips = new Set(monthPurchases.map((purchase: any) => `${purchase.date}-${purchase.storeId}`)).size;
@@ -196,13 +206,27 @@ export function Dashboard() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-6 md:grid-cols-4">
+        <div className="grid gap-6 md:grid-cols-5">
           <Card className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Gasto (Mês)</p>
                 <p className="mt-2 text-3xl font-semibold text-foreground">
                   R$ {totalSpent.toFixed(2)}
+                </p>
+              </div>
+              <div className="rounded-full bg-primary/10 p-3">
+                <DollarSign className="h-6 w-6 text-primary" />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Gasto (Mês Anterior)</p>
+                <p className="mt-2 text-3xl font-semibold text-foreground">
+                  R$ {totalSpentPreviousMonth.toFixed(2)}
                 </p>
               </div>
               <div className="rounded-full bg-primary/10 p-3">
