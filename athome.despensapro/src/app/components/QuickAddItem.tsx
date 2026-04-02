@@ -165,10 +165,28 @@ export function QuickAddItem({ open, onOpenChange, onItemCreated }: QuickAddItem
             )}
           </div>
 
-          <div className="space-y-2"><Label>Categoria</Label><Select value={categoryId} onValueChange={setCategoryId}><SelectTrigger><SelectValue placeholder="Selecione a categoria" /></SelectTrigger><SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div>
-          <div className="space-y-2"><Label>Embalagem</Label><Select value={packagingId} onValueChange={setPackagingId}><SelectTrigger><SelectValue placeholder="Selecione a embalagem" /></SelectTrigger><SelectContent>{packagings.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent></Select></div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Categoria</Label>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setCategoryId("")} disabled={!categoryId}>Remover</Button>
+            </div>
+            <Select value={categoryId} onValueChange={setCategoryId}><SelectTrigger><SelectValue placeholder="Selecione a categoria" /></SelectTrigger><SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Embalagem</Label>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setPackagingId("")} disabled={!packagingId}>Remover</Button>
+            </div>
+            <Select value={packagingId} onValueChange={setPackagingId}><SelectTrigger><SelectValue placeholder="Selecione a embalagem" /></SelectTrigger><SelectContent>{packagings.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent></Select>
+          </div>
           <div className="space-y-2"><Label>Volume da Embalagem</Label><Input value={packageSize} type="number" step="0.01" onChange={(e) => setPackageSize(e.target.value)} /></div>
-          <div className="space-y-2"><Label>Unidade</Label><Select value={unitId} onValueChange={setUnitId}><SelectTrigger><SelectValue placeholder="Selecione a unidade" /></SelectTrigger><SelectContent>{units.map((u) => <SelectItem key={u.id} value={u.id}>{u.name} ({u.abbreviation})</SelectItem>)}</SelectContent></Select></div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Unidade</Label>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setUnitId("")} disabled={!unitId}>Remover</Button>
+            </div>
+            <Select value={unitId} onValueChange={setUnitId}><SelectTrigger><SelectValue placeholder="Selecione a unidade" /></SelectTrigger><SelectContent>{units.map((u) => <SelectItem key={u.id} value={u.id}>{u.name} ({u.abbreviation})</SelectItem>)}</SelectContent></Select>
+          </div>
           <div className="flex items-center gap-2"><Checkbox id="quick-item-vegan" checked={isVegan} onCheckedChange={(checked) => setIsVegan(checked as boolean)} /><label htmlFor="quick-item-vegan" className="text-sm">Item vegano</label></div>
           <div className="flex items-center gap-2"><Checkbox id="quick-item-essential" checked={isEssential} onCheckedChange={(checked) => setIsEssential(checked as boolean)} /><label htmlFor="quick-item-essential" className="text-sm">Essencial</label></div>
         </div>
