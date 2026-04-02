@@ -3,7 +3,7 @@ import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
-import { AlertCircle, Info, Package2, Loader2 } from "lucide-react";
+import { AlertCircle, History, Info, Package2, Loader2 } from "lucide-react";
 import { itemsAPI, pantryAPI, brandsAPI, unitsAPI, storesAPI, packagingsAPI, categoriesAPI, purchasesAPI } from "../lib/api";
 import { toast } from "sonner";
 
@@ -20,6 +20,8 @@ export function Pantry() {
   const [packagings, setPackagings] = useState<any[]>([]);
   const [draftPantryByItemId, setDraftPantryByItemId] = useState<Record<string, { currentQuantity: string; openedDate: string }>>({});
   const [helpOpen, setHelpOpen] = useState(false);
+  const [historyDialogItem, setHistoryDialogItem] = useState<string | null>(null);
+  const [itemHistory, setItemHistory] = useState<any[]>([]);
 
   useEffect(() => {
     loadData();
@@ -186,6 +188,8 @@ export function Pantry() {
   const getBrandName = (brandId?: string) => brandId ? brands.find((b) => b.id === brandId)?.name || "Sem marca" : "Sem marca";
   const getCategoryName = (categoryId?: string) => categoryId ? categories.find((category) => category.id === categoryId)?.name || "Sem categoria" : "Sem categoria";
   const getUnitAbbr = (unitId: string) => units.find(u => u.id === unitId)?.abbreviation || "";
+  const getItemName = (itemId: string) => items.find((item) => item.id === itemId)?.name || "";
+  const getStoreName = (storeId: string) => stores.find((store) => store.id === storeId)?.name || "Mercado não informado";
 
   const getPackagingName = (packagingId: string) => packagings.find((p) => p.id === packagingId)?.name || "";
 
@@ -236,6 +240,12 @@ export function Pantry() {
     });
 
   const isEssentialZero = (item: any, quantity: number) => Boolean(item?.isEssential) && quantity <= 0;
+
+  const handleViewHistory = async (itemId: string) => {
+    const history = await itemsAPI.getHistory(itemId);
+    setItemHistory(history);
+    setHistoryDialogItem(itemId);
+  };
 
   if (loading) {
     return (
@@ -290,13 +300,10 @@ export function Pantry() {
                         Data de Abertura
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        Último Preço
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        Último Mercado
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                         Status
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                        Histórico
                       </th>
                     </tr>
                   </thead>
@@ -353,14 +360,6 @@ export function Pantry() {
                               />
                             </div>
                           </td>
-                          <td className="px-4 py-4 font-medium text-foreground">
-                            {pantryItem.lastPurchasePrice
-                              ? `R$ ${pantryItem.lastPurchasePrice.toFixed(2)}`
-                              : "—"}
-                          </td>
-                          <td className="px-4 py-4 text-muted-foreground">
-                            {pantryItem.lastPurchaseStore || "—"}
-                          </td>
                           <td className="px-4 py-4">
                             {oldProduct && (
                               <div className="flex items-center gap-1 text-warning">
@@ -371,6 +370,12 @@ export function Pantry() {
                             {essentialOutOfStock && (
                               <p className="text-xs text-warning-foreground">Item essencial zerado</p>
                             )}
+                          </td>
+                          <td className="px-4 py-4">
+                            <Button variant="ghost" size="sm" onClick={() => handleViewHistory(pantryItem.itemId)}>
+                              <History className="h-4 w-4 mr-1" />
+                              Histórico
+                            </Button>
                           </td>
                         </tr>
                       );
@@ -422,13 +427,11 @@ export function Pantry() {
                             </span>
                           )}
                         </div>
-                        <div>
-                          <p className="text-muted-foreground">Último Preço</p>
-                          <p className="font-semibold text-foreground">
-                            {pantryItem.lastPurchasePrice
-                              ? `R$ ${pantryItem.lastPurchasePrice.toFixed(2)}`
-                              : "—"}
-                          </p>
+                        <div className="col-span-2">
+                          <Button variant="outline" size="sm" onClick={() => handleViewHistory(pantryItem.itemId)}>
+                            <History className="h-4 w-4 mr-1" />
+                            Histórico
+                          </Button>
                         </div>
                       </div>
 
@@ -451,12 +454,6 @@ export function Pantry() {
                           <p className="mt-1 text-xs text-warning-foreground">Item essencial zerado</p>
                         )}
                       </div>
-                      
-                      {pantryItem.lastPurchaseStore && (
-                        <p className="text-xs text-muted-foreground">
-                          Último mercado: {pantryItem.lastPurchaseStore}
-                        </p>
-                      )}
                     </div>
                   </Card>
                 );
@@ -488,8 +485,28 @@ export function Pantry() {
             <DialogTitle>Dica de uso</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Nesta tela, você pode verificar e atualizar o estado atual da sua despensa. Para cada item listado, é possível atualizar a quantidade disponível e informar a data em que a embalagem foi aberta, nos casos em que o produto deve ser consumido após a abertura. Aqui também é possível ver o último valor pago e o mercado onde o item foi comprado. Ao finalizar suas alterações, é só tocar em “Salvar alterações da despensa”.
+            Nesta tela, você pode verificar e atualizar o estado atual da sua despensa. Para cada item listado, é possível atualizar a quantidade disponível e informar a data em que a embalagem foi aberta, nos casos em que o produto deve ser consumido após a abertura. Para consultar os preços já pagos, toque no botão “Histórico” e veja mercado, valor e data de compra. Ao finalizar suas alterações, é só tocar em “Salvar alterações da despensa”.
           </p>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={historyDialogItem !== null} onOpenChange={(open) => !open && setHistoryDialogItem(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Histórico de preços - {historyDialogItem ? getItemName(historyDialogItem) : ""}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 max-h-80 overflow-y-auto">
+            {itemHistory.map((purchase) => (
+              <div key={purchase.id} className="border rounded p-3 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm text-muted-foreground">{new Date(purchase.date).toLocaleDateString("pt-BR")}</p>
+                  <p className="text-sm font-medium text-foreground">{getStoreName(purchase.storeId)}</p>
+                </div>
+                <span className="font-medium">R$ {purchase.price.toFixed(2)}</span>
+              </div>
+            ))}
+            {!itemHistory.length && <p className="text-sm text-muted-foreground">Sem histórico para este item.</p>}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

@@ -392,10 +392,28 @@ export function Items() {
                     ))}
                   </div>
                 </div>
-                <div className="space-y-2"><Label>Categoria</Label><Select value={itemCategory} onValueChange={setItemCategory}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div>
-                <div className="space-y-2"><Label>Embalagem</Label><Select value={itemPackaging} onValueChange={setItemPackaging}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{packagings.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Categoria</Label>
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setItemCategory("")} disabled={!itemCategory}>Remover</Button>
+                  </div>
+                  <Select value={itemCategory} onValueChange={setItemCategory}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Embalagem</Label>
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setItemPackaging("")} disabled={!itemPackaging}>Remover</Button>
+                  </div>
+                  <Select value={itemPackaging} onValueChange={setItemPackaging}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{packagings.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent></Select>
+                </div>
                 <div className="space-y-2"><Label>Volume da embalagem</Label><Input value={itemPackageSize} onChange={(e) => setItemPackageSize(e.target.value)} type="number" step="0.01" /></div>
-                <div className="space-y-2"><Label>Unidade</Label><Select value={itemUnit} onValueChange={setItemUnit}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{units.map((u) => <SelectItem key={u.id} value={u.id}>{u.name} ({u.abbreviation})</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Unidade</Label>
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setItemUnit("")} disabled={!itemUnit}>Remover</Button>
+                  </div>
+                  <Select value={itemUnit} onValueChange={setItemUnit}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{units.map((u) => <SelectItem key={u.id} value={u.id}>{u.name} ({u.abbreviation})</SelectItem>)}</SelectContent></Select>
+                </div>
                 <div className="flex items-center gap-2"><Checkbox id="item-vegan" checked={itemVegan} onCheckedChange={(checked) => setItemVegan(checked as boolean)} /><label htmlFor="item-vegan" className="text-sm">Item vegano</label></div>
                 <div className="flex items-center gap-2"><Checkbox id="item-essential" checked={itemEssential} onCheckedChange={(checked) => setItemEssential(checked as boolean)} /><label htmlFor="item-essential" className="text-sm">Essencial</label></div>
               </>
