@@ -105,12 +105,18 @@ export function Pantry() {
     }));
   };
 
+  const parseDraftQuantity = (rawValue: string) => {
+    const normalizedValue = rawValue.trim() === "" ? "0" : rawValue;
+    const parsedQuantity = Number.parseFloat(normalizedValue);
+    return Number.isNaN(parsedQuantity) ? null : parsedQuantity;
+  };
+
   const getDirtyPantryUpdates = () => pantryItems.reduce<Array<{ itemId: string; currentQuantity: number; openedDate?: string }>>((acc, pantryItem) => {
     const draft = draftPantryByItemId[pantryItem.itemId];
     if (!draft) return acc;
 
-    const parsedQuantity = Number.parseFloat(draft.currentQuantity);
-    if (Number.isNaN(parsedQuantity)) return acc;
+    const parsedQuantity = parseDraftQuantity(draft.currentQuantity);
+    if (parsedQuantity === null) return acc;
 
     const openedDate = draft.openedDate || "";
     const quantityChanged = parsedQuantity !== pantryItem.currentQuantity;
@@ -129,13 +135,25 @@ export function Pantry() {
   const hasPendingChanges = getDirtyPantryUpdates().length > 0;
 
   const handleSaveAllChanges = async () => {
+    const normalizedDrafts = Object.fromEntries(
+      Object.entries(draftPantryByItemId).map(([itemId, draft]) => [
+        itemId,
+        {
+          ...draft,
+          currentQuantity: draft.currentQuantity.trim() === "" ? "0" : draft.currentQuantity,
+        },
+      ])
+    );
+
+    setDraftPantryByItemId(normalizedDrafts);
+
     const dirtyUpdates = getDirtyPantryUpdates();
     if (!dirtyUpdates.length) {
       toast.info("Não há alterações pendentes");
       return;
     }
 
-    const hasInvalidQuantity = Object.values(draftPantryByItemId).some((draft) => Number.isNaN(Number.parseFloat(draft.currentQuantity)));
+    const hasInvalidQuantity = Object.values(normalizedDrafts).some((draft) => parseDraftQuantity(draft.currentQuantity) === null);
     if (hasInvalidQuantity) {
       toast.error("Revise as quantidades informadas antes de salvar");
       return;
@@ -372,9 +390,8 @@ export function Pantry() {
                             )}
                           </td>
                           <td className="px-4 py-4">
-                            <Button variant="ghost" size="sm" onClick={() => handleViewHistory(pantryItem.itemId)}>
-                              <History className="h-4 w-4 mr-1" />
-                              Histórico
+                            <Button variant="ghost" size="icon" onClick={() => handleViewHistory(pantryItem.itemId)} title="Ver histórico">
+                              <History className="h-4 w-4" />
                             </Button>
                           </td>
                         </tr>
@@ -402,6 +419,9 @@ export function Pantry() {
                           <h4 className="font-semibold text-foreground">{item.name}{getItemDisplaySize(item) ? ` (${getItemDisplaySize(item)})` : ""}</h4>
                           <p className="text-sm text-muted-foreground">{getBrandName(brandId)} • {categoryName}</p>
                         </div>
+                        <Button variant="ghost" size="icon" onClick={() => handleViewHistory(pantryItem.itemId)} title="Ver histórico">
+                          <History className="h-4 w-4" />
+                        </Button>
                       </div>
 
                       <div className="grid grid-cols-2 gap-3 text-sm">
@@ -427,33 +447,26 @@ export function Pantry() {
                             </span>
                           )}
                         </div>
-                        <div className="col-span-2">
-                          <Button variant="outline" size="sm" onClick={() => handleViewHistory(pantryItem.itemId)}>
-                            <History className="h-4 w-4 mr-1" />
-                            Histórico
-                          </Button>
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            Aberto em: {formatStoredDate(draft.openedDate)}
+                          </p>
+                          <Input
+                            type="date"
+                            value={draft.openedDate}
+                            onChange={(e) => handleDraftChange(pantryItem.itemId, "openedDate", e.target.value)}
+                          />
+                          {oldProduct && (
+                            <div className="mt-1 flex items-center gap-1 text-warning">
+                              <AlertCircle className="h-3 w-3" />
+                              <span className="text-xs">Aberto há mais de 30 dias</span>
+                            </div>
+                          )}
                         </div>
                       </div>
-
-                      <div>
-                        <p className="text-xs text-muted-foreground">
-                          Aberto em: {formatStoredDate(draft.openedDate)}
-                        </p>
-                        <Input
-                          type="date"
-                          value={draft.openedDate}
-                          onChange={(e) => handleDraftChange(pantryItem.itemId, "openedDate", e.target.value)}
-                        />
-                        {oldProduct && (
-                          <div className="mt-1 flex items-center gap-1 text-warning">
-                            <AlertCircle className="h-3 w-3" />
-                            <span className="text-xs">Aberto há mais de 30 dias</span>
-                          </div>
-                        )}
-                        {essentialOutOfStock && (
-                          <p className="mt-1 text-xs text-warning-foreground">Item essencial zerado</p>
-                        )}
-                      </div>
+                      {essentialOutOfStock && (
+                        <p className="text-xs text-warning-foreground">Item essencial zerado</p>
+                      )}
                     </div>
                   </Card>
                 );
